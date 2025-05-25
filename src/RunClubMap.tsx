@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -776,17 +777,47 @@ export default function RunClubMap() {
           maxZoom={19}
         />
         
-        {/* Markers pour chaque run club */}
-        {clubs.map((feature, idx) => (
-          <Marker
-            key={idx}
-            position={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
-            icon={createCustomIcon(
-              feature.properties.image || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=60&h=60&fit=crop&crop=center',
-              feature.properties.name
-            )}
-          >
-            <Popup>
+        {/* Markers pour chaque run club avec clustering */}
+        <MarkerClusterGroup
+          chunkedLoading
+          iconCreateFunction={(cluster: any) => {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+              html: `
+                <div style="
+                  width: 50px;
+                  height: 50px;
+                  border-radius: 50%;
+                  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+                  border: 3px solid white;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: white;
+                  font-weight: bold;
+                  font-size: ${count > 99 ? '12px' : '14px'};
+                  font-family: Arial, sans-serif;
+                ">
+                  ${count}
+                </div>
+              `,
+              className: 'custom-cluster-icon',
+              iconSize: [50, 50],
+              iconAnchor: [25, 25]
+            });
+          }}
+        >
+          {clubs.map((feature, idx) => (
+            <Marker
+              key={idx}
+              position={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
+              icon={createCustomIcon(
+                feature.properties.image || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=60&h=60&fit=crop&crop=center',
+                feature.properties.name
+              )}
+            >
+              <Popup>
               <div style={{ 
                 minWidth: '280px', 
                 fontFamily: 'Arial, sans-serif',
@@ -1036,6 +1067,7 @@ export default function RunClubMap() {
             </Popup>
           </Marker>
         ))}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );
