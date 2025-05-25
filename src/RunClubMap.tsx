@@ -84,6 +84,31 @@ function ZoomControlBottomLeft() {
   return null;
 }
 
+// Composant pour gérer les clics sur la carte (fermeture overlay mobile)
+function MapClickHandler({ isMobile, showOverlay, setShowOverlay }: { 
+  isMobile: boolean; 
+  showOverlay: boolean; 
+  setShowOverlay: (show: boolean) => void; 
+}) {
+  const map = useMap();
+  
+  useEffect(() => {
+    const handleClick = () => {
+      if (isMobile && showOverlay) {
+        setShowOverlay(false);
+      }
+    };
+    
+    map.on('click', handleClick);
+    
+    return () => {
+      map.off('click', handleClick);
+    };
+  }, [map, isMobile, showOverlay, setShowOverlay]);
+  
+  return null;
+}
+
 // Système de traduction
 const translations = {
   fr: {
@@ -155,7 +180,18 @@ export default function RunClubMap() {
   const [filterCity, setFilterCity] = useState<string>('');
   const [filterDay, setFilterDay] = useState<string>('');
   const [language, setLanguage] = useState<Language>('fr');
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const mapRef = useRef<any>(null);
+
+  // Hook pour détecter les changements de taille d'écran
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fonction pour obtenir les traductions
   const t = translations[language];
@@ -323,23 +359,25 @@ export default function RunClubMap() {
         {/* Titre du site en haut à droite */}
         <div style={{
           position: 'absolute',
-          top: '20px',
-          right: '20px',
+          top: '10px',
+          right: '10px',
           zIndex: 1000,
           fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
-          alignItems: 'flex-end'
+          gap: '8px',
+          alignItems: 'flex-end',
+          maxWidth: 'calc(100vw - 20px)'
         }}>
           {/* Titre du site */}
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(10px)',
-            padding: '16px 20px',
+            padding: isMobile ? '12px 16px' : '16px 20px',
             borderRadius: '12px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            border: '1px solid rgba(255, 107, 53, 0.2)'
+            border: '1px solid rgba(255, 107, 53, 0.2)',
+            minWidth: 'fit-content'
           }}>
             <div style={{
               display: 'flex',
@@ -355,7 +393,7 @@ export default function RunClubMap() {
               }}></div>
               <h1 style={{
                 margin: '0',
-                fontSize: '22px',
+                fontSize: isMobile ? '18px' : '22px',
                 fontWeight: '700',
                 color: '#2d3748',
                 letterSpacing: '-0.5px'
@@ -364,7 +402,7 @@ export default function RunClubMap() {
               </h1>
             </div>
             <div style={{
-              fontSize: '13px',
+              fontSize: isMobile ? '11px' : '13px',
               color: '#ff6b35',
               fontWeight: '600',
               textAlign: 'left',
@@ -423,32 +461,37 @@ export default function RunClubMap() {
           onClick={() => setShowOverlay(!showOverlay)}
           style={{
             position: 'absolute',
-            top: '20px',
-            left: '20px',
+            top: '10px',
+            left: '10px',
             zIndex: 1000,
             backgroundColor: '#ff6b35',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            padding: '12px 16px',
-            fontSize: '14px',
+            padding: isMobile ? '10px 12px' : '12px 16px',
+            fontSize: isMobile ? '12px' : '14px',
             fontWeight: 'bold',
             cursor: 'pointer',
             boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            fontFamily: 'Arial, sans-serif'
+            fontFamily: 'Arial, sans-serif',
+            maxWidth: isMobile ? '120px' : 'auto',
+            whiteSpace: isMobile ? 'nowrap' : 'normal',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
           }}
         >
-          📍 {t.clubsList} ({filteredClubs.length}/{clubs.length})
+          {isMobile ? `📍 ${filteredClubs.length}/${clubs.length}` : `📍 ${t.clubsList} (${filteredClubs.length}/${clubs.length})`}
         </button>
 
               {/* Overlay avec la liste des clubs */}
         {showOverlay && (
           <div style={{
             position: 'absolute',
-            top: '70px',
-            left: '20px',
-            width: '380px',
-            maxHeight: '75vh',
+            top: isMobile ? '60px' : '70px',
+            left: isMobile ? '10px' : '20px',
+            width: isMobile ? 'calc(100vw - 20px)' : '380px',
+            maxWidth: isMobile ? '100vw' : '380px',
+            maxHeight: isMobile ? '70vh' : '75vh',
             backgroundColor: 'white',
             borderRadius: '16px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
@@ -459,7 +502,7 @@ export default function RunClubMap() {
           }}>
             {/* Header amélioré */}
             <div style={{
-              padding: '20px',
+              padding: isMobile ? '16px' : '20px',
               background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
               color: 'white'
             }}>
@@ -471,7 +514,7 @@ export default function RunClubMap() {
               }}>
                 <h3 style={{
                   margin: '0',
-                  fontSize: '20px',
+                  fontSize: isMobile ? '18px' : '20px',
                   fontWeight: 'bold'
                 }}>
                   🏃‍♂️ Run Clubs
@@ -490,7 +533,7 @@ export default function RunClubMap() {
               {/* Filtres */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr auto',
+                gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr auto',
                 gap: '8px',
                 alignItems: 'end'
               }}>
@@ -563,7 +606,9 @@ export default function RunClubMap() {
                       color: 'white',
                       fontSize: '12px',
                       cursor: 'pointer',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      gridColumn: isMobile ? '1 / -1' : 'auto',
+                      marginTop: isMobile ? '8px' : '0'
                     }}
                   >
                     ✕ {t.clear}
@@ -574,7 +619,7 @@ export default function RunClubMap() {
             
             {/* Liste des clubs */}
             <div style={{
-              maxHeight: 'calc(75vh - 140px)',
+              maxHeight: isMobile ? 'calc(70vh - 120px)' : 'calc(75vh - 140px)',
               overflowY: 'auto'
             }}>
               {filteredClubs.length === 0 ? (
@@ -715,6 +760,13 @@ export default function RunClubMap() {
       >
         {/* Contrôles de zoom en bas à gauche */}
         <ZoomControlBottomLeft />
+        
+        {/* Gestionnaire de clics pour mobile */}
+        <MapClickHandler 
+          isMobile={isMobile} 
+          showOverlay={showOverlay} 
+          setShowOverlay={setShowOverlay} 
+        />
         
         {/* Tuiles CartoDB Positron (fond clair et moderne) */}
         <TileLayer
