@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
 
 interface RunClubFeature {
   type: 'Feature';
@@ -107,6 +109,115 @@ function MapClickHandler({ isMobile, showOverlay, setShowOverlay }: {
     };
   }, [map, isMobile, showOverlay, setShowOverlay]);
   
+  return null;
+}
+
+// Composant pour gérer le clustering des marqueurs
+function ClusteredMarkers({ clubs, getClubText, t }: { 
+  clubs: RunClubFeature[]; 
+  getClubText: (club: RunClubFeature, field: 'name' | 'frequency' | 'description') => string;
+  t: any;
+}) {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Créer le groupe de clusters
+    const markerClusterGroup = (L as any).markerClusterGroup({
+      iconCreateFunction: function(cluster: any) {
+        const count = cluster.getChildCount();
+        return L.divIcon({
+          html: `
+            <div style="
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+              border: 3px solid white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: bold;
+              font-size: ${count > 99 ? '12px' : '14px'};
+              font-family: Arial, sans-serif;
+            ">
+              ${count}
+            </div>
+          `,
+          className: 'custom-cluster-icon',
+          iconSize: [50, 50],
+          iconAnchor: [25, 25]
+        });
+      },
+      maxClusterRadius: 80,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true
+    });
+
+    // Ajouter les marqueurs au groupe de clusters
+    clubs.forEach((club) => {
+      const marker = L.marker([club.geometry.coordinates[1], club.geometry.coordinates[0]], {
+        icon: createCustomIcon(
+          club.properties.image || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=60&h=60&fit=crop&crop=center',
+          club.properties.name
+        )
+      });
+
+      // Créer le contenu du popup
+      const popupContent = `
+        <div style="min-width: 280px; font-family: Arial, sans-serif; line-height: 1.4;">
+          <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ff6b35;">
+            ${club.properties.image ? `<img src="${club.properties.image}" alt="${club.properties.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 12px; object-fit: cover; border: 3px solid #ff6b35;" />` : ''}
+            <h3 style="margin: 0; color: #ff6b35; font-size: 18px; font-weight: bold;">${getClubText(club, 'name')}</h3>
+          </div>
+          ${club.properties.city ? `
+            <div style="margin-bottom: 12px;">
+              <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: bold; color: #333;">📍 ${t.city}</h4>
+              <p style="margin: 0; font-size: 14px; color: #666;">${club.properties.city}</p>
+            </div>
+          ` : ''}
+          ${(club.properties.frequency || club.properties.frequency_en) ? `
+            <div style="margin-bottom: 12px;">
+              <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: bold; color: #333;">⏰ ${t.frequency}</h4>
+              <p style="margin: 0; font-size: 14px; color: #666;">${getClubText(club, 'frequency')}</p>
+            </div>
+          ` : ''}
+          ${(club.properties.description || club.properties.description_en) ? `
+            <div style="margin-bottom: 15px;">
+              <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: bold; color: #333;">📝 ${t.description}</h4>
+              <p style="margin: 0; font-size: 14px; color: #666; line-height: 1.5;">${getClubText(club, 'description')}</p>
+            </div>
+          ` : ''}
+          ${club.properties.social && Object.keys(club.properties.social).length > 0 ? `
+            <div>
+              <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold; color: #333;">🌐 ${t.socialNetworks}</h4>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${club.properties.social.website ? `<a href="${club.properties.social.website}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #ff6b35; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #fff5f0; border-radius: 12px; border: 1px solid #ff6b35;">🔗 ${t.site}</a>` : ''}
+                ${club.properties.social.instagram ? `<a href="${club.properties.social.instagram}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #E4405F; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #fdf2f8; border-radius: 12px; border: 1px solid #E4405F;">📷 Instagram</a>` : ''}
+                ${club.properties.social.facebook ? `<a href="${club.properties.social.facebook}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #1877F2; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #eff6ff; border-radius: 12px; border: 1px solid #1877F2;">📘 Facebook</a>` : ''}
+                ${club.properties.social.tiktok ? `<a href="${club.properties.social.tiktok}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #000000; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #f9fafb; border-radius: 12px; border: 1px solid #000000;">🎵 TikTok</a>` : ''}
+                ${club.properties.social.linkedin ? `<a href="${club.properties.social.linkedin}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #0A66C2; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #eff6ff; border-radius: 12px; border: 1px solid #0A66C2;">💼 LinkedIn</a>` : ''}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+      markerClusterGroup.addLayer(marker);
+    });
+
+    // Ajouter le groupe de clusters à la carte
+    map.addLayer(markerClusterGroup);
+
+    // Nettoyer lors du démontage
+    return () => {
+      map.removeLayer(markerClusterGroup);
+    };
+  }, [map, clubs, getClubText, t]);
+
   return null;
 }
 
@@ -777,297 +888,8 @@ export default function RunClubMap() {
           maxZoom={19}
         />
         
-        {/* Markers pour chaque run club avec clustering */}
-        <MarkerClusterGroup
-          chunkedLoading
-          iconCreateFunction={(cluster: any) => {
-            const count = cluster.getChildCount();
-            return L.divIcon({
-              html: `
-                <div style="
-                  width: 50px;
-                  height: 50px;
-                  border-radius: 50%;
-                  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-                  border: 3px solid white;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  color: white;
-                  font-weight: bold;
-                  font-size: ${count > 99 ? '12px' : '14px'};
-                  font-family: Arial, sans-serif;
-                ">
-                  ${count}
-                </div>
-              `,
-              className: 'custom-cluster-icon',
-              iconSize: [50, 50],
-              iconAnchor: [25, 25]
-            });
-          }}
-        >
-          {clubs.map((feature, idx) => (
-            <Marker
-              key={idx}
-              position={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
-              icon={createCustomIcon(
-                feature.properties.image || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=60&h=60&fit=crop&crop=center',
-                feature.properties.name
-              )}
-            >
-              <Popup>
-              <div style={{ 
-                minWidth: '280px', 
-                fontFamily: 'Arial, sans-serif',
-                lineHeight: '1.4'
-              }}>
-                {/* Header avec image et nom */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: '15px',
-                  paddingBottom: '10px',
-                  borderBottom: '2px solid #ff6b35'
-                }}>
-                  {feature.properties.image && (
-                    <img 
-                      src={feature.properties.image}
-                      alt={feature.properties.name}
-                      style={{
-                        width: '50px',
-                        height: '50px',
-                        borderRadius: '50%',
-                        marginRight: '12px',
-                        objectFit: 'cover',
-                        border: '3px solid #ff6b35'
-                      }}
-                    />
-                  )}
-                  <h3 style={{ 
-                    margin: '0', 
-                    color: '#ff6b35',
-                    fontSize: '18px',
-                    fontWeight: 'bold'
-                  }}>
-                    {getClubText(feature, 'name')}
-                  </h3>
-                </div>
-
-                {/* Section Ville */}
-                {feature.properties.city && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <h4 style={{ 
-                      margin: '0 0 4px 0', 
-                      fontSize: '14px', 
-                      fontWeight: 'bold',
-                      color: '#333'
-                    }}>
-                      📍 {t.city}
-                    </h4>
-                    <p style={{ 
-                      margin: '0', 
-                      fontSize: '14px',
-                      color: '#666'
-                    }}>
-                      {feature.properties.city}
-                    </p>
-                  </div>
-                )}
-
-                {/* Section Fréquence */}
-                {(feature.properties.frequency || feature.properties.frequency_en) && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <h4 style={{ 
-                      margin: '0 0 4px 0', 
-                      fontSize: '14px', 
-                      fontWeight: 'bold',
-                      color: '#333'
-                    }}>
-                      ⏰ {t.frequency}
-                    </h4>
-                    <p style={{ 
-                      margin: '0', 
-                      fontSize: '14px',
-                      color: '#666'
-                    }}>
-                      {getClubText(feature, 'frequency')}
-                    </p>
-                  </div>
-                )}
-
-                {/* Section Description */}
-                {(feature.properties.description || feature.properties.description_en) && (
-                  <div style={{ marginBottom: '15px' }}>
-                    <h4 style={{ 
-                      margin: '0 0 4px 0', 
-                      fontSize: '14px', 
-                      fontWeight: 'bold',
-                      color: '#333'
-                    }}>
-                      📝 {t.description}
-                    </h4>
-                    <p style={{ 
-                      margin: '0', 
-                      fontSize: '14px',
-                      color: '#666',
-                      lineHeight: '1.5'
-                    }}>
-                      {getClubText(feature, 'description')}
-                    </p>
-                  </div>
-                )}
-
-                {/* Section Réseaux sociaux */}
-                {feature.properties.social && Object.keys(feature.properties.social).length > 0 && (
-                  <div>
-                    <h4 style={{ 
-                      margin: '0 0 8px 0', 
-                      fontSize: '14px', 
-                      fontWeight: 'bold',
-                      color: '#333'
-                    }}>
-                      🌐 {t.socialNetworks}
-                    </h4>
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '8px'
-                    }}>
-                      {feature.properties.social.website && (
-                        <a 
-                          href={feature.properties.social.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ 
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: '#ff6b35', 
-                            textDecoration: 'none',
-                            fontSize: '13px',
-                            fontWeight: 'bold',
-                            padding: '6px 10px',
-                            backgroundColor: '#fff5f0',
-                            borderRadius: '12px',
-                            border: '1px solid #ff6b35'
-                          }}
-                        >
-                                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                            {t.site}
-                          </a>
-                      )}
-                      {feature.properties.social.instagram && (
-                        <a 
-                          href={feature.properties.social.instagram} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ 
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: '#E4405F', 
-                            textDecoration: 'none',
-                            fontSize: '13px',
-                            fontWeight: 'bold',
-                            padding: '6px 10px',
-                            backgroundColor: '#fdf2f8',
-                            borderRadius: '12px',
-                            border: '1px solid #E4405F'
-                          }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                          </svg>
-                          Instagram
-                        </a>
-                      )}
-                      {feature.properties.social.facebook && (
-                        <a 
-                          href={feature.properties.social.facebook} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ 
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: '#1877F2', 
-                            textDecoration: 'none',
-                            fontSize: '13px',
-                            fontWeight: 'bold',
-                            padding: '6px 10px',
-                            backgroundColor: '#eff6ff',
-                            borderRadius: '12px',
-                            border: '1px solid #1877F2'
-                          }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                          </svg>
-                          Facebook
-                        </a>
-                      )}
-                      {feature.properties.social.tiktok && (
-                        <a 
-                          href={feature.properties.social.tiktok} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ 
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: '#000000', 
-                            textDecoration: 'none',
-                            fontSize: '13px',
-                            fontWeight: 'bold',
-                            padding: '6px 10px',
-                            backgroundColor: '#f9fafb',
-                            borderRadius: '12px',
-                            border: '1px solid #000000'
-                          }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-                          </svg>
-                          TikTok
-                        </a>
-                      )}
-                      {feature.properties.social.linkedin && (
-                        <a 
-                          href={feature.properties.social.linkedin} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ 
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: '#0A66C2', 
-                            textDecoration: 'none',
-                            fontSize: '13px',
-                            fontWeight: 'bold',
-                            padding: '6px 10px',
-                            backgroundColor: '#eff6ff',
-                            borderRadius: '12px',
-                            border: '1px solid #0A66C2'
-                          }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                          </svg>
-                          LinkedIn
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-        </MarkerClusterGroup>
+                {/* Markers avec clustering personnalisé */}
+        <ClusteredMarkers clubs={clubs} getClubText={getClubText} t={t} />
       </MapContainer>
     </div>
   );
