@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Fond circulaire orange -->
+  <circle cx="16" cy="16" r="15" fill="#ff6b35" stroke="#fff" stroke-width="2"/>
+  
+  <!-- Icône de coureur stylisé -->
+  <g fill="#fff">
+    <!-- Tête -->
+    <circle cx="14" cy="8" r="2.5"/>
+    
+    <!-- Corps -->
+    <ellipse cx="14" cy="14" rx="1.5" ry="3"/>
+    
+    <!-- Bras en mouvement -->
+    <ellipse cx="11" cy="12" rx="0.8" ry="2.5" transform="rotate(-30 11 12)"/>
+    <ellipse cx="17" cy="13" rx="0.8" ry="2.5" transform="rotate(20 17 13)"/>
+    
+    <!-- Jambes en mouvement -->
+    <ellipse cx="12" cy="20" rx="0.8" ry="3.5" transform="rotate(-15 12 20)"/>
+    <ellipse cx="16" cy="21" rx="0.8" ry="3.5" transform="rotate(25 16 21)"/>
+  </g>
+  
+  <!-- Points de localisation (style carte) -->
+  <circle cx="24" cy="10" r="1.5" fill="#fff" opacity="0.8"/>
+  <circle cx="26" cy="18" r="1" fill="#fff" opacity="0.6"/>
+  <circle cx="22" cy="24" r="1.2" fill="#fff" opacity="0.7"/>
+</svg> 

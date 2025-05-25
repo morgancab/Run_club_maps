@@ -22,6 +22,10 @@ interface RunClubFeature {
       tiktok?: string;
       linkedin?: string;
     };
+    // Traductions optionnelles
+    name_en?: string;
+    frequency_en?: string;
+    description_en?: string;
   };
 }
 
@@ -80,6 +84,68 @@ function ZoomControlBottomLeft() {
   return null;
 }
 
+// Système de traduction
+const translations = {
+  fr: {
+    title: 'Social Run Club',
+    subtitle: '🗺️ Carte Interactive',
+    clubsList: 'Liste des clubs',
+    loading: 'Chargement de la carte...',
+    city: 'Ville',
+    day: 'Jour',
+    all: 'Tous',
+    allCities: 'Toutes',
+    clear: 'Effacer',
+    noClubsFound: 'Aucun club trouvé',
+    tryModifyFilters: 'Essayez de modifier vos filtres',
+    clickToLocate: 'Cliquer pour localiser',
+    site: 'Site',
+    description: 'Description',
+    frequency: 'Fréquence',
+    socialNetworks: 'Réseaux sociaux',
+    visitSite: 'Visiter le site',
+    days: {
+      monday: 'Lundi',
+      tuesday: 'Mardi', 
+      wednesday: 'Mercredi',
+      thursday: 'Jeudi',
+      friday: 'Vendredi',
+      saturday: 'Samedi',
+      sunday: 'Dimanche'
+    }
+  },
+  en: {
+    title: 'Social Run Club',
+    subtitle: '🗺️ Interactive Maps',
+    clubsList: 'Clubs list',
+    loading: 'Loading map...',
+    city: 'City',
+    day: 'Day',
+    all: 'All',
+    allCities: 'All',
+    clear: 'Clear',
+    noClubsFound: 'No clubs found',
+    tryModifyFilters: 'Try modifying your filters',
+    clickToLocate: 'Click to locate',
+    site: 'Website',
+    description: 'Description',
+    frequency: 'Frequency',
+    socialNetworks: 'Social Networks',
+    visitSite: 'Visit website',
+    days: {
+      monday: 'Monday',
+      tuesday: 'Tuesday',
+      wednesday: 'Wednesday', 
+      thursday: 'Thursday',
+      friday: 'Friday',
+      saturday: 'Saturday',
+      sunday: 'Sunday'
+    }
+  }
+};
+
+type Language = 'fr' | 'en';
+
 export default function RunClubMap() {
   const [clubs, setClubs] = useState<RunClubFeature[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +154,28 @@ export default function RunClubMap() {
   const [mapZoom, setMapZoom] = useState(6);
   const [filterCity, setFilterCity] = useState<string>('');
   const [filterDay, setFilterDay] = useState<string>('');
+  const [language, setLanguage] = useState<Language>('fr');
   const mapRef = useRef<any>(null);
+
+  // Fonction pour obtenir les traductions
+  const t = translations[language];
+
+  // Fonction pour obtenir le texte traduit d'un club
+  const getClubText = (club: RunClubFeature, field: 'name' | 'frequency' | 'description'): string => {
+    if (language === 'en') {
+      switch (field) {
+        case 'name':
+          return club.properties.name_en || club.properties.name || '';
+        case 'frequency':
+          return club.properties.frequency_en || club.properties.frequency || '';
+        case 'description':
+          return club.properties.description_en || club.properties.description || '';
+        default:
+          return club.properties[field] || '';
+      }
+    }
+    return club.properties[field] || '';
+  };
 
   // Fonction pour calculer le centre et le zoom optimal
   const calculateMapBounds = (features: RunClubFeature[]) => {
@@ -163,7 +250,7 @@ export default function RunClubMap() {
         fontSize: '18px',
         fontFamily: 'Arial, sans-serif'
       }}>
-        Chargement de la carte...
+        {t.loading}
       </div>
     );
   }
@@ -179,7 +266,25 @@ export default function RunClubMap() {
   // Filtrer les clubs selon les critères sélectionnés
   const filteredClubs = clubs.filter(club => {
     const cityMatch = !filterCity || club.properties.city?.toLowerCase().includes(filterCity.toLowerCase());
-    const dayMatch = !filterDay || club.properties.frequency?.toLowerCase().includes(filterDay.toLowerCase());
+    
+    // Filtrage par jour avec support multilingue
+    let dayMatch = true;
+    if (filterDay) {
+      const freq = club.properties.frequency?.toLowerCase() || '';
+      const dayMappings = {
+        'monday': ['lundi', 'monday'],
+        'tuesday': ['mardi', 'tuesday'],
+        'wednesday': ['mercredi', 'wednesday'],
+        'thursday': ['jeudi', 'thursday'],
+        'friday': ['vendredi', 'friday'],
+        'saturday': ['samedi', 'saturday'],
+        'sunday': ['dimanche', 'sunday']
+      };
+      
+      const searchTerms = dayMappings[filterDay as keyof typeof dayMappings] || [];
+      dayMatch = searchTerms.some(term => freq.includes(term));
+    }
+    
     return cityMatch && dayMatch;
   });
 
@@ -192,19 +297,20 @@ export default function RunClubMap() {
     const freq = club.properties.frequency.toLowerCase();
     const days = [];
     
-    if (freq.includes('lundi')) days.push('Lundi');
-    if (freq.includes('mardi')) days.push('Mardi');
-    if (freq.includes('mercredi')) days.push('Mercredi');
-    if (freq.includes('jeudi')) days.push('Jeudi');
-    if (freq.includes('vendredi')) days.push('Vendredi');
-    if (freq.includes('samedi')) days.push('Samedi');
-    if (freq.includes('dimanche')) days.push('Dimanche');
+    // Détection en français et anglais
+    if (freq.includes('lundi') || freq.includes('monday')) days.push('monday');
+    if (freq.includes('mardi') || freq.includes('tuesday')) days.push('tuesday');
+    if (freq.includes('mercredi') || freq.includes('wednesday')) days.push('wednesday');
+    if (freq.includes('jeudi') || freq.includes('thursday')) days.push('thursday');
+    if (freq.includes('vendredi') || freq.includes('friday')) days.push('friday');
+    if (freq.includes('samedi') || freq.includes('saturday')) days.push('saturday');
+    if (freq.includes('dimanche') || freq.includes('sunday')) days.push('sunday');
     
     return days;
   }).filter(Boolean).flat())] as string[];
 
   // Trier les jours dans l'ordre de la semaine
-  const dayOrder = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   const sortedUniqueDays = uniqueDays.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
 
   const clearFilters = () => {
@@ -221,45 +327,94 @@ export default function RunClubMap() {
           right: '20px',
           zIndex: 1000,
           fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          padding: '16px 20px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-          border: '1px solid rgba(255, 107, 53, 0.2)'
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          alignItems: 'flex-end'
         }}>
+          {/* Titre du site */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 107, 53, 0.2)'
           }}>
             <div style={{
-              width: '8px',
-              height: '8px',
-              backgroundColor: '#ff6b35',
-              borderRadius: '50%',
-              animation: 'pulse 2s infinite'
-            }}></div>
-            <h1 style={{
-              margin: '0',
-              fontSize: '22px',
-              fontWeight: '700',
-              color: '#2d3748',
-              letterSpacing: '-0.5px'
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
             }}>
-              Social Run Club
-            </h1>
+              <div style={{
+                width: '8px',
+                height: '8px',
+                backgroundColor: '#ff6b35',
+                borderRadius: '50%',
+                animation: 'pulse 2s infinite'
+              }}></div>
+              <h1 style={{
+                margin: '0',
+                fontSize: '22px',
+                fontWeight: '700',
+                color: '#2d3748',
+                letterSpacing: '-0.5px'
+              }}>
+                {t.title}
+              </h1>
+            </div>
+            <div style={{
+              fontSize: '13px',
+              color: '#ff6b35',
+              fontWeight: '600',
+              textAlign: 'left',
+              marginTop: '4px',
+              letterSpacing: '1px',
+              textTransform: 'uppercase'
+            }}>
+              {t.subtitle}
+            </div>
           </div>
+
+          {/* Sélecteur de langue */}
           <div style={{
-            fontSize: '13px',
-            color: '#ff6b35',
-            fontWeight: '600',
-            textAlign: 'left',
-            marginTop: '4px',
-            letterSpacing: '1px',
-            textTransform: 'uppercase'
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '8px',
+            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 107, 53, 0.2)',
+            overflow: 'hidden'
           }}>
-            🗺️ Carte Interactive
+            <button
+              onClick={() => setLanguage('fr')}
+              style={{
+                padding: '8px 12px',
+                border: 'none',
+                backgroundColor: language === 'fr' ? '#ff6b35' : 'transparent',
+                color: language === 'fr' ? 'white' : '#666',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              🇫🇷 FR
+            </button>
+            <button
+              onClick={() => setLanguage('en')}
+              style={{
+                padding: '8px 12px',
+                border: 'none',
+                backgroundColor: language === 'en' ? '#ff6b35' : 'transparent',
+                color: language === 'en' ? 'white' : '#666',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              🇬🇧 EN
+            </button>
           </div>
         </div>
 
@@ -283,7 +438,7 @@ export default function RunClubMap() {
             fontFamily: 'Arial, sans-serif'
           }}
         >
-          📍 Liste des clubs ({filteredClubs.length}/{clubs.length})
+          📍 {t.clubsList} ({filteredClubs.length}/{clubs.length})
         </button>
 
               {/* Overlay avec la liste des clubs */}
@@ -346,7 +501,7 @@ export default function RunClubMap() {
                     marginBottom: '4px',
                     opacity: 0.9
                   }}>
-                    Ville
+                    {t.city}
                   </label>
                   <select
                     value={filterCity}
@@ -361,7 +516,7 @@ export default function RunClubMap() {
                       color: '#333'
                     }}
                   >
-                    <option value="">Toutes</option>
+                    <option value="">{t.allCities}</option>
                     {uniqueCities.map(city => (
                       <option key={city} value={city}>{city}</option>
                     ))}
@@ -375,7 +530,7 @@ export default function RunClubMap() {
                     marginBottom: '4px',
                     opacity: 0.9
                   }}>
-                    Jour
+                    {t.day}
                   </label>
                   <select
                     value={filterDay}
@@ -390,9 +545,9 @@ export default function RunClubMap() {
                       color: '#333'
                     }}
                   >
-                    <option value="">Tous</option>
+                    <option value="">{t.all}</option>
                     {sortedUniqueDays.map((day: string) => (
-                      <option key={day} value={day}>{day}</option>
+                      <option key={day} value={day}>{t.days[day as keyof typeof t.days]}</option>
                     ))}
                   </select>
                 </div>
@@ -411,7 +566,7 @@ export default function RunClubMap() {
                       fontWeight: 'bold'
                     }}
                   >
-                    ✕ Effacer
+                    ✕ {t.clear}
                   </button>
                 )}
               </div>
@@ -430,10 +585,10 @@ export default function RunClubMap() {
                 }}>
                   <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
                   <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
-                    Aucun club trouvé
+                    {t.noClubsFound}
                   </p>
                   <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
-                    Essayez de modifier vos filtres
+                    {t.tryModifyFilters}
                   </p>
                 </div>
                                ) : (
@@ -476,7 +631,7 @@ export default function RunClubMap() {
                              color: '#ff6b35',
                              fontWeight: 'bold'
                            }}>
-                             {club.properties.name}
+                             {getClubText(club, 'name')}
                            </h4>
                            {club.properties.city && (
                              <div style={{
@@ -490,7 +645,7 @@ export default function RunClubMap() {
                          </div>
                        </div>
                        
-                       {club.properties.frequency && (
+                       {(club.properties.frequency || club.properties.frequency_en) && (
                          <div style={{
                            fontSize: '13px',
                            color: '#666',
@@ -500,18 +655,18 @@ export default function RunClubMap() {
                            borderRadius: '6px',
                            display: 'inline-block'
                          }}>
-                           ⏰ {club.properties.frequency}
+                           ⏰ {getClubText(club, 'frequency')}
                          </div>
                        )}
                        
-                       {club.properties.description && (
+                       {(club.properties.description || club.properties.description_en) && (
                          <p style={{
                            margin: '0 0 8px 0',
                            fontSize: '14px',
                            color: '#666',
                            lineHeight: '1.4'
                          }}>
-                           {club.properties.description}
+                           {getClubText(club, 'description')}
                          </p>
                        )}
                        
@@ -524,7 +679,7 @@ export default function RunClubMap() {
                            fontSize: '12px',
                            color: '#999'
                          }}>
-                           📍 Cliquer pour localiser
+                           📍 {t.clickToLocate}
                          </span>
                          {club.properties.social?.website && (
                            <a
@@ -538,9 +693,9 @@ export default function RunClubMap() {
                                fontSize: '12px',
                                fontWeight: 'bold'
                              }}
-                           >
-                             🔗 Site
-                           </a>
+                                                        >
+                               🔗 {t.site}
+                             </a>
                          )}
                        </div>
                      </div>
@@ -613,7 +768,7 @@ export default function RunClubMap() {
                     fontSize: '18px',
                     fontWeight: 'bold'
                   }}>
-                    {feature.properties.name}
+                    {getClubText(feature, 'name')}
                   </h3>
                 </div>
 
@@ -626,7 +781,7 @@ export default function RunClubMap() {
                       fontWeight: 'bold',
                       color: '#333'
                     }}>
-                      📍 Ville
+                      📍 {t.city}
                     </h4>
                     <p style={{ 
                       margin: '0', 
@@ -639,7 +794,7 @@ export default function RunClubMap() {
                 )}
 
                 {/* Section Fréquence */}
-                {feature.properties.frequency && (
+                {(feature.properties.frequency || feature.properties.frequency_en) && (
                   <div style={{ marginBottom: '12px' }}>
                     <h4 style={{ 
                       margin: '0 0 4px 0', 
@@ -647,20 +802,20 @@ export default function RunClubMap() {
                       fontWeight: 'bold',
                       color: '#333'
                     }}>
-                      ⏰ Fréquence
+                      ⏰ {t.frequency}
                     </h4>
                     <p style={{ 
                       margin: '0', 
                       fontSize: '14px',
                       color: '#666'
                     }}>
-                      {feature.properties.frequency}
+                      {getClubText(feature, 'frequency')}
                     </p>
                   </div>
                 )}
 
                 {/* Section Description */}
-                {feature.properties.description && (
+                {(feature.properties.description || feature.properties.description_en) && (
                   <div style={{ marginBottom: '15px' }}>
                     <h4 style={{ 
                       margin: '0 0 4px 0', 
@@ -668,7 +823,7 @@ export default function RunClubMap() {
                       fontWeight: 'bold',
                       color: '#333'
                     }}>
-                      📝 Description
+                      📝 {t.description}
                     </h4>
                     <p style={{ 
                       margin: '0', 
@@ -676,7 +831,7 @@ export default function RunClubMap() {
                       color: '#666',
                       lineHeight: '1.5'
                     }}>
-                      {feature.properties.description}
+                      {getClubText(feature, 'description')}
                     </p>
                   </div>
                 )}
@@ -690,7 +845,7 @@ export default function RunClubMap() {
                       fontWeight: 'bold',
                       color: '#333'
                     }}>
-                      🌐 Réseaux sociaux
+                      🌐 {t.socialNetworks}
                     </h4>
                     <div style={{
                       display: 'flex',
@@ -716,11 +871,11 @@ export default function RunClubMap() {
                             border: '1px solid #ff6b35'
                           }}
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                          </svg>
-                          Site
-                        </a>
+                                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            {t.site}
+                          </a>
                       )}
                       {feature.properties.social.instagram && (
                         <a 
