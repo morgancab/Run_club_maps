@@ -29,12 +29,28 @@ This file is being treated as an ES module because it has a '.js' file extension
 ### ✅ Solution appliquée
 - **Suppression de "type": "module"** du package.json
 - **Configuration Vercel spécifique** pour les fonctions API
-- **Runtime Node.js 20.x** configuré
+- **Runtime @vercel/node@3.0.0** configuré
 - **Imports corrigés** avec extensions .js
 
 **Résultat** : Plus d'erreur ES modules, API Vercel fonctionnelle.
 
 📚 **Guide détaillé** : Voir `VERCEL-ES-MODULES-FIX.md`
+
+## ⚙️ Erreur Runtime Vercel - RÉSOLU
+
+### Symptômes
+```
+Error: Function Runtimes must have a valid version, for example `now-php@1.0.0`.
+Exiting build container
+```
+
+### ✅ Solution appliquée
+- **Correction de la syntaxe runtime** : `"nodejs20.x"` → `"@vercel/node@3.0.0"`
+- **Format Vercel correct** utilisé
+
+**Résultat** : Build Vercel réussi, fonctions API déployées.
+
+📚 **Guide détaillé** : Voir `VERCEL-RUNTIME-ERROR-FIX.md`
 
 ## ✅ Solution en 5 étapes
 

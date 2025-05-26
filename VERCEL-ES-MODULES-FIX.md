@@ -35,7 +35,7 @@ Ajout dans `vercel.json` :
 {
   "functions": {
     "api/**/*.ts": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@3.0.0"
     }
   }
 }
@@ -75,7 +75,7 @@ npm run build         # ✅ Build réussi (3.10s)
 ```
 
 ### ✅ Configuration Vercel
-- Runtime Node.js 20.x configuré
+- Runtime @vercel/node@3.0.0 configuré
 - TypeScript compilé correctement
 - Imports ES modules fonctionnels
 
