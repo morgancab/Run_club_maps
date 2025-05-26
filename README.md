@@ -12,6 +12,7 @@ npm install
 ### 2. Configuration Google Sheets
 - Placez votre clé de service Google dans `keys/google-service-account.json`
 - Assurez-vous que votre Google Sheet est partagée avec le compte de service
+- **Google Sheet** : [Accéder à la feuille](https://docs.google.com/spreadsheets/d/1hsOICQY2d527Dah8-rLBlUApPmHgETKPfJxrhKazBhA/edit?gid=0#gid=0)
 - ID de la feuille : `1hsOICQY2d527Dah8-rLBlUApPmHgETKPfJxrhKazBhA`
 
 ### 3. Développement local
@@ -35,6 +36,8 @@ npm run build
 ```
 
 ## 📊 Structure Google Sheet
+
+**🔗 Lien vers la Google Sheet** : [https://docs.google.com/spreadsheets/d/1hsOICQY2d527Dah8-rLBlUApPmHgETKPfJxrhKazBhA/edit?gid=0#gid=0](https://docs.google.com/spreadsheets/d/1hsOICQY2d527Dah8-rLBlUApPmHgETKPfJxrhKazBhA/edit?gid=0#gid=0)
 
 La Google Sheet doit avoir cette structure (colonnes A-O) :
 
