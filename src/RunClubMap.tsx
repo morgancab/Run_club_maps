@@ -511,16 +511,20 @@ export default function RunClubMap() {
 
             {/* Points de clubs qui apparaissent */}
             <circle cx="110" cy="50" r="3" fill="#ff6b35" style={{
-              animation: 'popIn 2s ease-in-out infinite'
+              animation: 'popInPlace 2s ease-in-out infinite',
+              transformOrigin: '110px 50px'
             }} />
             <circle cx="50" cy="110" r="3" fill="#ff6b35" style={{
-              animation: 'popIn 2s ease-in-out infinite 0.5s'
+              animation: 'popInPlace 2s ease-in-out infinite 0.5s',
+              transformOrigin: '50px 110px'
             }} />
             <circle cx="110" cy="110" r="3" fill="#ff6b35" style={{
-              animation: 'popIn 2s ease-in-out infinite 1s'
+              animation: 'popInPlace 2s ease-in-out infinite 1s',
+              transformOrigin: '110px 110px'
             }} />
             <circle cx="50" cy="50" r="3" fill="#ff6b35" style={{
-              animation: 'popIn 2s ease-in-out infinite 1.5s'
+              animation: 'popInPlace 2s ease-in-out infinite 1.5s',
+              transformOrigin: '50px 50px'
             }} />
           </svg>
         </div>
@@ -668,13 +672,17 @@ export default function RunClubMap() {
             }
           }
           
-          @keyframes popIn {
-            0%, 80% { 
+          @keyframes popInPlace {
+            0%, 75% { 
               transform: scale(0); 
               opacity: 0; 
             }
-            90% { 
-              transform: scale(1.3); 
+            85% { 
+              transform: scale(1.2); 
+              opacity: 0.8; 
+            }
+            95% { 
+              transform: scale(1.1); 
               opacity: 1; 
             }
             100% { 
