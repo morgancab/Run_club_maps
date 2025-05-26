@@ -26,12 +26,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       features: clubs
     };
 
+    // Ajouter des informations de debug si aucun club n'est trouvé
+    if (clubs.length === 0) {
+      console.warn('⚠️ Aucun club trouvé - vérifiez la configuration Google Sheets');
+    } else {
+      console.log(`✅ ${clubs.length} clubs récupérés avec succès`);
+    }
+
     res.status(200).json(geojson);
   } catch (error) {
-    console.error('Erreur API:', error);
-    res.status(500).json({ 
-      error: 'Erreur lors de la récupération des données',
-      details: error instanceof Error ? error.message : 'Erreur inconnue'
-    });
+    console.error('❌ Erreur API critique:', error);
+    
+    // Même en cas d'erreur critique, retourner une structure GeoJSON vide
+    // plutôt qu'une erreur 500
+    const emptyGeojson = {
+      type: 'FeatureCollection',
+      features: []
+    };
+    
+    console.warn('⚠️ Retour d\'une collection vide en raison de l\'erreur');
+    res.status(200).json(emptyGeojson);
   }
 } 

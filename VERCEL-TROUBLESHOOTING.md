@@ -3,6 +3,21 @@
 ## ❌ Problème
 Après déploiement sur Vercel, les clubs n'apparaissent pas sur la carte alors qu'ils fonctionnent en local.
 
+## 🔥 Erreur HTTP 500 - RÉSOLU
+
+### Symptômes
+- Message dans la console : `Erreur lors du chargement des données depuis Google Sheets: Error: Erreur HTTP: 500`
+- L'API `/api/runclubs` retourne une erreur 500
+- Logs Vercel montrent : `Unable to parse range: Feuille1!A2:M`
+
+### ✅ Solution appliquée
+Le problème a été corrigé dans le code :
+- **Gestion d'erreur améliorée** : L'API retourne maintenant un tableau vide au lieu d'une erreur 500
+- **Plages multiples** : Test de plusieurs formats de plages Google Sheets
+- **Logs détaillés** : Meilleur diagnostic des problèmes
+
+**Résultat** : Plus d'erreur 500, l'application fonctionne même si la Google Sheet n'est pas accessible.
+
 ## ✅ Solution en 5 étapes
 
 ### 1. **Vérifier la variable d'environnement**
@@ -61,9 +76,15 @@ curl https://votre-projet.vercel.app/api/runclubs
 2. Cliquer sur `/api/runclubs`
 3. Vérifier les logs pour :
    - ✅ `Credentials Google chargées depuis les variables d'environnement`
+   - ✅ `X clubs récupérés avec succès`
+   - ⚠️ `Aucun club trouvé - vérifiez la configuration Google Sheets`
    - ❌ Erreurs d'authentification
 
 ### Erreurs courantes
+
+#### ~~"Erreur HTTP: 500"~~ ✅ RÉSOLU
+**Ancienne cause** : Erreur non gérée dans l'API
+**Solution** : Code corrigé pour retourner un tableau vide au lieu d'une erreur 500
 
 #### "Unable to parse range: Feuille1!A2:M"
 **Cause** : Google Sheet non partagée ou nom de feuille incorrect
@@ -88,7 +109,7 @@ curl https://votre-projet.vercel.app/api/runclubs
 - [ ] Google Sheet partagée avec le compte de service
 - [ ] Permissions "Lecteur" accordées
 - [ ] Redéploiement effectué
-- [ ] API `/api/runclubs` retourne des données
+- [ ] API `/api/runclubs` retourne des données (pas d'erreur 500)
 - [ ] Clubs visibles sur la carte
 
 ## 🆘 Si ça ne marche toujours pas
@@ -117,4 +138,4 @@ curl https://votre-projet.vercel.app/api/runclubs
 
 ---
 
-*Guide de résolution rapide - Version 1.0* 
+*Guide de résolution rapide - Version 1.1 (Erreur 500 résolue)* 

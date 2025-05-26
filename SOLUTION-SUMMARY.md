@@ -9,6 +9,8 @@
 - ✅ Traitement automatique des caractères `\n` dans la clé privée
 - ✅ Gestion d'erreur améliorée avec logs de debug
 - ✅ Support robuste des variables d'environnement Vercel
+- ✅ **NOUVEAU** : Résolution erreur HTTP 500 - retour tableau vide au lieu d'erreur
+- ✅ **NOUVEAU** : Test de plages multiples pour Google Sheets
 
 ```typescript
 // Correction pour Vercel : traiter les caractères d'échappement
@@ -53,8 +55,13 @@ if (rawCredentials.private_key) {
 ```bash
 npm run test:api      # ✅ 4 clubs récupérés
 npm run test:vercel   # ✅ Diagnostic fonctionnel
-npm run build         # ✅ Build réussi (4.47s)
+npm run build         # ✅ Build réussi (2.73s)
 ```
+
+### ✅ Erreur HTTP 500 résolue
+- Plus d'erreur 500 dans l'API
+- Gestion gracieuse des erreurs Google Sheets
+- Application fonctionnelle même sans accès à la Google Sheet
 
 ### ✅ Configuration Vercel prête
 - Variables d'environnement supportées

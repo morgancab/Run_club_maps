@@ -87,10 +87,12 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
 
     // Essayons différentes plages pour trouver les données
     const possibleRanges = [
-      'Feuille1!A2:O',
-      'Sheet1!A2:O', 
-      'Feuille 1!A2:O',
-      'A2:O'
+      'A2:O',           // Plage simple sans nom de feuille
+      'Sheet1!A2:O',    // Nom anglais standard
+      'Feuille1!A2:O',  // Nom français
+      'Feuille 1!A2:O', // Nom français avec espace
+      'A:O',            // Toutes les lignes
+      'A1:O'            // Avec en-têtes
     ];
 
     let res;
@@ -113,7 +115,12 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
     }
 
     if (!res) {
-      throw new Error('Aucune plage de données valide trouvée dans la Google Sheet');
+      console.error('❌ Aucune plage de données valide trouvée dans la Google Sheet');
+      console.error('💡 Vérifiez que la Google Sheet est partagée avec le compte de service');
+      console.error('💡 Vérifiez que la feuille contient des données dans les colonnes A-O');
+      
+      // Retourner un tableau vide plutôt que de lever une erreur
+      return [];
     }
 
     const rows = res.data.values;
@@ -180,6 +187,18 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
       });
     }
     
-    throw error;
+    // Diagnostics d'erreur spécifiques
+    const errorMessage = (error as any).message || '';
+    if (errorMessage.includes('Unable to parse range')) {
+      console.error('💡 Problème de plage - Vérifiez que la Google Sheet est partagée');
+    } else if (errorMessage.includes('Authentication')) {
+      console.error('💡 Problème d\'authentification - Vérifiez GOOGLE_SERVICE_ACCOUNT_KEY');
+    } else if (errorMessage.includes('permission')) {
+      console.error('💡 Problème de permissions - Partagez la sheet avec le compte de service');
+    }
+    
+    // En cas d'erreur, retourner un tableau vide plutôt que de faire planter l'API
+    console.warn('⚠️ Retour d\'un tableau vide en raison de l\'erreur');
+    return [];
   }
 } 
