@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/runclubs/index.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/runclubs",
+      "destination": "/api/runclubs/index.ts"
+    }
+  ]
+} 

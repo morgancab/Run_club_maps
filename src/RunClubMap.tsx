@@ -373,8 +373,14 @@ export default function RunClubMap() {
   };
 
   useEffect(() => {
-    fetch('/data/runclubs.geojson')
-      .then((res) => res.json())
+    // Utiliser l'API pour récupérer les données depuis Google Sheets
+    fetch('/api/runclubs')
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Erreur HTTP: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
         const features = data.features || [];
         setClubs(features);
@@ -382,7 +388,7 @@ export default function RunClubMap() {
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Erreur lors du chargement du GeoJSON:', error);
+        console.error('Erreur lors du chargement des données depuis Google Sheets:', error);
         setLoading(false);
       });
   }, []);
@@ -393,12 +399,156 @@ export default function RunClubMap() {
         width: '100vw', 
         height: '100vh', 
         display: 'flex', 
+        flexDirection: 'column',
         alignItems: 'center', 
         justifyContent: 'center',
-        fontSize: '18px',
-        fontFamily: 'Arial, sans-serif'
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        {t.loading}
+        {/* Particules d'arrière-plan */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(255, 107, 53, 0.05) 0%, transparent 50%)
+          `
+        }}></div>
+
+        {/* Animation de la carte qui se dessine */}
+        <div style={{
+          position: 'relative',
+          marginBottom: '40px',
+          zIndex: 2
+        }}>
+          <svg width="120" height="120" viewBox="0 0 120 120" style={{
+            filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.2))'
+          }}>
+            {/* Cercle de fond */}
+            <circle
+              cx="60"
+              cy="60"
+              r="50"
+              fill="rgba(255, 255, 255, 0.1)"
+              stroke="rgba(255, 255, 255, 0.3)"
+              strokeWidth="2"
+            />
+            
+            {/* Lignes de carte animées */}
+            <g stroke="#ff6b35" strokeWidth="3" fill="none" strokeLinecap="round">
+              <path
+                d="M 30 40 Q 60 20 90 40"
+                style={{
+                  strokeDasharray: '60',
+                  strokeDashoffset: '60',
+                  animation: 'drawPath 2s ease-in-out infinite'
+                }}
+              />
+              <path
+                d="M 25 60 Q 60 80 95 60"
+                style={{
+                  strokeDasharray: '70',
+                  strokeDashoffset: '70',
+                  animation: 'drawPath 2s ease-in-out infinite 0.5s'
+                }}
+              />
+              <path
+                d="M 35 80 Q 60 60 85 80"
+                style={{
+                  strokeDasharray: '50',
+                  strokeDashoffset: '50',
+                  animation: 'drawPath 2s ease-in-out infinite 1s'
+                }}
+              />
+            </g>
+            
+            {/* Points de clubs animés */}
+            <circle cx="45" cy="45" r="4" fill="#ff6b35" style={{
+              animation: 'pulse 1.5s ease-in-out infinite'
+            }} />
+            <circle cx="75" cy="35" r="4" fill="#ff6b35" style={{
+              animation: 'pulse 1.5s ease-in-out infinite 0.3s'
+            }} />
+            <circle cx="40" cy="75" r="4" fill="#ff6b35" style={{
+              animation: 'pulse 1.5s ease-in-out infinite 0.6s'
+            }} />
+            <circle cx="80" cy="70" r="4" fill="#ff6b35" style={{
+              animation: 'pulse 1.5s ease-in-out infinite 0.9s'
+            }} />
+          </svg>
+        </div>
+
+        {/* Texte de chargement */}
+        <div style={{
+          color: 'white',
+          fontSize: '24px',
+          fontWeight: '600',
+          marginBottom: '16px',
+          textAlign: 'center',
+          zIndex: 2
+        }}>
+          {t.loading}
+        </div>
+
+        {/* Sous-texte */}
+        <div style={{
+          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: '16px',
+          fontWeight: '400',
+          textAlign: 'center',
+          marginBottom: '40px',
+          zIndex: 2
+        }}>
+          {language === 'fr' ? 'Chargement des clubs...' : 'Loading the clubs ...'}
+        </div>
+
+        {/* Barre de progression animée */}
+        <div style={{
+          width: '300px',
+          height: '4px',
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '2px',
+          overflow: 'hidden',
+          zIndex: 2
+        }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent, #ff6b35, transparent)',
+            animation: 'loading 2s ease-in-out infinite'
+          }}></div>
+        </div>
+
+        {/* Styles CSS intégrés */}
+        <style>{`
+          @keyframes drawPath {
+            0% { stroke-dashoffset: 60; }
+            50% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -60; }
+          }
+          
+          @keyframes pulse {
+            0%, 100% { 
+              transform: scale(1); 
+              opacity: 1; 
+            }
+            50% { 
+              transform: scale(1.5); 
+              opacity: 0.7; 
+            }
+          }
+          
+          @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -467,7 +617,12 @@ export default function RunClubMap() {
   };
 
       return (
-      <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      <div style={{ 
+        width: '100vw', 
+        height: '100vh', 
+        position: 'relative',
+        animation: 'fadeIn 0.8s ease-out'
+      }}>
         {/* Titre du site en haut à droite */}
         <div style={{
           position: 'absolute',
@@ -891,6 +1046,52 @@ export default function RunClubMap() {
                 {/* Markers avec clustering personnalisé */}
         <ClusteredMarkers clubs={clubs} getClubText={getClubText} t={t} />
       </MapContainer>
+
+      {/* Styles CSS globaux pour les animations */}
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        /* Animation pour les marqueurs qui apparaissent */
+        .custom-club-icon {
+          animation: markerAppear 0.6s ease-out;
+        }
+        
+        @keyframes markerAppear {
+          from {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        /* Animation pour les clusters */
+        .custom-cluster-icon {
+          animation: clusterAppear 0.4s ease-out;
+        }
+        
+        @keyframes clusterAppear {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 } 

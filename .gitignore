@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Google Service Account Keys
+keys/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
