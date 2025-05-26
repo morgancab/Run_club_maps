@@ -92,11 +92,23 @@ Run_club_maps/
 
 ## 🚀 Déploiement
 
-Le projet est configuré pour Vercel avec l'API serverless intégrée.
+### Configuration Vercel
 
-```bash
-vercel --prod
-```
+1. **Variables d'environnement**
+   - Aller dans les paramètres de votre projet Vercel
+   - Ajouter la variable : `GOOGLE_SERVICE_ACCOUNT_KEY`
+   - Valeur : Le contenu JSON complet de votre clé de service Google
+
+2. **Déploiement**
+   ```bash
+   vercel --prod
+   ```
+
+### Variables d'environnement requises
+
+- `GOOGLE_SERVICE_ACCOUNT_KEY` : Clé de service Google au format JSON
+  
+Voir `env.example` pour un exemple de configuration.
 
 ---
 

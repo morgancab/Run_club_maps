@@ -29,10 +29,25 @@ interface RunClubFeature {
   };
 }
 
+// Configuration d'authentification Google
+let credentials;
+
+if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+  // En production (Vercel), utiliser la variable d'environnement
+  credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+} else {
+  // En développement local, utiliser le fichier
+  try {
+    credentials = JSON.parse(
+      readFileSync(path.join(process.cwd(), 'keys/google-service-account.json'), 'utf8')
+    );
+  } catch (error) {
+    throw new Error('Clé de service Google non trouvée. Vérifiez le fichier keys/google-service-account.json ou la variable d\'environnement GOOGLE_SERVICE_ACCOUNT_KEY');
+  }
+}
+
 const auth = new GoogleAuth({
-  credentials: JSON.parse(
-    readFileSync(path.join(process.cwd(), 'keys/google-service-account.json'), 'utf8')
-  ),
+  credentials,
   scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
 });
 
