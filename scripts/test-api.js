@@ -1,9 +1,25 @@
 // Script de test pour vérifier l'API Google Sheets
+const https = require('https');
+const http = require('http');
+
 async function testAPI() {
   try {
     console.log('🧪 Test de l\'API Google Sheets...');
     
-    const response = await fetch('http://localhost:3001/api/runclubs');
+    const response = await new Promise((resolve, reject) => {
+      const req = http.get('http://localhost:3001/api/runclubs', (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            json: () => Promise.resolve(JSON.parse(data))
+          });
+        });
+      });
+      req.on('error', reject);
+    });
     
     if (!response.ok) {
       throw new Error(`Erreur HTTP: ${response.status}`);

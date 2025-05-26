@@ -2,7 +2,6 @@
   "name": "run-club-maps",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"vite\" --names \"API,VITE\" --prefix-colors \"blue,green\"",
     "dev:frontend": "vite",

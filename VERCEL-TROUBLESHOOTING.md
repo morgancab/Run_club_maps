@@ -18,6 +18,24 @@ Le problème a été corrigé dans le code :
 
 **Résultat** : Plus d'erreur 500, l'application fonctionne même si la Google Sheet n'est pas accessible.
 
+## 🔧 Erreur ES modules - RÉSOLU
+
+### Symptômes
+```
+ReferenceError: exports is not defined in ES module scope
+This file is being treated as an ES module because it has a '.js' file extension and '/var/task/package.json' contains "type": "module".
+```
+
+### ✅ Solution appliquée
+- **Suppression de "type": "module"** du package.json
+- **Configuration Vercel spécifique** pour les fonctions API
+- **Runtime Node.js 20.x** configuré
+- **Imports corrigés** avec extensions .js
+
+**Résultat** : Plus d'erreur ES modules, API Vercel fonctionnelle.
+
+📚 **Guide détaillé** : Voir `VERCEL-ES-MODULES-FIX.md`
+
 ## ✅ Solution en 5 étapes
 
 ### 1. **Vérifier la variable d'environnement**
