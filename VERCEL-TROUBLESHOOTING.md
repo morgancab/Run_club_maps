@@ -36,6 +36,23 @@ This file is being treated as an ES module because it has a '.js' file extension
 
 📚 **Guide détaillé** : Voir `VERCEL-ES-MODULES-FIX.md`
 
+## 🔄 Erreur ES modules API - RÉSOLU
+
+### Symptômes
+```
+SyntaxError: Cannot use import statement outside a module
+    at internalCompileFunction (node:internal/vm:76:18)
+```
+
+### ✅ Solution appliquée
+- **Package.json API spécifique** : `api/package.json` avec `"type": "module"`
+- **Runtime Vercel mis à jour** : `@vercel/node@3.2.0`
+- **Configuration isolée** : API en ES modules, projet principal en CommonJS
+
+**Résultat** : Fonctions API compilées correctement avec support ES modules.
+
+📚 **Guide détaillé** : Voir `VERCEL-ES-MODULES-API-FIX.md`
+
 ## ⚙️ Erreur Runtime Vercel - RÉSOLU
 
 ### Symptômes
