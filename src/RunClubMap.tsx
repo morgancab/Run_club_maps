@@ -407,7 +407,7 @@ export default function RunClubMap() {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Particules d'arrière-plan */}
+        {/* Particules d'arrière-plan animées */}
         <div style={{
           position: 'absolute',
           top: 0,
@@ -415,138 +415,324 @@ export default function RunClubMap() {
           width: '100%',
           height: '100%',
           background: `
-            radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.15) 0%, transparent 50%),
             radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(255, 107, 53, 0.05) 0%, transparent 50%)
+            radial-gradient(circle at 40% 40%, rgba(255, 107, 53, 0.08) 0%, transparent 50%)
           `
         }}></div>
 
-        {/* Animation de la carte qui se dessine */}
+        {/* Piste de course circulaire avec coureurs */}
         <div style={{
           position: 'relative',
           marginBottom: '40px',
           zIndex: 2
         }}>
-          <svg width="120" height="120" viewBox="0 0 120 120" style={{
-            filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.2))'
+          <svg width="160" height="160" viewBox="0 0 160 160" style={{
+            filter: 'drop-shadow(0 15px 35px rgba(0,0,0,0.2))'
           }}>
-            {/* Cercle de fond */}
+            {/* Piste de course (cercle extérieur) */}
             <circle
-              cx="60"
-              cy="60"
-              r="50"
-              fill="rgba(255, 255, 255, 0.1)"
+              cx="80"
+              cy="80"
+              r="65"
+              fill="none"
               stroke="rgba(255, 255, 255, 0.3)"
-              strokeWidth="2"
+              strokeWidth="8"
+              strokeDasharray="10 5"
+              style={{
+                animation: 'rotateDash 3s linear infinite'
+              }}
             />
             
-            {/* Lignes de carte animées */}
-            <g stroke="#ff6b35" strokeWidth="3" fill="none" strokeLinecap="round">
-              <path
-                d="M 30 40 Q 60 20 90 40"
-                style={{
-                  strokeDasharray: '60',
-                  strokeDashoffset: '60',
-                  animation: 'drawPath 2s ease-in-out infinite'
-                }}
-              />
-              <path
-                d="M 25 60 Q 60 80 95 60"
-                style={{
-                  strokeDasharray: '70',
-                  strokeDashoffset: '70',
-                  animation: 'drawPath 2s ease-in-out infinite 0.5s'
-                }}
-              />
-              <path
-                d="M 35 80 Q 60 60 85 80"
-                style={{
-                  strokeDasharray: '50',
-                  strokeDashoffset: '50',
-                  animation: 'drawPath 2s ease-in-out infinite 1s'
-                }}
-              />
+            {/* Piste intérieure */}
+            <circle
+              cx="80"
+              cy="80"
+              r="50"
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.2)"
+              strokeWidth="4"
+              strokeDasharray="5 3"
+              style={{
+                animation: 'rotateDash 4s linear infinite reverse'
+              }}
+            />
+
+            {/* Coureur 1 - Principal */}
+            <g style={{
+              animation: 'runAroundTrack 3s linear infinite',
+              transformOrigin: '80px 80px'
+            }}>
+              <g transform="translate(145, 80)">
+                <circle cx="0" cy="0" r="8" fill="#ff6b35" />
+                <text x="0" y="2" textAnchor="middle" fontSize="10" fill="white">🏃‍♂️</text>
+              </g>
             </g>
+
+            {/* Coureur 2 - Suiveur */}
+            <g style={{
+              animation: 'runAroundTrack 3s linear infinite',
+              animationDelay: '-1s',
+              transformOrigin: '80px 80px'
+            }}>
+              <g transform="translate(145, 80)">
+                <circle cx="0" cy="0" r="7" fill="#f7931e" />
+                <text x="0" y="2" textAnchor="middle" fontSize="9" fill="white">🏃‍♀️</text>
+              </g>
+            </g>
+
+            {/* Coureur 3 - Troisième */}
+            <g style={{
+              animation: 'runAroundTrack 3s linear infinite',
+              animationDelay: '-2s',
+              transformOrigin: '80px 80px'
+            }}>
+              <g transform="translate(145, 80)">
+                <circle cx="0" cy="0" r="6" fill="#4CAF50" />
+                <text x="0" y="2" textAnchor="middle" fontSize="8" fill="white">🏃</text>
+              </g>
+            </g>
+
+            {/* Logo central avec pulsation */}
+            <circle
+              cx="80"
+              cy="80"
+              r="25"
+              fill="rgba(255, 107, 53, 0.2)"
+              style={{
+                animation: 'pulse 2s ease-in-out infinite'
+              }}
+            />
             
-            {/* Points de clubs animés */}
-            <circle cx="45" cy="45" r="4" fill="#ff6b35" style={{
-              animation: 'pulse 1.5s ease-in-out infinite'
+            {/* Icône de carte au centre */}
+            <text x="80" y="88" textAnchor="middle" fontSize="24" fill="#ff6b35">
+              🗺️
+            </text>
+
+            {/* Points de clubs qui apparaissent */}
+            <circle cx="110" cy="50" r="3" fill="#ff6b35" style={{
+              animation: 'popIn 2s ease-in-out infinite'
             }} />
-            <circle cx="75" cy="35" r="4" fill="#ff6b35" style={{
-              animation: 'pulse 1.5s ease-in-out infinite 0.3s'
+            <circle cx="50" cy="110" r="3" fill="#ff6b35" style={{
+              animation: 'popIn 2s ease-in-out infinite 0.5s'
             }} />
-            <circle cx="40" cy="75" r="4" fill="#ff6b35" style={{
-              animation: 'pulse 1.5s ease-in-out infinite 0.6s'
+            <circle cx="110" cy="110" r="3" fill="#ff6b35" style={{
+              animation: 'popIn 2s ease-in-out infinite 1s'
             }} />
-            <circle cx="80" cy="70" r="4" fill="#ff6b35" style={{
-              animation: 'pulse 1.5s ease-in-out infinite 0.9s'
+            <circle cx="50" cy="50" r="3" fill="#ff6b35" style={{
+              animation: 'popIn 2s ease-in-out infinite 1.5s'
             }} />
           </svg>
         </div>
 
-        {/* Texte de chargement */}
+        {/* Texte de chargement avec animation */}
         <div style={{
           color: 'white',
-          fontSize: '24px',
-          fontWeight: '600',
-          marginBottom: '16px',
+          fontSize: '28px',
+          fontWeight: '700',
+          marginBottom: '12px',
           textAlign: 'center',
-          zIndex: 2
+          zIndex: 2,
+          animation: 'fadeInUp 0.8s ease-out'
         }}>
           {t.loading}
         </div>
 
-        {/* Sous-texte */}
+        {/* Sous-texte avec émojis animés */}
         <div style={{
-          color: 'rgba(255, 255, 255, 0.8)',
-          fontSize: '16px',
-          fontWeight: '400',
+          color: 'rgba(255, 255, 255, 0.9)',
+          fontSize: '18px',
+          fontWeight: '500',
           textAlign: 'center',
           marginBottom: '40px',
-          zIndex: 2
+          zIndex: 2,
+          animation: 'fadeInUp 0.8s ease-out 0.2s both'
         }}>
-          {language === 'fr' ? 'Chargement des clubs...' : 'Loading the clubs ...'}
+          <span style={{ animation: 'bounce 1s ease-in-out infinite' }}>🏃‍♂️</span>
+          {' '}
+          {language === 'fr' ? 'Recherche des clubs de running...' : 'Finding running clubs...'}
+          {' '}
+          <span style={{ animation: 'bounce 1s ease-in-out infinite 0.5s' }}>🏃‍♀️</span>
         </div>
 
-        {/* Barre de progression animée */}
+        {/* Barre de progression avec style running */}
         <div style={{
-          width: '300px',
-          height: '4px',
+          width: '320px',
+          height: '6px',
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          borderRadius: '2px',
+          borderRadius: '3px',
           overflow: 'hidden',
-          zIndex: 2
+          zIndex: 2,
+          position: 'relative',
+          animation: 'fadeInUp 0.8s ease-out 0.4s both'
         }}>
           <div style={{
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(90deg, transparent, #ff6b35, transparent)',
-            animation: 'loading 2s ease-in-out infinite'
+            background: 'linear-gradient(90deg, transparent, #ff6b35, #f7931e, #ff6b35, transparent)',
+            animation: 'runningProgress 2.5s ease-in-out infinite'
           }}></div>
+          
+          {/* Petit coureur qui court sur la barre */}
+          <div style={{
+            position: 'absolute',
+            top: '-8px',
+            left: '0',
+            fontSize: '16px',
+            animation: 'runnerProgress 2.5s ease-in-out infinite'
+          }}>
+            🏃‍♂️
+          </div>
         </div>
 
-        {/* Styles CSS intégrés */}
+        {/* Statistiques animées */}
+        <div style={{
+          display: 'flex',
+          gap: '30px',
+          marginTop: '30px',
+          zIndex: 2,
+          animation: 'fadeInUp 0.8s ease-out 0.6s both'
+        }}>
+          <div style={{
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.8)'
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#ff6b35',
+              animation: 'countUp 2s ease-out infinite'
+            }}>
+              🏃‍♂️
+            </div>
+            <div style={{ fontSize: '12px', marginTop: '4px' }}>
+              {language === 'fr' ? 'Clubs' : 'Clubs'}
+            </div>
+          </div>
+          
+          <div style={{
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.8)'
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#f7931e',
+              animation: 'countUp 2s ease-out infinite 0.3s'
+            }}>
+              🗺️
+            </div>
+            <div style={{ fontSize: '12px', marginTop: '4px' }}>
+              {language === 'fr' ? 'Carte' : 'Map'}
+            </div>
+          </div>
+          
+          <div style={{
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.8)'
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#4CAF50',
+              animation: 'countUp 2s ease-out infinite 0.6s'
+            }}>
+              👥
+            </div>
+            <div style={{ fontSize: '12px', marginTop: '4px' }}>
+              {language === 'fr' ? 'Communauté' : 'Community'}
+            </div>
+          </div>
+        </div>
+
+        {/* Styles CSS intégrés pour les animations running */}
         <style>{`
-          @keyframes drawPath {
-            0% { stroke-dashoffset: 60; }
-            50% { stroke-dashoffset: 0; }
-            100% { stroke-dashoffset: -60; }
+          @keyframes runAroundTrack {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          
+          @keyframes rotateDash {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: 15; }
           }
           
           @keyframes pulse {
             0%, 100% { 
               transform: scale(1); 
-              opacity: 1; 
+              opacity: 0.8; 
             }
             50% { 
-              transform: scale(1.5); 
-              opacity: 0.7; 
+              transform: scale(1.1); 
+              opacity: 1; 
             }
           }
           
-          @keyframes loading {
+          @keyframes popIn {
+            0%, 80% { 
+              transform: scale(0); 
+              opacity: 0; 
+            }
+            90% { 
+              transform: scale(1.3); 
+              opacity: 1; 
+            }
+            100% { 
+              transform: scale(1); 
+              opacity: 1; 
+            }
+          }
+          
+          @keyframes runningProgress {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
+          }
+          
+          @keyframes runnerProgress {
+            0% { 
+              transform: translateX(0); 
+              left: 0;
+            }
+            50% { 
+              transform: translateX(0) scaleX(-1); 
+              left: calc(100% - 16px);
+            }
+            100% { 
+              transform: translateX(0); 
+              left: 0;
+            }
+          }
+          
+          @keyframes bounce {
+            0%, 100% { 
+              transform: translateY(0); 
+            }
+            50% { 
+              transform: translateY(-8px); 
+            }
+          }
+          
+          @keyframes fadeInUp {
+            0% { 
+              opacity: 0; 
+              transform: translateY(30px); 
+            }
+            100% { 
+              opacity: 1; 
+              transform: translateY(0); 
+            }
+          }
+          
+          @keyframes countUp {
+            0%, 70% { 
+              transform: scale(1); 
+            }
+            85% { 
+              transform: scale(1.2); 
+            }
+            100% { 
+              transform: scale(1); 
+            }
           }
         `}</style>
       </div>
