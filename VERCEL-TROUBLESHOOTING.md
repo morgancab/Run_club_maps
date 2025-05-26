@@ -53,6 +53,40 @@ SyntaxError: Cannot use import statement outside a module
 
 📚 **Guide détaillé** : Voir `VERCEL-ES-MODULES-API-FIX.md`
 
+## 📦 Erreur Export ES modules - RÉSOLU
+
+### Symptômes
+```
+SyntaxError: The requested module '../../lib/fetchSheet.js' does not provide an export named 'fetchRunClubs'
+```
+
+### ✅ Solution appliquée
+- **Configuration lib ES modules** : `lib/package.json` avec `"type": "module"`
+- **Import corrigé** : Suppression de l'extension `.js`
+- **Structure modulaire** : Isolation des configurations par dossier
+
+**Résultat** : Import/export ES modules fonctionnel entre API et lib.
+
+📚 **Guide détaillé** : Voir `VERCEL-EXPORT-ERROR-FIX.md`
+
+## 🌐 Erreur "exports is not defined" - RÉSOLU
+
+### Symptômes
+```
+ReferenceError: exports is not defined in ES module scope
+This file is being treated as an ES module because it has a '.js' file extension and '/var/task/package.json' contains "type": "module".
+```
+
+### ✅ Solution appliquée
+- **Configuration ES modules globale** : `"type": "module"` dans package.json racine
+- **Suppression configurations locales** : Suppression des package.json des sous-dossiers
+- **Scripts convertis** : Conversion de tous les scripts en ES modules
+- **Import avec extension** : Utilisation de `.js` dans les imports
+
+**Résultat** : Configuration ES modules cohérente et compatible Vercel.
+
+📚 **Guide détaillé** : Voir `VERCEL-ES-MODULES-GLOBAL-FIX.md`
+
 ## ⚙️ Erreur Runtime Vercel - RÉSOLU
 
 ### Symptômes

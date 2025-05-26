@@ -39,6 +39,13 @@
 }
 ```
 
+### `lib/package.json` (nouveau)
+```json
+{
+  "type": "module"
+}
+```
+
 ### `api/tsconfig.json` (maintenu)
 ```json
 {
@@ -83,7 +90,8 @@ project/
 │   └── runclubs/
 │       └── index.ts          # Imports ES modules ✅
 ├── lib/
-│   └── fetchSheet.ts         # Imports ES modules ✅
+│   ├── package.json          # ES modules ("type": "module")
+│   └── fetchSheet.ts         # Exports ES modules ✅
 └── vercel.json               # Runtime @vercel/node@3.2.0
 ```
 

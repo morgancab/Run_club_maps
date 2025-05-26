@@ -1,6 +1,6 @@
 // Script de test pour vérifier l'API Google Sheets
-const https = require('https');
-const http = require('http');
+import https from 'https';
+import http from 'http';
 
 async function testAPI() {
   try {

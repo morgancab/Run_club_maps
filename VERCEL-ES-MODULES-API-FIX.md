@@ -14,8 +14,8 @@ SyntaxError: Cannot use import statement outside a module
 
 ## ✅ Solutions appliquées
 
-### 1. **Package.json spécifique pour les API**
-Création de `api/package.json` :
+### 1. **Package.json spécifique pour les modules**
+Création de `api/package.json` et `lib/package.json` :
 ```json
 {
   "type": "module"
@@ -52,7 +52,8 @@ Le fichier `api/tsconfig.json` reste :
 ### Hiérarchie des configurations
 1. **Racine** : `package.json` sans `"type": "module"` (pour compatibilité générale)
 2. **API** : `api/package.json` avec `"type": "module"` (pour les fonctions)
-3. **Runtime** : `@vercel/node@3.2.0` (support ES modules amélioré)
+3. **Lib** : `lib/package.json` avec `"type": "module"` (pour les utilitaires)
+4. **Runtime** : `@vercel/node@3.2.0` (support ES modules amélioré)
 
 ### Pourquoi cette approche ?
 - ✅ **Isolation** : Les API ont leur propre configuration modules
@@ -76,6 +77,9 @@ project/
 │   ├── tsconfig.json     # Configuration ES modules
 │   └── runclubs/
 │       └── index.ts      # Imports ES modules
+├── lib/
+│   ├── package.json      # Avec "type": "module"
+│   └── fetchSheet.ts     # Exports ES modules
 └── vercel.json           # Runtime @vercel/node@3.2.0
 ```
 
@@ -83,8 +87,8 @@ project/
 
 1. **Commit des changements** :
    ```bash
-   git add api/package.json vercel.json
-   git commit -m "fix: add ES modules support for API functions"
+   git add api/package.json lib/package.json vercel.json api/runclubs/index.ts
+   git commit -m "fix: add ES modules support for API and lib functions"
    git push origin main
    ```
 
