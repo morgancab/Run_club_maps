@@ -34,14 +34,29 @@ let credentials;
 
 if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
   // En production (Vercel), utiliser la variable d'environnement
-  credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+  try {
+    const rawCredentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+    
+    // Correction pour Vercel : traiter les caractères d'échappement dans la clé privée
+    if (rawCredentials.private_key) {
+      rawCredentials.private_key = rawCredentials.private_key.replace(/\\n/g, '\n');
+    }
+    
+    credentials = rawCredentials;
+    console.log('✅ Credentials Google chargées depuis les variables d\'environnement');
+  } catch (error) {
+    console.error('❌ Erreur lors du parsing des credentials Google:', error);
+    throw new Error('Format invalide pour GOOGLE_SERVICE_ACCOUNT_KEY. Vérifiez que c\'est un JSON valide.');
+  }
 } else {
   // En développement local, utiliser le fichier
   try {
     credentials = JSON.parse(
       readFileSync(path.join(process.cwd(), 'keys/google-service-account.json'), 'utf8')
     );
+    console.log('✅ Credentials Google chargées depuis le fichier local');
   } catch (error) {
+    console.error('❌ Erreur lors du chargement du fichier de credentials:', error);
     throw new Error('Clé de service Google non trouvée. Vérifiez le fichier keys/google-service-account.json ou la variable d\'environnement GOOGLE_SERVICE_ACCOUNT_KEY');
   }
 }
@@ -53,6 +68,7 @@ const auth = new GoogleAuth({
 
 export async function fetchRunClubs(): Promise<RunClubFeature[]> {
   try {
+    console.log('🔐 Initialisation de l\'authentification Google...');
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: 'v4', auth: authClient as any });
 
@@ -153,7 +169,17 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
       };
     }).filter(Boolean) as RunClubFeature[]; // Filtrer les entrées nulles
   } catch (error) {
-    console.error('Erreur lors de la récupération des données Google Sheets:', error);
+    console.error('❌ Erreur lors de la récupération des données Google Sheets:', error);
+    
+    // Informations de debug pour Vercel
+    if (process.env.NODE_ENV === 'production') {
+      console.error('🔍 Debug Vercel - Variables d\'environnement disponibles:', {
+        hasGoogleKey: !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
+        nodeEnv: process.env.NODE_ENV,
+        vercelEnv: process.env.VERCEL_ENV
+      });
+    }
+    
     throw error;
   }
 } 

@@ -86,20 +86,31 @@ Run_club_maps/
 - `npm run dev:frontend` - Frontend seul
 - `npm run dev:api` - API seule
 - `npm run test:api` - Test de l'API Google Sheets
+- `npm run test:vercel` - Test de configuration Vercel
 - `npm run build` - Build de production
 - `npm run preview` - Aperçu du build
 - `npm run lint` - Vérification du code
 
 ## 🚀 Déploiement
 
+### ⚠️ Problème courant : Clubs invisibles sur Vercel
+
+Si après déploiement les clubs n'apparaissent pas, consultez le **[Guide de résolution rapide](./VERCEL-TROUBLESHOOTING.md)**.
+
 ### Configuration Vercel
 
-1. **Variables d'environnement**
+1. **Test de configuration**
+   ```bash
+   npm run test:vercel
+   ```
+
+2. **Variables d'environnement**
    - Aller dans les paramètres de votre projet Vercel
    - Ajouter la variable : `GOOGLE_SERVICE_ACCOUNT_KEY`
    - Valeur : Le contenu JSON complet de votre clé de service Google
+   - Environnements : Production, Preview, Development
 
-2. **Déploiement**
+3. **Déploiement**
    ```bash
    vercel --prod
    ```
@@ -108,7 +119,7 @@ Run_club_maps/
 
 - `GOOGLE_SERVICE_ACCOUNT_KEY` : Clé de service Google au format JSON
   
-Voir `env.example` pour un exemple de configuration.
+Voir `env.example` pour un exemple de configuration détaillé.
 
 ---
 
