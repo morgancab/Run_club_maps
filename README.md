@@ -43,7 +43,7 @@ La Google Sheet doit avoir cette structure (colonnes A-O) :
 
 | A | B | C | D | E | F | G | H | I | J | K | L | M | N | O |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| name | city | frequency | frequency_en | description | description_en | image | **latitude** | **longitude** | instagram | facebook | website | tiktok | linkedin | - |
+| name | city | frequency | frequency_en | description | description_en | image | **latitude** | **longitude** | instagram | facebook | website | tiktok | whatsapp | strava |
 
 **Important :** Les coordonnées sont en colonnes H (latitude) et I (longitude).
 

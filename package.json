@@ -8,6 +8,8 @@
     "dev:frontend": "vite",
     "dev:api": "npx tsx scripts/dev-server.ts",
     "test:api": "node scripts/test-api.js",
+    "test:api:detailed": "node scripts/test-api-detailed.js",
+    "test:fetchsheet": "npx tsx scripts/test-fetchsheet-direct.js",
     "test:vercel": "node scripts/test-vercel-config.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

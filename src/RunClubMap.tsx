@@ -23,7 +23,8 @@ interface RunClubFeature {
       instagram?: string;
       facebook?: string;
       tiktok?: string;
-      linkedin?: string;
+      whatsapp?: string;
+      strava?: string;
     };
     // Traductions optionnelles
     name_en?: string;
@@ -198,7 +199,8 @@ function ClusteredMarkers({ clubs, getClubText, t }: {
                 ${club.properties.social.instagram ? `<a href="${club.properties.social.instagram}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #E4405F; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #fdf2f8; border-radius: 12px; border: 1px solid #E4405F;">📷 Instagram</a>` : ''}
                 ${club.properties.social.facebook ? `<a href="${club.properties.social.facebook}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #1877F2; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #eff6ff; border-radius: 12px; border: 1px solid #1877F2;">📘 Facebook</a>` : ''}
                 ${club.properties.social.tiktok ? `<a href="${club.properties.social.tiktok}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #000000; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #f9fafb; border-radius: 12px; border: 1px solid #000000;">🎵 TikTok</a>` : ''}
-                ${club.properties.social.linkedin ? `<a href="${club.properties.social.linkedin}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #0A66C2; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #eff6ff; border-radius: 12px; border: 1px solid #0A66C2;">💼 LinkedIn</a>` : ''}
+                ${club.properties.social.whatsapp ? `<a href="${club.properties.social.whatsapp}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #25D366; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #f0fdf4; border-radius: 12px; border: 1px solid #25D366;">💬 WhatsApp</a>` : ''}
+                ${club.properties.social.strava ? `<a href="${club.properties.social.strava}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #FC4C02; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #fff7ed; border-radius: 12px; border: 1px solid #FC4C02;">🏃 Strava</a>` : ''}
               </div>
             </div>
           ` : ''}

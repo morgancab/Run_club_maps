@@ -22,7 +22,8 @@ interface RunClubFeature {
       instagram?: string;
       facebook?: string;
       tiktok?: string;
-      linkedin?: string;
+      whatsapp?: string;
+      strava?: string;
     };
     // Traductions optionnelles
     name_en?: string;
@@ -149,6 +150,10 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
       }
 
       console.log(`✅ Ligne ${index + 2}: ${row[0]} à [${longitude}, ${latitude}]`);
+      console.log(`🔍 Debug colonnes (${row.length} colonnes):`, {
+        'N (13)': row[13] || 'vide',
+        'O (14)': row[14] || 'vide'
+      });
 
       return {
         type: 'Feature' as const,
@@ -169,8 +174,9 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
             website: row[11] || '',     // L: website
             instagram: row[9] || '',    // J: instagram
             facebook: row[10] || '',    // K: facebook
-            linkedin: row[13] || '',    // N: linkedin
-            tiktok: row[12] || ''       // M: tiktok
+            tiktok: row[12] || '',      // M: tiktok
+            whatsapp: row[13] || '',    // N: whatsapp
+            strava: row[14] || ''       // O: strava
           },
         },
       };
