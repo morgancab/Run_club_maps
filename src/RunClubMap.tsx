@@ -302,6 +302,21 @@ const translations = {
     allCities: 'Toutes',
     clear: 'Effacer',
     search: 'Rechercher un club...',
+    addClub: 'Suggérer un club',
+    addClubTooltip: 'Vous connaissez un club qui devrait apparaître sur la carte ?',
+    info: 'En savoir plus',
+    aboutProject: 'À propos du projet',
+    projectDescription: 'Social Run Club est une carte interactive collaborative qui référence les clubs de running en France.',
+    projectGoal: 'Notre objectif est de créer une communauté où chacun peut découvrir et partager des clubs de course près de chez soi.',
+    howItWorks: 'Comment ça marche ?',
+    step1: '🗺️ Explorez la carte pour découvrir les clubs',
+    step2: '🔍 Utilisez les filtres pour affiner votre recherche',
+    step3: '📍 Cliquez sur un marqueur pour voir les détails',
+    step4: '➕ Suggérez de nouveaux clubs via notre formulaire',
+    contribute: 'Contribuer au projet',
+    contributeText: 'Vous connaissez un club qui n\'est pas encore référencé ? Aidez-nous à enrichir la carte !',
+    suggestClub: 'Suggérer un club',
+    close: 'Fermer',
     noClubsFound: 'Aucun club trouvé',
     tryModifyFilters: 'Essayez de modifier vos filtres ou votre recherche',
     clickToLocate: 'Cliquer pour localiser',
@@ -331,6 +346,21 @@ const translations = {
     allCities: 'All',
     clear: 'Clear',
     search: 'Search for a club...',
+    addClub: 'Suggest a club',
+    addClubTooltip: 'Know a club that should appear on the map?',
+    info: 'Learn more',
+    aboutProject: 'About the project',
+    projectDescription: 'Social Run Club is a collaborative interactive map that references running clubs in France.',
+    projectGoal: 'Our goal is to create a community where everyone can discover and share running clubs near them.',
+    howItWorks: 'How it works?',
+    step1: '🗺️ Explore the map to discover clubs',
+    step2: '🔍 Use filters to refine your search',
+    step3: '📍 Click on a marker to see details',
+    step4: '➕ Suggest new clubs via our form',
+    contribute: 'Contribute to the project',
+    contributeText: 'Know a club that isn\'t listed yet? Help us enrich the map!',
+    suggestClub: 'Suggest a club',
+    close: 'Close',
     noClubsFound: 'No clubs found',
     tryModifyFilters: 'Try modifying your filters or search',
     clickToLocate: 'Click to locate',
@@ -365,6 +395,7 @@ export default function RunClubMap() {
   const [language, setLanguage] = useState<Language>('fr');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
   const mapRef = useRef<any>(null);
 
   // Hook pour détecter les changements de taille d'écran
@@ -1009,6 +1040,52 @@ export default function RunClubMap() {
               🇬🇧 EN
             </button>
           </div>
+
+          {/* Bouton d'information amélioré */}
+          <button
+            onClick={() => setShowInfoPopup(true)}
+            title={t.info}
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '2px solid #ff6b35',
+              borderRadius: '12px',
+              width: '40px',
+              height: '40px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(255, 107, 53, 0.2)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '18px',
+              color: '#ff6b35',
+              fontWeight: 'bold',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#ff6b35';
+              e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.4)';
+              e.currentTarget.style.color = 'white';
+              e.currentTarget.style.borderColor = '#ff6b35';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.2)';
+              e.currentTarget.style.color = '#ff6b35';
+              e.currentTarget.style.borderColor = '#ff6b35';
+            }}
+          >
+            <span style={{
+              display: 'inline-block',
+              transition: 'transform 0.3s ease'
+            }}>
+              ℹ️
+            </span>
+          </button>
         </div>
 
         {/* Bouton pour ouvrir/fermer l'overlay */}
@@ -1407,6 +1484,293 @@ export default function RunClubMap() {
         <ClusteredMarkers clubs={clubs} getClubText={getClubText} t={t} selectedClubId={selectedClubId} />
       </MapContainer>
 
+      {/* Popup d'information sur le projet */}
+      {showInfoPopup && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            boxSizing: 'border-box'
+          }}
+          onClick={(e) => {
+            // Fermer le popup si on clique sur l'arrière-plan (pas sur le contenu)
+            if (e.target === e.currentTarget) {
+              setShowInfoPopup(false);
+            }
+          }}
+        >
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            maxWidth: isMobile ? '100%' : '500px',
+            width: '100%',
+            maxHeight: isMobile ? '90vh' : '80vh',
+            overflow: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+            position: 'relative'
+          }}>
+                         {/* Header du popup amélioré */}
+             <div style={{
+               background: `
+                 linear-gradient(135deg, rgba(255, 107, 53, 0.85) 0%, rgba(247, 147, 30, 0.85) 50%, rgba(255, 140, 66, 0.85) 100%),
+                 url('/header-background.jpg') center/cover no-repeat
+               `,
+               color: 'white',
+               padding: '32px 24px',
+               borderRadius: '16px 16px 0 0',
+               position: 'relative',
+               overflow: 'hidden'
+             }}>
+               {/* Motif d'arrière-plan décoratif */}
+               <div style={{
+                 position: 'absolute',
+                 top: '-50%',
+                 right: '-20%',
+                 width: '200px',
+                 height: '200px',
+                 background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+                 borderRadius: '50%'
+               }}></div>
+               <div style={{
+                 position: 'absolute',
+                 bottom: '-30%',
+                 left: '-10%',
+                 width: '150px',
+                 height: '150px',
+                 background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
+                 borderRadius: '50%'
+               }}></div>
+
+               <button
+                 onClick={() => setShowInfoPopup(false)}
+                 style={{
+                   position: 'absolute',
+                   top: '20px',
+                   right: '20px',
+                   background: 'rgba(255, 255, 255, 0.15)',
+                   backdropFilter: 'blur(10px)',
+                   border: '1px solid rgba(255, 255, 255, 0.2)',
+                   borderRadius: '12px',
+                   width: '36px',
+                   height: '36px',
+                   color: 'white',
+                   fontSize: '16px',
+                   cursor: 'pointer',
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   transition: 'all 0.3s ease',
+                   fontWeight: 'bold',
+                   zIndex: 10
+                 }}
+                 onMouseEnter={(e) => {
+                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
+                   e.currentTarget.style.transform = 'scale(1.1)';
+                   e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                 }}
+                 onMouseLeave={(e) => {
+                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+                   e.currentTarget.style.transform = 'scale(1)';
+                   e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                 }}
+               >
+                 ✕
+               </button>
+               
+               <div style={{
+                 position: 'relative',
+                 zIndex: 5,
+                 marginBottom: '12px'
+               }}>
+                 <h2 style={{
+                   margin: '0 0 12px 0',
+                   fontSize: '28px',
+                   fontWeight: '800',
+                   letterSpacing: '-0.5px',
+                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                 }}>
+                   Social Run Club
+                 </h2>
+                 <div style={{
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: '8px'
+                 }}>
+                   <div style={{
+                     width: '4px',
+                     height: '4px',
+                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                     borderRadius: '50%'
+                   }}></div>
+                   <p style={{
+                     margin: '0',
+                     fontSize: '16px',
+                     opacity: 0.95,
+                     fontWeight: '500',
+                     letterSpacing: '0.3px'
+                   }}>
+                     {t.aboutProject}
+                   </p>
+                 </div>
+               </div>
+
+               {/* Indicateur de scroll décoratif */}
+               <div style={{
+                 position: 'absolute',
+                 bottom: '0',
+                 left: '50%',
+                 transform: 'translateX(-50%)',
+                 width: '40px',
+                 height: '4px',
+                 background: 'rgba(255, 255, 255, 0.3)',
+                 borderRadius: '2px 2px 0 0'
+               }}></div>
+             </div>
+
+            {/* Contenu du popup */}
+            <div style={{ padding: '24px' }}>
+              {/* Description du projet */}
+              <div style={{ marginBottom: '24px' }}>
+                <p style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '16px',
+                  lineHeight: '1.6',
+                  color: '#333'
+                }}>
+                  {t.projectDescription}
+                </p>
+                <p style={{
+                  margin: '0',
+                  fontSize: '16px',
+                  lineHeight: '1.6',
+                  color: '#666'
+                }}>
+                  {t.projectGoal}
+                </p>
+              </div>
+
+              {/* Comment ça marche */}
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#ff6b35'
+                }}>
+                  {t.howItWorks}
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {[t.step1, t.step2, t.step3, t.step4].map((step, index) => (
+                    <div key={index} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
+                    }}>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        backgroundColor: '#ff6b35',
+                        color: 'white',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        flexShrink: 0
+                      }}>
+                        {index + 1}
+                      </div>
+                      <span style={{
+                        fontSize: '14px',
+                        color: '#333'
+                      }}>
+                        {step}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section contribution */}
+              <div style={{
+                backgroundColor: '#fff5f0',
+                border: '2px solid #ff6b35',
+                borderRadius: '12px',
+                padding: '20px'
+              }}>
+                <h3 style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#ff6b35',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>🤝</span>
+                  {t.contribute}
+                </h3>
+                <p style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  color: '#666'
+                }}>
+                  {t.contributeText}
+                </p>
+                <button
+                  onClick={() => {
+                    window.open('https://forms.gle/H4r6NMeHp1dtCq1U9', '_blank');
+                    setShowInfoPopup(false);
+                  }}
+                  style={{
+                    backgroundColor: '#ff6b35',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#e55a2b';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ff6b35';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <span>➕</span>
+                  {t.suggestClub}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Styles CSS globaux pour les animations */}
       <style>{`
         @keyframes fadeIn {
@@ -1482,6 +1846,16 @@ export default function RunClubMap() {
         .leaflet-cluster-anim .leaflet-marker-icon {
           transition: none !important;
           animation: none !important;
+        }
+        
+        /* Animation de flottement pour l'icône du popup */
+        @keyframes float {
+          0%, 100% { 
+            transform: translateY(0px); 
+          }
+          50% { 
+            transform: translateY(-8px); 
+          }
         }
       `}</style>
     </div>
