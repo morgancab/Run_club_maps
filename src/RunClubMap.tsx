@@ -114,12 +114,14 @@ function MapClickHandler({ isMobile, showOverlay, setShowOverlay }: {
 }
 
 // Composant pour gérer le clustering des marqueurs
-function ClusteredMarkers({ clubs, getClubText, t }: { 
+function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: { 
   clubs: RunClubFeature[]; 
   getClubText: (club: RunClubFeature, field: 'name' | 'frequency' | 'description') => string;
   t: any;
+  selectedClubId?: string;
 }) {
   const map = useMap();
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
   
   useEffect(() => {
     // Créer le groupe de clusters
@@ -158,13 +160,17 @@ function ClusteredMarkers({ clubs, getClubText, t }: {
     });
 
     // Ajouter les marqueurs au groupe de clusters
-    clubs.forEach((club) => {
+    clubs.forEach((club, index) => {
+      const clubId = `${club.properties.name}-${index}`;
       const marker = L.marker([club.geometry.coordinates[1], club.geometry.coordinates[0]], {
         icon: createCustomIcon(
           club.properties.image || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=60&h=60&fit=crop&crop=center',
           club.properties.name
         )
       });
+
+      // Stocker la référence du marqueur
+      markersRef.current.set(clubId, marker);
 
       // Créer le contenu du popup
       const popupContent = `
@@ -217,8 +223,22 @@ function ClusteredMarkers({ clubs, getClubText, t }: {
     // Nettoyer lors du démontage
     return () => {
       map.removeLayer(markerClusterGroup);
+      markersRef.current.clear();
     };
   }, [map, clubs, getClubText, t]);
+
+  // Effet pour ouvrir la popup du club sélectionné
+  useEffect(() => {
+    if (selectedClubId && markersRef.current.has(selectedClubId)) {
+      const marker = markersRef.current.get(selectedClubId);
+      if (marker) {
+        // Ouvrir la popup avec un petit délai pour s'assurer que la carte est centrée
+        setTimeout(() => {
+          marker.openPopup();
+        }, 300);
+      }
+    }
+  }, [selectedClubId]);
 
   return null;
 }
@@ -295,6 +315,7 @@ export default function RunClubMap() {
   const [filterDay, setFilterDay] = useState<string>('');
   const [language, setLanguage] = useState<Language>('fr');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
   const mapRef = useRef<any>(null);
 
   // Hook pour détecter les changements de taille d'écran
@@ -749,10 +770,18 @@ export default function RunClubMap() {
     );
   }
 
-  const handleClubClick = (club: RunClubFeature) => {
+  const handleClubClick = (club: RunClubFeature, index: number) => {
     if (mapRef.current) {
       const map = mapRef.current;
-      map.setView([club.geometry.coordinates[1], club.geometry.coordinates[0]], 12);
+      const clubId = `${club.properties.name}-${index}`;
+      
+      // Centrer la carte sur le club avec un zoom élevé pour éviter le clustering
+      map.setView([club.geometry.coordinates[1], club.geometry.coordinates[0]], 16);
+      
+      // Définir le club sélectionné pour ouvrir sa popup
+      setSelectedClubId(clubId);
+      
+      // Fermer l'overlay
       setShowOverlay(false);
     }
   };
@@ -1100,11 +1129,15 @@ export default function RunClubMap() {
                   </p>
                 </div>
                                ) : (
-                   filteredClubs.map((club, idx) => (
-                     <div
-                       key={idx}
-                       onClick={() => handleClubClick(club)}
-                       style={{
+                   filteredClubs.map((club, idx) => {
+                     // Trouver l'index original du club dans la liste complète
+                     const originalIndex = clubs.findIndex(c => c.properties.name === club.properties.name && c.geometry.coordinates[0] === club.geometry.coordinates[0] && c.geometry.coordinates[1] === club.geometry.coordinates[1]);
+                     
+                     return (
+                       <div
+                         key={idx}
+                         onClick={() => handleClubClick(club, originalIndex)}
+                         style={{
                          padding: '16px',
                          borderBottom: idx < filteredClubs.length - 1 ? '1px solid #eee' : 'none',
                          cursor: 'pointer',
@@ -1207,7 +1240,8 @@ export default function RunClubMap() {
                          )}
                        </div>
                      </div>
-                   ))
+                   );
+                 })
                  )}
                </div>
              </div>
@@ -1240,7 +1274,7 @@ export default function RunClubMap() {
         />
         
                 {/* Markers avec clustering personnalisé */}
-        <ClusteredMarkers clubs={clubs} getClubText={getClubText} t={t} />
+        <ClusteredMarkers clubs={clubs} getClubText={getClubText} t={t} selectedClubId={selectedClubId} />
       </MapContainer>
 
       {/* Styles CSS globaux pour les animations */}
