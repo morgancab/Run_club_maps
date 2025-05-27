@@ -124,7 +124,7 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   
   useEffect(() => {
-    // Créer le groupe de clusters
+    // Créer le groupe de clusters avec configuration anti-flash
     const markerClusterGroup = (L as any).markerClusterGroup({
       iconCreateFunction: function(cluster: any) {
         const count = cluster.getChildCount();
@@ -156,19 +156,61 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
       maxClusterRadius: 80,
       spiderfyOnMaxZoom: true,
       showCoverageOnHover: false,
-      zoomToBoundsOnClick: true
+      zoomToBoundsOnClick: true,
+      // Configuration anti-flash optimisée
+      animate: false,                    // Désactiver l'animation générale
+      animateAddingMarkers: false,       // Pas d'animation à l'ajout
+      disableClusteringAtZoom: 16,       // Désactiver clustering plus tôt
+      spiderfyDistanceMultiplier: 1.5,
+      chunkedLoading: false,             // Chargement direct
+      // Options supplémentaires pour éviter le flash
+      removeOutsideVisibleBounds: false, // Garder les marqueurs en mémoire
+      spiderfyShapePositions: function(count: number, centerPt: any) {
+        // Position personnalisée pour éviter le flash
+        const positions = [];
+        const legLength = 30;
+        const angleStep = (2 * Math.PI) / count;
+        
+        for (let i = 0; i < count; i++) {
+          const angle = i * angleStep;
+          positions.push([
+            centerPt.x + legLength * Math.cos(angle),
+            centerPt.y + legLength * Math.sin(angle)
+          ]);
+        }
+        return positions;
+      }
     });
 
     // Ajouter les marqueurs au groupe de clusters
     clubs.forEach((club, index) => {
       const clubId = `${club.properties.name}-${index}`;
-      const marker = L.marker([club.geometry.coordinates[1], club.geometry.coordinates[0]], {
+      const lat = club.geometry.coordinates[1];
+      const lng = club.geometry.coordinates[0];
+      
+      // Vérifier que les coordonnées sont valides
+      if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+        console.warn(`Coordonnées invalides pour ${club.properties.name}:`, { lat, lng });
+        return;
+      }
+      
+      // Créer le marqueur avec des options anti-flash
+      const marker = L.marker([lat, lng], {
         icon: createCustomIcon(
           club.properties.image || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=60&h=60&fit=crop&crop=center',
           club.properties.name
-        )
+        ),
+        riseOnHover: true,
+        riseOffset: 250,
+        // Options pour éviter le flash
+        opacity: 1,
+        // Forcer la position immédiatement
+        bubblingMouseEvents: false
       });
 
+      // Forcer la position du marqueur pour éviter le flash en (0,0)
+      marker.setLatLng([lat, lng]);
+      
       // Stocker la référence du marqueur
       markersRef.current.set(clubId, marker);
 
@@ -214,10 +256,14 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
       `;
 
       marker.bindPopup(popupContent);
+      
+      // Ajouter le marqueur au cluster seulement si les coordonnées sont valides
+      // Utiliser addLayers en batch pour éviter le flash
       markerClusterGroup.addLayer(marker);
     });
 
-    // Ajouter le groupe de clusters à la carte
+    // Ajouter le groupe de clusters à la carte directement
+    // Les options anti-flash sont déjà configurées dans markerClusterGroup
     map.addLayer(markerClusterGroup);
 
     // Nettoyer lors du démontage
@@ -1292,26 +1338,12 @@ export default function RunClubMap() {
         
         /* Animation pour les marqueurs qui apparaissent */
         .custom-club-icon {
-          animation: markerAppear 0.6s ease-out;
+          animation: markerAppear 0.3s ease-out;
+          /* Éviter le flash en position (0,0) */
+          visibility: visible !important;
         }
         
         @keyframes markerAppear {
-          from {
-            opacity: 0;
-            transform: scale(0.5);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        
-        /* Animation pour les clusters */
-        .custom-cluster-icon {
-          animation: clusterAppear 0.4s ease-out;
-        }
-        
-        @keyframes clusterAppear {
           from {
             opacity: 0;
             transform: scale(0.8);
@@ -1320,6 +1352,52 @@ export default function RunClubMap() {
             opacity: 1;
             transform: scale(1);
           }
+        }
+        
+        /* Masquer complètement les marqueurs en position (0,0) ou invalides */
+        .leaflet-marker-pane .leaflet-marker-icon {
+          transition: none !important; /* Pas de transition pour éviter le flash */
+        }
+        
+        /* Masquer les marqueurs en position (0,0) - plusieurs variantes */
+        .leaflet-marker-icon[style*="left: 0px; top: 0px"],
+        .leaflet-marker-icon[style*="left: 0px; top: 0px;"],
+        .leaflet-marker-icon[style*="left:0px;top:0px"],
+        .leaflet-marker-icon[style*="transform: translate3d(0px, 0px, 0px)"],
+        .leaflet-marker-icon[style*="transform:translate3d(0px,0px,0px)"] {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+        }
+        
+        /* Masquer aussi les marqueurs avec des coordonnées très proches de (0,0) */
+        .leaflet-marker-icon[style*="left: 1px; top: 0px"],
+        .leaflet-marker-icon[style*="left: 0px; top: 1px"],
+        .leaflet-marker-icon[style*="left: 1px; top: 1px"] {
+          opacity: 0 !important;
+          visibility: hidden !important;
+        }
+        
+        /* Animation pour les clusters - plus rapide */
+        .custom-cluster-icon {
+          animation: clusterAppear 0.2s ease-out;
+        }
+        
+        @keyframes clusterAppear {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        /* Éviter les transitions sur les éléments de clustering */
+        .leaflet-cluster-anim .leaflet-marker-icon {
+          transition: none !important;
+          animation: none !important;
         }
       `}</style>
     </div>
