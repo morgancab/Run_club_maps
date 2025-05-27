@@ -301,8 +301,9 @@ const translations = {
     all: 'Tous',
     allCities: 'Toutes',
     clear: 'Effacer',
+    search: 'Rechercher un club...',
     noClubsFound: 'Aucun club trouvé',
-    tryModifyFilters: 'Essayez de modifier vos filtres',
+    tryModifyFilters: 'Essayez de modifier vos filtres ou votre recherche',
     clickToLocate: 'Cliquer pour localiser',
     site: 'Site',
     description: 'Description',
@@ -329,8 +330,9 @@ const translations = {
     all: 'All',
     allCities: 'All',
     clear: 'Clear',
+    search: 'Search for a club...',
     noClubsFound: 'No clubs found',
-    tryModifyFilters: 'Try modifying your filters',
+    tryModifyFilters: 'Try modifying your filters or search',
     clickToLocate: 'Click to locate',
     site: 'Website',
     description: 'Description',
@@ -359,6 +361,7 @@ export default function RunClubMap() {
   const [mapZoom, setMapZoom] = useState(6);
   const [filterCity, setFilterCity] = useState<string>('');
   const [filterDay, setFilterDay] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [language, setLanguage] = useState<Language>('fr');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
@@ -854,7 +857,20 @@ export default function RunClubMap() {
       dayMatch = searchTerms.some(term => freq.includes(term));
     }
     
-    return cityMatch && dayMatch;
+    // Filtrage par recherche textuelle
+    let searchMatch = true;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      const clubName = getClubText(club, 'name').toLowerCase();
+      const clubCity = club.properties.city?.toLowerCase() || '';
+      const clubDescription = getClubText(club, 'description').toLowerCase();
+      
+      searchMatch = clubName.includes(query) || 
+                   clubCity.includes(query) || 
+                   clubDescription.includes(query);
+    }
+    
+    return cityMatch && dayMatch && searchMatch;
   });
 
   // Obtenir les villes uniques pour le filtre
@@ -885,6 +901,7 @@ export default function RunClubMap() {
   const clearFilters = () => {
     setFilterCity('');
     setFilterDay('');
+    setSearchQuery('');
   };
 
       return (
@@ -1068,6 +1085,73 @@ export default function RunClubMap() {
                 </div>
               </div>
               
+              {/* Barre de recherche */}
+              <div style={{ marginBottom: '16px', position: 'relative' }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  fontSize: '16px',
+                  color: '#666',
+                  pointerEvents: 'none',
+                  zIndex: 1
+                }}>
+                  🔍
+                </div>
+                <input
+                  type="text"
+                  placeholder={t.search}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px 10px 40px',
+                    borderRadius: '8px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    fontSize: '14px',
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                    color: '#333',
+                    outline: 'none',
+                    transition: 'border-color 0.2s, box-shadow 0.2s',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(255,255,255,0.6)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255,255,255,0.3)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '16px',
+                      color: '#666',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.1)'}
+                    onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'transparent'}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              
               {/* Filtres */}
               <div style={{
                 display: 'grid',
@@ -1133,7 +1217,7 @@ export default function RunClubMap() {
                   </select>
                 </div>
                 
-                {(filterCity || filterDay) && (
+                {(filterCity || filterDay || searchQuery) && (
                   <button
                     onClick={clearFilters}
                     style={{
