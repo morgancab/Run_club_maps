@@ -905,7 +905,10 @@ export default function RunClubMap() {
   });
 
   // Obtenir les villes uniques pour le filtre
-  const uniqueCities = [...new Set(clubs.map(club => club.properties.city).filter(Boolean))];
+  const uniqueCities = [...new Set(clubs.map(club => club.properties.city).filter(Boolean))] as string[];
+  
+  // Trier les villes par ordre alphabétique
+  const sortedUniqueCities = uniqueCities.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
   
   // Obtenir les jours de la semaine uniques pour le filtre
   const uniqueDays = [...new Set(clubs.map(club => {
@@ -1259,7 +1262,7 @@ export default function RunClubMap() {
                     }}
                   >
                     <option value="">{t.allCities}</option>
-                    {uniqueCities.map(city => (
+                    {sortedUniqueCities.map(city => (
                       <option key={city} value={city}>{city}</option>
                     ))}
                   </select>
