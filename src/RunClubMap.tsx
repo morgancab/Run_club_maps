@@ -395,14 +395,19 @@ export default function RunClubMap() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [language, setLanguage] = useState<Language>('fr');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth > 768 && window.innerWidth <= 1024);
+  const [isTouchDevice, setIsTouchDevice] = useState('ontouchstart' in window);
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const mapRef = useRef<any>(null);
 
-  // Hook pour détecter les changements de taille d'écran
+  // Hook pour détecter les changements de taille d'écran et le type d'appareil
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      const width = window.innerWidth;
+      setIsMobile(width <= 768);
+      setIsTablet(width > 768 && width <= 1024);
+      setIsTouchDevice('ontouchstart' in window);
     };
 
     window.addEventListener('resize', handleResize);
@@ -940,532 +945,1007 @@ export default function RunClubMap() {
     setSearchQuery('');
   };
 
-      return (
-      <div style={{ 
-        width: '100vw', 
-        height: '100vh', 
-        position: 'relative',
-        animation: 'fadeIn 0.8s ease-out'
-      }}>
-        {/* Titre du site en haut à droite */}
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          zIndex: 1000,
-          fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          alignItems: 'flex-end',
-          maxWidth: 'calc(100vw - 20px)'
-        }}>
-          {/* Titre du site */}
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            padding: isMobile ? '12px 16px' : '16px 20px',
-            borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            border: '1px solid rgba(255, 107, 53, 0.2)',
-            minWidth: 'fit-content'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                backgroundColor: '#ff6b35',
-                borderRadius: '50%',
-                animation: 'pulse 2s infinite'
-              }}></div>
-              <h1 style={{
-                margin: '0',
-                fontSize: isMobile ? '18px' : '22px',
-                fontWeight: '700',
-                color: '#2d3748',
-                letterSpacing: '-0.5px'
-              }}>
-                {t.title}
-              </h1>
-            </div>
-            <div style={{
-              fontSize: isMobile ? '11px' : '13px',
-              color: '#ff6b35',
-              fontWeight: '600',
-              textAlign: 'left',
-              marginTop: '4px',
-              letterSpacing: '1px',
-              textTransform: 'uppercase'
-            }}>
-              {t.subtitle}
-            </div>
-          </div>
-
-          {/* Sélecteur de langue */}
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '8px',
-            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
-            border: '1px solid rgba(255, 107, 53, 0.2)',
-            overflow: 'hidden'
-          }}>
-            <button
-              onClick={() => setLanguage('fr')}
-              style={{
-                padding: '8px 12px',
-                border: 'none',
-                backgroundColor: language === 'fr' ? '#ff6b35' : 'transparent',
-                color: language === 'fr' ? 'white' : '#666',
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              🇫🇷 FR
-            </button>
-            <button
-              onClick={() => setLanguage('en')}
-              style={{
-                padding: '8px 12px',
-                border: 'none',
-                backgroundColor: language === 'en' ? '#ff6b35' : 'transparent',
-                color: language === 'en' ? 'white' : '#666',
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              🇬🇧 EN
-            </button>
-          </div>
-
-          {/* Bouton d'information amélioré */}
-          <button
-            onClick={() => setShowInfoPopup(true)}
-            title={t.info}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              border: '2px solid #ff6b35',
-              borderRadius: '12px',
-              width: '40px',
-              height: '40px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(255, 107, 53, 0.2)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '18px',
-              color: '#ff6b35',
-              fontWeight: 'bold',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#ff6b35';
-              e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.4)';
-              e.currentTarget.style.color = 'white';
-              e.currentTarget.style.borderColor = '#ff6b35';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-              e.currentTarget.style.transform = 'translateY(0) scale(1)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.2)';
-              e.currentTarget.style.color = '#ff6b35';
-              e.currentTarget.style.borderColor = '#ff6b35';
-            }}
-          >
-            <span style={{
-              display: 'inline-block',
-              transition: 'transform 0.3s ease'
-            }}>
-              ℹ️
-            </span>
-          </button>
-        </div>
-
-        {/* Bouton pour ouvrir/fermer l'overlay */}
-        <button
-          onClick={() => setShowOverlay(!showOverlay)}
-          style={{
-            position: 'absolute',
-            top: '10px',
-            left: '10px',
-            zIndex: 1000,
-            backgroundColor: '#ff6b35',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: isMobile ? '10px 12px' : '12px 16px',
-            fontSize: isMobile ? '12px' : '14px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            fontFamily: 'Arial, sans-serif',
-            maxWidth: isMobile ? '120px' : 'auto',
-            whiteSpace: isMobile ? 'nowrap' : 'normal',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}
-        >
-          {isMobile ? `📍 ${filteredClubs.length}/${clubs.length}` : `📍 ${t.clubsList} (${filteredClubs.length}/${clubs.length})`}
-        </button>
-
-              {/* Overlay avec la liste des clubs */}
-        {showOverlay && (
+  return (
+    <div style={{ 
+      width: '100vw', 
+      height: '100vh', 
+      position: 'relative',
+      animation: 'fadeIn 0.8s ease-out'
+    }}>
+      {/* Interface mobile optimisée */}
+      {isMobile ? (
+        <>
+          {/* Barre de navigation mobile en haut */}
           <div style={{
             position: 'absolute',
-            top: isMobile ? '60px' : '70px',
-            left: isMobile ? '10px' : '20px',
-            width: isMobile ? 'calc(100vw - 20px)' : '380px',
-            maxWidth: isMobile ? '100vw' : '380px',
-            maxHeight: isMobile ? '70vh' : '75vh',
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            top: 0,
+            left: 0,
+            right: 0,
             zIndex: 1000,
-            overflow: 'hidden',
-            fontFamily: 'Arial, sans-serif',
-            border: '1px solid rgba(255, 107, 53, 0.1)'
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderBottom: '1px solid rgba(255, 107, 53, 0.2)',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)'
           }}>
-            {/* Header amélioré */}
-            <div style={{
-              padding: isMobile ? '16px' : '20px',
-              background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
-              color: 'white'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '16px'
-              }}>
-                <h3 style={{
+            {/* Bouton menu et titre */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+              <button
+                onClick={() => setShowOverlay(!showOverlay)}
+                style={{
+                  backgroundColor: '#ff6b35',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
+                  minHeight: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>{showOverlay ? '✕' : '☰'}</span>
+                <span>{filteredClubs.length}/{clubs.length}</span>
+              </button>
+              
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h1 style={{
                   margin: '0',
-                  fontSize: isMobile ? '18px' : '20px',
-                  fontWeight: 'bold'
-                }}>
-                  🏃‍♂️ Run Clubs
-                </h3>
-                <div style={{
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  padding: '4px 12px',
-                  borderRadius: '20px',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
-                }}>
-                  {filteredClubs.length}/{clubs.length}
-                </div>
-              </div>
-              
-              {/* Barre de recherche */}
-              <div style={{ marginBottom: '16px', position: 'relative' }}>
-                <div style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
                   fontSize: '16px',
-                  color: '#666',
-                  pointerEvents: 'none',
-                  zIndex: 1
+                  fontWeight: '700',
+                  color: '#2d3748',
+                  letterSpacing: '-0.3px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
                 }}>
-                  🔍
+                  {t.title}
+                </h1>
+                <div style={{
+                  fontSize: '10px',
+                  color: '#ff6b35',
+                  fontWeight: '600',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase'
+                }}>
+                  {t.subtitle}
                 </div>
-                <input
-                  type="text"
-                  placeholder={t.search}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px 10px 40px',
-                    borderRadius: '8px',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    fontSize: '14px',
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    color: '#333',
-                    outline: 'none',
-                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(255,255,255,0.6)';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(255,255,255,0.3)';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    style={{
-                      position: 'absolute',
-                      right: '8px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      fontSize: '16px',
-                      color: '#666',
-                      cursor: 'pointer',
-                      padding: '4px',
-                      borderRadius: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.1)'}
-                    onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'transparent'}
-                  >
-                    ✕
-                  </button>
-                )}
               </div>
-              
-              {/* Filtres */}
+            </div>
+
+            {/* Contrôles droite */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Sélecteur de langue compact */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr auto',
-                gap: '8px',
-                alignItems: 'end'
+                backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                display: 'flex'
               }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '12px',
-                    marginBottom: '4px',
-                    opacity: 0.9
+                <button
+                  onClick={() => setLanguage('fr')}
+                  style={{
+                    padding: '6px 8px',
+                    border: 'none',
+                    backgroundColor: language === 'fr' ? '#ff6b35' : 'transparent',
+                    color: language === 'fr' ? 'white' : '#ff6b35',
+                    fontSize: '10px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  🇫🇷
+                </button>
+                <button
+                  onClick={() => setLanguage('en')}
+                  style={{
+                    padding: '6px 8px',
+                    border: 'none',
+                    backgroundColor: language === 'en' ? '#ff6b35' : 'transparent',
+                    color: language === 'en' ? 'white' : '#ff6b35',
+                    fontSize: '10px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  🇬🇧
+                </button>
+              </div>
+
+              {/* Bouton info compact */}
+              <button
+                onClick={() => setShowInfoPopup(true)}
+                style={{
+                  backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                  border: '1px solid #ff6b35',
+                  borderRadius: '6px',
+                  width: '32px',
+                  height: '32px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  color: '#ff6b35',
+                  fontWeight: 'bold'
+                }}
+              >
+                ℹ️
+              </button>
+            </div>
+          </div>
+
+          {/* Overlay mobile plein écran */}
+          {showOverlay && (
+            <div style={{
+              position: 'fixed',
+              top: '60px',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'white',
+              zIndex: 999,
+              overflow: 'hidden',
+              fontFamily: 'Arial, sans-serif',
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              {/* Header des filtres mobile */}
+              <div style={{
+                padding: '16px',
+                background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
+                color: 'white',
+                flexShrink: 0
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '16px'
+                }}>
+                  <h3 style={{
+                    margin: '0',
+                    fontSize: '18px',
+                    fontWeight: 'bold'
                   }}>
-                    {t.city}
-                  </label>
-                  <select
-                    value={filterCity}
-                    onChange={(e) => setFilterCity(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      fontSize: '13px',
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      color: '#333'
-                    }}
-                  >
-                    <option value="">{t.allCities}</option>
-                    {sortedUniqueCities.map(city => (
-                      <option key={city} value={city}>{city}</option>
-                    ))}
-                  </select>
+                    🏃‍♂️ Run Clubs
+                  </h3>
+                  <div style={{
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>
+                    {filteredClubs.length}/{clubs.length}
+                  </div>
                 </div>
                 
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '12px',
-                    marginBottom: '4px',
-                    opacity: 0.9
+                {/* Barre de recherche mobile */}
+                <div style={{ marginBottom: '16px', position: 'relative' }}>
+                  <div style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '16px',
+                    color: '#666',
+                    pointerEvents: 'none',
+                    zIndex: 1
                   }}>
-                    {t.day}
-                  </label>
-                  <select
-                    value={filterDay}
-                    onChange={(e) => setFilterDay(e.target.value)}
+                    🔍
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={t.search}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '6px 8px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      fontSize: '13px',
+                      padding: '12px 12px 12px 40px',
+                      borderRadius: '8px',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      fontSize: '16px', // Évite le zoom sur iOS
                       backgroundColor: 'rgba(255,255,255,0.9)',
-                      color: '#333'
+                      color: '#333',
+                      outline: 'none',
+                      boxSizing: 'border-box'
                     }}
-                  >
-                    <option value="">{t.all}</option>
-                    {sortedUniqueDays.map((day: string) => (
-                      <option key={day} value={day}>{t.days[day as keyof typeof t.days]}</option>
-                    ))}
-                  </select>
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '16px',
+                        color: '#666',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
                 
+                {/* Filtres mobile en grille */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                  marginBottom: '12px'
+                }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      marginBottom: '6px',
+                      opacity: 0.9,
+                      fontWeight: '600'
+                    }}>
+                      {t.city}
+                    </label>
+                    <select
+                      value={filterCity}
+                      onChange={(e) => setFilterCity(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        fontSize: '14px',
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        color: '#333'
+                      }}
+                    >
+                      <option value="">{t.allCities}</option>
+                      {sortedUniqueCities.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      marginBottom: '6px',
+                      opacity: 0.9,
+                      fontWeight: '600'
+                    }}>
+                      {t.day}
+                    </label>
+                    <select
+                      value={filterDay}
+                      onChange={(e) => setFilterDay(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        fontSize: '14px',
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        color: '#333'
+                      }}
+                    >
+                      <option value="">{t.all}</option>
+                      {sortedUniqueDays.map((day: string) => (
+                        <option key={day} value={day}>{t.days[day as keyof typeof t.days]}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Bouton effacer mobile */}
                 {(filterCity || filterDay || searchQuery) && (
                   <button
                     onClick={clearFilters}
                     style={{
-                      padding: '6px 10px',
+                      width: '100%',
+                      padding: '8px 12px',
                       borderRadius: '6px',
                       border: 'none',
                       backgroundColor: 'rgba(255,255,255,0.2)',
                       color: 'white',
-                      fontSize: '12px',
+                      fontSize: '14px',
                       cursor: 'pointer',
-                      fontWeight: 'bold',
-                      gridColumn: isMobile ? '1 / -1' : 'auto',
-                      marginTop: isMobile ? '8px' : '0'
+                      fontWeight: 'bold'
                     }}
                   >
                     ✕ {t.clear}
                   </button>
                 )}
               </div>
-            </div>
-            
-            {/* Liste des clubs */}
-            <div 
-              className="clubs-list-container"
-              style={{
-                maxHeight: isMobile ? 'calc(70vh - 120px)' : 'calc(75vh - 140px)',
-                overflowY: 'scroll',
-                paddingBottom: '60px',
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#ff6b35 #f1f1f1'
+              
+              {/* Liste des clubs mobile avec scroll optimisé */}
+              <div style={{
+                flex: 1,
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch', // Scroll fluide sur iOS
+                padding: '0 16px 16px 16px'
               }}>
-              {filteredClubs.length === 0 ? (
+                {filteredClubs.length === 0 ? (
+                  <div style={{
+                    padding: '40px 20px',
+                    textAlign: 'center',
+                    color: '#666'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
+                    <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
+                      {t.noClubsFound}
+                    </p>
+                    <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
+                      {t.tryModifyFilters}
+                    </p>
+                  </div>
+                ) : (
+                  filteredClubs.map((club, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => handleClubClick(club)}
+                      style={{
+                        padding: '16px',
+                        borderBottom: idx < filteredClubs.length - 1 ? '1px solid #eee' : 'none',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s',
+                        // Amélioration tactile
+                        minHeight: '44px', // Taille minimale tactile
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px'
+                      }}
+                      onTouchStart={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                      onTouchEnd={(e) => setTimeout(() => e.currentTarget.style.backgroundColor = 'white', 150)}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}>
+                        {club.properties.image && (
+                          <img 
+                            src={club.properties.image}
+                            alt={club.properties.name}
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              border: '2px solid #ff6b35',
+                              flexShrink: 0
+                            }}
+                          />
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h4 style={{
+                            margin: '0',
+                            fontSize: '16px',
+                            color: '#ff6b35',
+                            fontWeight: 'bold',
+                            lineHeight: '1.2'
+                          }}>
+                            {getClubText(club, 'name')}
+                          </h4>
+                          {club.properties.city && (
+                            <div style={{
+                              fontSize: '12px',
+                              color: '#666',
+                              marginTop: '2px'
+                            }}>
+                              📍 {club.properties.city}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {(club.properties.frequency || club.properties.frequency_en) && (
+                        <div style={{
+                          fontSize: '13px',
+                          color: '#666',
+                          padding: '6px 10px',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '6px',
+                          display: 'inline-block',
+                          alignSelf: 'flex-start'
+                        }}>
+                          ⏰ {getClubText(club, 'frequency')}
+                        </div>
+                      )}
+                      
+                      {(club.properties.description || club.properties.description_en) && (
+                        <p style={{
+                          margin: '0',
+                          fontSize: '14px',
+                          color: '#666',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {getClubText(club, 'description')}
+                        </p>
+                      )}
+                      
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginTop: '4px'
+                      }}>
+                        <span style={{
+                          fontSize: '12px',
+                          color: '#999',
+                          fontWeight: '500'
+                        }}>
+                          📍 {t.clickToLocate}
+                        </span>
+                        {club.properties.social?.website && (
+                          <a
+                            href={club.properties.social.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              color: '#ff6b35',
+                              textDecoration: 'none',
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                              padding: '4px 8px',
+                              backgroundColor: '#fff5f0',
+                              borderRadius: '4px',
+                              border: '1px solid #ff6b35'
+                            }}
+                          >
+                            🔗 {t.site}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Titre du site en haut à droite */}
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            zIndex: 1000,
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            alignItems: 'flex-end',
+            maxWidth: 'calc(100vw - 20px)'
+          }}>
+            {/* Titre du site */}
+            <div style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              padding: '16px 20px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 107, 53, 0.2)',
+              minWidth: 'fit-content'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
                 <div style={{
-                  padding: '40px 20px',
-                  textAlign: 'center',
-                  color: '#666'
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: '#ff6b35',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s infinite'
+                }}></div>
+                <h1 style={{
+                  margin: '0',
+                  fontSize: '22px',
+                  fontWeight: '700',
+                  color: '#2d3748',
+                  letterSpacing: '-0.5px'
                 }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-                  <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
-                    {t.noClubsFound}
-                  </p>
-                  <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
-                    {t.tryModifyFilters}
-                  </p>
-                </div>
-                               ) : (
-                   filteredClubs.map((club, idx) => {
-                     return (
-                       <div
-                         key={idx}
-                         onClick={() => handleClubClick(club)}
-                         style={{
-                         padding: '16px',
-                         borderBottom: idx < filteredClubs.length - 1 ? '1px solid #eee' : 'none',
-                         cursor: 'pointer',
-                         transition: 'background-color 0.2s'
-                       }}
-                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                     >
-                       <div style={{
-                         display: 'flex',
-                         alignItems: 'center',
-                         marginBottom: '8px'
-                       }}>
-                         {club.properties.image && (
-                           <img 
-                             src={club.properties.image}
-                             alt={club.properties.name}
-                             style={{
-                               width: '32px',
-                               height: '32px',
-                               borderRadius: '50%',
-                               marginRight: '10px',
-                               objectFit: 'cover',
-                               border: '2px solid #ff6b35'
-                             }}
-                           />
-                         )}
-                         <div style={{ flex: 1 }}>
-                           <h4 style={{
-                             margin: '0',
-                             fontSize: '16px',
-                             color: '#ff6b35',
-                             fontWeight: 'bold'
-                           }}>
-                             {getClubText(club, 'name')}
-                           </h4>
-                           {club.properties.city && (
-                             <div style={{
-                               fontSize: '12px',
-                               color: '#666',
-                               marginTop: '2px'
-                             }}>
-                               📍 {club.properties.city}
-                             </div>
-                           )}
-                         </div>
-                       </div>
-                       
-                       {(club.properties.frequency || club.properties.frequency_en) && (
-                         <div style={{
-                           fontSize: '13px',
-                           color: '#666',
-                           marginBottom: '8px',
-                           padding: '4px 8px',
-                           backgroundColor: '#f8f9fa',
-                           borderRadius: '6px',
-                           display: 'inline-block'
-                         }}>
-                           ⏰ {getClubText(club, 'frequency')}
-                         </div>
-                       )}
-                       
-                       {(club.properties.description || club.properties.description_en) && (
-                         <p style={{
-                           margin: '0 0 8px 0',
-                           fontSize: '14px',
-                           color: '#666',
-                           lineHeight: '1.4'
-                         }}>
-                           {getClubText(club, 'description')}
-                         </p>
-                       )}
-                       
-                       <div style={{
-                         display: 'flex',
-                         justifyContent: 'space-between',
-                         alignItems: 'center'
-                       }}>
-                         <span style={{
-                           fontSize: '12px',
-                           color: '#999'
-                         }}>
-                           📍 {t.clickToLocate}
-                         </span>
-                         {club.properties.social?.website && (
-                           <a
-                             href={club.properties.social.website}
-                             target="_blank"
-                             rel="noopener noreferrer"
-                             onClick={(e) => e.stopPropagation()}
-                             style={{
-                               color: '#ff6b35',
-                               textDecoration: 'none',
-                               fontSize: '12px',
-                               fontWeight: 'bold'
-                             }}
-                                                        >
-                               🔗 {t.site}
-                             </a>
-                         )}
-                       </div>
-                     </div>
-                   );
-                 })
-                 )}
-               </div>
-             </div>
-           )}
+                  {t.title}
+                </h1>
+              </div>
+              <div style={{
+                fontSize: '13px',
+                color: '#ff6b35',
+                fontWeight: '600',
+                textAlign: 'left',
+                marginTop: '4px',
+                letterSpacing: '1px',
+                textTransform: 'uppercase'
+              }}>
+                {t.subtitle}
+              </div>
+            </div>
 
+            {/* Sélecteur de langue */}
+            <div style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '8px',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 107, 53, 0.2)',
+              overflow: 'hidden'
+            }}>
+              <button
+                onClick={() => setLanguage('fr')}
+                style={{
+                  padding: '8px 12px',
+                  border: 'none',
+                  backgroundColor: language === 'fr' ? '#ff6b35' : 'transparent',
+                  color: language === 'fr' ? 'white' : '#666',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🇫🇷 FR
+              </button>
+              <button
+                onClick={() => setLanguage('en')}
+                style={{
+                  padding: '8px 12px',
+                  border: 'none',
+                  backgroundColor: language === 'en' ? '#ff6b35' : 'transparent',
+                  color: language === 'en' ? 'white' : '#666',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🇬🇧 EN
+              </button>
+            </div>
+
+            {/* Bouton d'information amélioré */}
+            <button
+              onClick={() => setShowInfoPopup(true)}
+              title={t.info}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                border: '2px solid #ff6b35',
+                borderRadius: '12px',
+                width: '40px',
+                height: '40px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(255, 107, 53, 0.2)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                color: '#ff6b35',
+                fontWeight: 'bold',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#ff6b35';
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.4)';
+                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.borderColor = '#ff6b35';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.2)';
+                e.currentTarget.style.color = '#ff6b35';
+                e.currentTarget.style.borderColor = '#ff6b35';
+              }}
+            >
+              <span style={{
+                display: 'inline-block',
+                transition: 'transform 0.3s ease'
+              }}>
+                ℹ️
+              </span>
+            </button>
+          </div>
+
+          {/* Bouton pour ouvrir/fermer l'overlay */}
+          <button
+            onClick={() => setShowOverlay(!showOverlay)}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              left: '10px',
+              zIndex: 1000,
+              backgroundColor: '#ff6b35',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              fontFamily: 'Arial, sans-serif'
+            }}
+          >
+            📍 {t.clubsList} ({filteredClubs.length}/{clubs.length})
+          </button>
+
+          {/* Overlay desktop existant */}
+          {showOverlay && (
+            <div style={{
+              position: 'absolute',
+              top: '70px',
+              left: '20px',
+              width: '380px',
+              maxHeight: '75vh',
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+              zIndex: 1000,
+              overflow: 'hidden',
+              fontFamily: 'Arial, sans-serif',
+              border: '1px solid rgba(255, 107, 53, 0.1)'
+            }}>
+              {/* Header amélioré */}
+              <div style={{
+                padding: '20px',
+                background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
+                color: 'white'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '16px'
+                }}>
+                  <h3 style={{
+                    margin: '0',
+                    fontSize: '20px',
+                    fontWeight: 'bold'
+                  }}>
+                    🏃‍♂️ Run Clubs
+                  </h3>
+                  <div style={{
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>
+                    {filteredClubs.length}/{clubs.length}
+                  </div>
+                </div>
+                
+                {/* Barre de recherche */}
+                <div style={{ marginBottom: '16px', position: 'relative' }}>
+                  <div style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '16px',
+                    color: '#666',
+                    pointerEvents: 'none',
+                    zIndex: 1
+                  }}>
+                    🔍
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={t.search}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 40px',
+                      borderRadius: '8px',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      fontSize: '14px',
+                      backgroundColor: 'rgba(255,255,255,0.9)',
+                      color: '#333',
+                      outline: 'none',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'rgba(255,255,255,0.6)';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255,255,255,0.3)';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '16px',
+                        color: '#666',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.1)'}
+                      onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'transparent'}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                
+                {/* Filtres */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr auto',
+                  gap: '8px',
+                  alignItems: 'end'
+                }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      marginBottom: '4px',
+                      opacity: 0.9
+                    }}>
+                      {t.city}
+                    </label>
+                    <select
+                      value={filterCity}
+                      onChange={(e) => setFilterCity(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        fontSize: '13px',
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        color: '#333'
+                      }}
+                    >
+                      <option value="">{t.allCities}</option>
+                      {sortedUniqueCities.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      marginBottom: '4px',
+                      opacity: 0.9
+                    }}>
+                      {t.day}
+                    </label>
+                    <select
+                      value={filterDay}
+                      onChange={(e) => setFilterDay(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        fontSize: '13px',
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        color: '#333'
+                      }}
+                    >
+                      <option value="">{t.all}</option>
+                      {sortedUniqueDays.map((day: string) => (
+                        <option key={day} value={day}>{t.days[day as keyof typeof t.days]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {(filterCity || filterDay || searchQuery) && (
+                    <button
+                      onClick={clearFilters}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      ✕ {t.clear}
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Liste des clubs */}
+              <div 
+                className="clubs-list-container"
+                style={{
+                  maxHeight: 'calc(75vh - 140px)',
+                  overflowY: 'scroll',
+                  paddingBottom: '60px',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#ff6b35 #f1f1f1'
+                }}>
+                {filteredClubs.length === 0 ? (
+                  <div style={{
+                    padding: '40px 20px',
+                    textAlign: 'center',
+                    color: '#666'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
+                    <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
+                      {t.noClubsFound}
+                    </p>
+                    <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
+                      {t.tryModifyFilters}
+                    </p>
+                  </div>
+                ) : (
+                  filteredClubs.map((club, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => handleClubClick(club)}
+                      style={{
+                        padding: '16px',
+                        borderBottom: idx < filteredClubs.length - 1 ? '1px solid #eee' : 'none',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginBottom: '8px'
+                      }}>
+                        {club.properties.image && (
+                          <img 
+                            src={club.properties.image}
+                            alt={club.properties.name}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              marginRight: '10px',
+                              objectFit: 'cover',
+                              border: '2px solid #ff6b35'
+                            }}
+                          />
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{
+                            margin: '0',
+                            fontSize: '16px',
+                            color: '#ff6b35',
+                            fontWeight: 'bold'
+                          }}>
+                            {getClubText(club, 'name')}
+                          </h4>
+                          {club.properties.city && (
+                            <div style={{
+                              fontSize: '12px',
+                              color: '#666',
+                              marginTop: '2px'
+                            }}>
+                              📍 {club.properties.city}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {(club.properties.frequency || club.properties.frequency_en) && (
+                        <div style={{
+                          fontSize: '13px',
+                          color: '#666',
+                          marginBottom: '8px',
+                          padding: '4px 8px',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '6px',
+                          display: 'inline-block'
+                        }}>
+                          ⏰ {getClubText(club, 'frequency')}
+                        </div>
+                      )}
+                      
+                      {(club.properties.description || club.properties.description_en) && (
+                        <p style={{
+                          margin: '0 0 8px 0',
+                          fontSize: '14px',
+                          color: '#666',
+                          lineHeight: '1.4'
+                        }}>
+                          {getClubText(club, 'description')}
+                        </p>
+                      )}
+                      
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{
+                          fontSize: '12px',
+                          color: '#999'
+                        }}>
+                          📍 {t.clickToLocate}
+                        </span>
+                        {club.properties.social?.website && (
+                          <a
+                            href={club.properties.social.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              color: '#ff6b35',
+                              textDecoration: 'none',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            🔗 {t.site}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Carte commune aux deux interfaces */}
       <MapContainer
         ref={mapRef}
         center={mapCenter}
         zoom={mapZoom}
-        style={{ width: '100%', height: '100%' }}
+        style={{ 
+          width: '100%', 
+          height: '100%',
+          marginTop: isMobile ? '60px' : '0' // Décaler la carte sur mobile pour la barre de navigation
+        }}
         scrollWheelZoom={true}
         zoomControl={false}
       >
@@ -1487,7 +1967,7 @@ export default function RunClubMap() {
           maxZoom={19}
         />
         
-                {/* Markers avec clustering personnalisé */}
+        {/* Markers avec clustering personnalisé */}
         <ClusteredMarkers clubs={filteredClubs} getClubText={getClubText} t={t} selectedClubId={selectedClubId} />
       </MapContainer>
 
@@ -1527,123 +2007,69 @@ export default function RunClubMap() {
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             position: 'relative'
           }}>
-                         {/* Header du popup amélioré */}
-             <div style={{
-               background: `
-                 linear-gradient(135deg, rgba(255, 107, 53, 0.85) 0%, rgba(247, 147, 30, 0.85) 50%, rgba(255, 140, 66, 0.85) 100%),
-                 url('/header-background.jpg') center/cover no-repeat
-               `,
-               color: 'white',
-               padding: '32px 24px',
-               borderRadius: '16px 16px 0 0',
-               position: 'relative',
-               overflow: 'hidden'
-             }}>
-               {/* Motif d'arrière-plan décoratif */}
-               <div style={{
-                 position: 'absolute',
-                 top: '-50%',
-                 right: '-20%',
-                 width: '200px',
-                 height: '200px',
-                 background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-                 borderRadius: '50%'
-               }}></div>
-               <div style={{
-                 position: 'absolute',
-                 bottom: '-30%',
-                 left: '-10%',
-                 width: '150px',
-                 height: '150px',
-                 background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
-                 borderRadius: '50%'
-               }}></div>
-
-               <button
-                 onClick={() => setShowInfoPopup(false)}
-                 style={{
-                   position: 'absolute',
-                   top: '20px',
-                   right: '20px',
-                   background: 'rgba(255, 255, 255, 0.15)',
-                   backdropFilter: 'blur(10px)',
-                   border: '1px solid rgba(255, 255, 255, 0.2)',
-                   borderRadius: '12px',
-                   width: '36px',
-                   height: '36px',
-                   color: 'white',
-                   fontSize: '16px',
-                   cursor: 'pointer',
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   transition: 'all 0.3s ease',
-                   fontWeight: 'bold',
-                   zIndex: 10
-                 }}
-                 onMouseEnter={(e) => {
-                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
-                   e.currentTarget.style.transform = 'scale(1.1)';
-                   e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                 }}
-                 onMouseLeave={(e) => {
-                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
-                   e.currentTarget.style.transform = 'scale(1)';
-                   e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                 }}
-               >
-                 ✕
-               </button>
-               
-               <div style={{
-                 position: 'relative',
-                 zIndex: 5,
-                 marginBottom: '12px'
-               }}>
-                 <h2 style={{
-                   margin: '0 0 12px 0',
-                   fontSize: '28px',
-                   fontWeight: '800',
-                   letterSpacing: '-0.5px',
-                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-                 }}>
-                   Social Run Club
-                 </h2>
-                 <div style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   gap: '8px'
-                 }}>
-                   <div style={{
-                     width: '4px',
-                     height: '4px',
-                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                     borderRadius: '50%'
-                   }}></div>
-                   <p style={{
-                     margin: '0',
-                     fontSize: '16px',
-                     opacity: 0.95,
-                     fontWeight: '500',
-                     letterSpacing: '0.3px'
-                   }}>
-                     {t.aboutProject}
-                   </p>
-                 </div>
-               </div>
-
-               {/* Indicateur de scroll décoratif */}
-               <div style={{
-                 position: 'absolute',
-                 bottom: '0',
-                 left: '50%',
-                 transform: 'translateX(-50%)',
-                 width: '40px',
-                 height: '4px',
-                 background: 'rgba(255, 255, 255, 0.3)',
-                 borderRadius: '2px 2px 0 0'
-               }}></div>
-             </div>
+            {/* Header du popup amélioré */}
+            <div style={{
+              background: `
+                linear-gradient(135deg, rgba(255, 107, 53, 0.85) 0%, rgba(247, 147, 30, 0.85) 50%, rgba(255, 140, 66, 0.85) 100%),
+                url('/header-background.jpg') center/cover no-repeat
+              `,
+              color: 'white',
+              padding: '32px 24px',
+              borderRadius: '16px 16px 0 0',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <button
+                onClick={() => setShowInfoPopup(false)}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  right: '20px',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  width: '36px',
+                  height: '36px',
+                  color: 'white',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease',
+                  fontWeight: 'bold',
+                  zIndex: 10
+                }}
+              >
+                ✕
+              </button>
+              
+              <div style={{
+                position: 'relative',
+                zIndex: 5,
+                marginBottom: '12px'
+              }}>
+                <h2 style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '28px',
+                  fontWeight: '800',
+                  letterSpacing: '-0.5px',
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                }}>
+                  Social Run Club
+                </h2>
+                <p style={{
+                  margin: '0',
+                  fontSize: '16px',
+                  opacity: 0.95,
+                  fontWeight: '500',
+                  letterSpacing: '0.3px'
+                }}>
+                  {t.aboutProject}
+                </p>
+              </div>
+            </div>
 
             {/* Contenu du popup */}
             <div style={{ padding: '24px' }}>
@@ -1760,14 +2186,6 @@ export default function RunClubMap() {
                     alignItems: 'center',
                     gap: '8px'
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#e55a2b';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#ff6b35';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
                 >
                   <span>➕</span>
                   {t.suggestClub}
@@ -1778,7 +2196,7 @@ export default function RunClubMap() {
         </div>
       )}
 
-      {/* Styles CSS globaux pour les animations */}
+      {/* Styles CSS globaux pour les animations et l'adaptation mobile */}
       <style>{`
         @keyframes fadeIn {
           from {
@@ -1794,7 +2212,6 @@ export default function RunClubMap() {
         /* Animation pour les marqueurs qui apparaissent */
         .custom-club-icon {
           animation: markerAppear 0.3s ease-out;
-          /* Éviter le flash en position (0,0) */
           visibility: visible !important;
         }
         
@@ -1809,31 +2226,15 @@ export default function RunClubMap() {
           }
         }
         
-        /* Masquer complètement les marqueurs en position (0,0) ou invalides */
-        .leaflet-marker-pane .leaflet-marker-icon {
-          transition: none !important; /* Pas de transition pour éviter le flash */
-        }
-        
-        /* Masquer les marqueurs en position (0,0) - plusieurs variantes */
+        /* Masquer les marqueurs en position (0,0) */
         .leaflet-marker-icon[style*="left: 0px; top: 0px"],
-        .leaflet-marker-icon[style*="left: 0px; top: 0px;"],
-        .leaflet-marker-icon[style*="left:0px;top:0px"],
-        .leaflet-marker-icon[style*="transform: translate3d(0px, 0px, 0px)"],
-        .leaflet-marker-icon[style*="transform:translate3d(0px,0px,0px)"] {
+        .leaflet-marker-icon[style*="transform: translate3d(0px, 0px, 0px)"] {
           opacity: 0 !important;
           visibility: hidden !important;
           pointer-events: none !important;
         }
         
-        /* Masquer aussi les marqueurs avec des coordonnées très proches de (0,0) */
-        .leaflet-marker-icon[style*="left: 1px; top: 0px"],
-        .leaflet-marker-icon[style*="left: 0px; top: 1px"],
-        .leaflet-marker-icon[style*="left: 1px; top: 1px"] {
-          opacity: 0 !important;
-          visibility: hidden !important;
-        }
-        
-        /* Animation pour les clusters - plus rapide */
+        /* Animation pour les clusters */
         .custom-cluster-icon {
           animation: clusterAppear 0.2s ease-out;
         }
@@ -1849,92 +2250,100 @@ export default function RunClubMap() {
           }
         }
         
-        /* Éviter les transitions sur les éléments de clustering */
-        .leaflet-cluster-anim .leaflet-marker-icon {
-          transition: none !important;
-          animation: none !important;
-        }
-        
-        /* Animation de flottement pour l'icône du popup */
-        @keyframes float {
-          0%, 100% { 
-            transform: translateY(0px); 
-          }
-          50% { 
-            transform: translateY(-8px); 
-          }
-        }
-        
         /* Styles pour la barre de scroll personnalisée */
         .clubs-list-container::-webkit-scrollbar {
-          width: 14px;
-          height: 14px;
-          /* Forcer l'affichage permanent */
+          width: 16px;
           display: block !important;
         }
         
         .clubs-list-container::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 7px;
-          margin: 8px 0 20px 0; /* Marge en bas pour empêcher le slider de descendre trop */
-          border: 1px solid #e0e0e0;
-          /* Toujours visible */
+          background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+          border-radius: 8px;
+          margin: 8px 0 100px 0;
+          border: 1px solid #dee2e6;
           display: block !important;
+          box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
         
         .clubs-list-container::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #ff6b35 0%, #e55a2b 100%);
-          border-radius: 7px;
-          transition: all 0.2s;
-          min-height: 40px; /* Hauteur minimale plus importante */
-          max-height: calc(100% - 40px); /* Limiter la hauteur maximale */
-          border: 2px solid #f1f1f1;
+          background: linear-gradient(180deg, #ff6b35 0%, #e55a2b 50%, #d14d20 100%);
+          border-radius: 8px;
+          transition: all 0.3s ease;
+          min-height: 30px;
+          max-height: calc(100% - 200px);
+          border: 2px solid #ffffff;
           background-clip: padding-box;
-          /* Toujours visible */
           display: block !important;
           opacity: 1 !important;
           visibility: visible !important;
-          /* Empêcher le slider de descendre trop bas */
-          margin-bottom: 15000px;
+          margin-bottom: 20px;
+          box-shadow: 
+            0 2px 8px rgba(255, 107, 53, 0.3),
+            0 1px 3px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
         
         .clubs-list-container::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #e55a2b 0%, #d14d20 100%);
-          transform: scale(1.05); /* Réduire l'effet de scale pour éviter les débordements */
+          background: linear-gradient(180deg, #e55a2b 0%, #d14d20 50%, #b8421a 100%);
+          transform: scale(1.02);
+          box-shadow: 
+            0 4px 12px rgba(255, 107, 53, 0.4),
+            0 2px 6px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
         
-        .clubs-list-container::-webkit-scrollbar-corner {
-          background: #f1f1f1;
-          display: block !important;
-        }
-        
-        /* Assurer que le scroll reste visible */
-        .clubs-list-container {
-          scrollbar-width: auto !important;
-          scrollbar-color: #ff6b35 #f1f1f1;
-          /* Forcer l'affichage permanent de la barre de scroll */
-          overflow-y: scroll !important;
-          /* Assurer un espace pour le dernier élément */
-          box-sizing: border-box;
-          /* Forcer la visibilité de la scrollbar */
-          scrollbar-gutter: stable both-edges;
-          /* Propriétés supplémentaires pour maintenir la visibilité */
-          -webkit-overflow-scrolling: touch;
-          /* Forcer la présence de la scrollbar même quand pas nécessaire */
-          overflow-scrolling: auto;
-          /* Ajouter un espace en bas pour la barre de scroll */
-          margin-bottom: 20px;
-          /* Padding interne pour le contenu */
-          padding-right: 8px;
-          /* Limiter la zone de scroll pour empêcher le slider de disparaître */
-          position: relative;
-        }
-        
-        /* Styles spécifiques pour Firefox */
-        @-moz-document url-prefix() {
+        /* Améliorations tactiles pour mobile */
+        @media (max-width: 768px) {
+          /* Améliorer la taille des zones tactiles */
+          button, select, input {
+            min-height: 44px;
+            min-width: 44px;
+          }
+          
+          /* Éviter le zoom sur les inputs iOS */
+          input[type="text"], input[type="search"], select, textarea {
+            font-size: 16px !important;
+          }
+          
+          /* Améliorer le scroll sur mobile */
           .clubs-list-container {
-            scrollbar-width: auto !important;
-            scrollbar-color: #ff6b35 #f1f1f1 !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+          }
+          
+          /* Masquer la barre de scroll personnalisée sur mobile */
+          .clubs-list-container::-webkit-scrollbar {
+            display: none;
+          }
+          
+          /* Utiliser la barre de scroll native sur mobile */
+          .clubs-list-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+          
+          /* Améliorer les interactions tactiles */
+          * {
+            -webkit-tap-highlight-color: rgba(255, 107, 53, 0.2);
+          }
+          
+          /* Optimiser les transitions pour mobile */
+          button, .club-item {
+            transition: background-color 0.15s ease, transform 0.15s ease;
+          }
+          
+          /* Améliorer la lisibilité sur mobile */
+          body {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+          }
+        }
+        
+        /* Styles spécifiques pour tablettes */
+        @media (min-width: 769px) and (max-width: 1024px) {
+          /* Adapter l'interface pour tablettes */
+          .clubs-list-container {
+            max-width: 420px;
           }
         }
       `}</style>
