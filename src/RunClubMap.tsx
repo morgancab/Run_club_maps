@@ -184,7 +184,8 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
 
     // Ajouter les marqueurs au groupe de clusters
     clubs.forEach((club, index) => {
-      const clubId = `${club.properties.name}-${index}`;
+      // Créer un ID unique basé sur les propriétés du club plutôt que sur l'index
+      const clubId = `${club.properties.name}-${club.geometry.coordinates[0]}-${club.geometry.coordinates[1]}`;
       const lat = club.geometry.coordinates[1];
       const lng = club.geometry.coordinates[0];
       
@@ -853,7 +854,8 @@ export default function RunClubMap() {
   const handleClubClick = (club: RunClubFeature, index: number) => {
     if (mapRef.current) {
       const map = mapRef.current;
-      const clubId = `${club.properties.name}-${index}`;
+      // Utiliser le même format d'ID que dans ClusteredMarkers
+      const clubId = `${club.properties.name}-${club.geometry.coordinates[0]}-${club.geometry.coordinates[1]}`;
       
       // Centrer la carte sur le club avec un zoom élevé pour éviter le clustering
       map.setView([club.geometry.coordinates[1], club.geometry.coordinates[0]], 16);
@@ -1345,13 +1347,10 @@ export default function RunClubMap() {
                 </div>
                                ) : (
                    filteredClubs.map((club, idx) => {
-                     // Trouver l'index original du club dans la liste complète
-                     const originalIndex = clubs.findIndex(c => c.properties.name === club.properties.name && c.geometry.coordinates[0] === club.geometry.coordinates[0] && c.geometry.coordinates[1] === club.geometry.coordinates[1]);
-                     
                      return (
                        <div
                          key={idx}
-                         onClick={() => handleClubClick(club, originalIndex)}
+                         onClick={() => handleClubClick(club, idx)}
                          style={{
                          padding: '16px',
                          borderBottom: idx < filteredClubs.length - 1 ? '1px solid #eee' : 'none',
@@ -1489,7 +1488,7 @@ export default function RunClubMap() {
         />
         
                 {/* Markers avec clustering personnalisé */}
-        <ClusteredMarkers clubs={clubs} getClubText={getClubText} t={t} selectedClubId={selectedClubId} />
+        <ClusteredMarkers clubs={filteredClubs} getClubText={getClubText} t={t} selectedClubId={selectedClubId} />
       </MapContainer>
 
       {/* Popup d'information sur le projet */}
