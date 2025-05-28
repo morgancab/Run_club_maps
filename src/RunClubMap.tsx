@@ -183,7 +183,7 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
     });
 
     // Ajouter les marqueurs au groupe de clusters
-    clubs.forEach((club, index) => {
+    clubs.forEach((club) => {
       // Créer un ID unique basé sur les propriétés du club plutôt que sur l'index
       const clubId = `${club.properties.name}-${club.geometry.coordinates[0]}-${club.geometry.coordinates[1]}`;
       const lat = club.geometry.coordinates[1];
@@ -851,7 +851,7 @@ export default function RunClubMap() {
     );
   }
 
-  const handleClubClick = (club: RunClubFeature, index: number) => {
+  const handleClubClick = (club: RunClubFeature) => {
     if (mapRef.current) {
       const map = mapRef.current;
       // Utiliser le même format d'ID que dans ClusteredMarkers
@@ -1350,7 +1350,7 @@ export default function RunClubMap() {
                      return (
                        <div
                          key={idx}
-                         onClick={() => handleClubClick(club, idx)}
+                         onClick={() => handleClubClick(club)}
                          style={{
                          padding: '16px',
                          borderBottom: idx < filteredClubs.length - 1 ? '1px solid #eee' : 'none',
