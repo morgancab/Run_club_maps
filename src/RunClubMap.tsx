@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -481,6 +481,40 @@ export default function RunClubMap() {
     setMapZoom(zoom);
   };
 
+  // Fonction pour ajuster la vue de la carte en fonction des clubs filtrés
+  const adjustMapToFilteredClubs = useCallback((filteredClubsToAdjust: RunClubFeature[]) => {
+    if (mapRef.current && filteredClubsToAdjust.length > 0) {
+      const map = mapRef.current;
+      
+      if (filteredClubsToAdjust.length === 1) {
+        // Un seul club : centrer avec zoom élevé
+        const coords = filteredClubsToAdjust[0].geometry.coordinates;
+        map.setView([coords[1], coords[0]], 14, { animate: true, duration: 1 });
+      } else {
+        // Plusieurs clubs : calculer les limites et ajuster la vue
+        const bounds = L.latLngBounds(
+          filteredClubsToAdjust.map(clubItem => [
+            clubItem.geometry.coordinates[1], 
+            clubItem.geometry.coordinates[0]
+          ])
+        );
+        
+        // Ajouter un padding pour que les marqueurs ne soient pas collés aux bords
+        const padding = isMobile ? [20, 20] : [50, 50];
+        map.fitBounds(bounds, { 
+          animate: true, 
+          duration: 1,
+          padding: padding,
+          maxZoom: 15 // Éviter un zoom trop élevé
+        });
+      }
+    } else if (mapRef.current && filteredClubsToAdjust.length === 0) {
+      // Aucun club trouvé : revenir à la vue globale
+      const map = mapRef.current;
+      map.setView([46.5, 2.5], 6, { animate: true, duration: 1 });
+    }
+  }, [isMobile]);
+
   useEffect(() => {
     // Utiliser l'API pour récupérer les données depuis Google Sheets
     fetch('/api/runclubs')
@@ -856,22 +890,7 @@ export default function RunClubMap() {
     );
   }
 
-  const handleClubClick = (club: RunClubFeature) => {
-    if (mapRef.current) {
-      const map = mapRef.current;
-      // Utiliser le même format d'ID que dans ClusteredMarkers
-      const clubId = `${club.properties.name}-${club.geometry.coordinates[0]}-${club.geometry.coordinates[1]}`;
-      
-      // Centrer la carte sur le club avec un zoom élevé pour éviter le clustering
-      map.setView([club.geometry.coordinates[1], club.geometry.coordinates[0]], 16);
-      
-      // Définir le club sélectionné pour ouvrir sa popup
-      setSelectedClubId(clubId);
-      
-      // Fermer l'overlay
-      setShowOverlay(false);
-    }
-  };
+  // Ajustement automatique de la carte géré par les fonctions de filtrage
 
   // Filtrer les clubs selon les critères sélectionnés
   const filteredClubs = clubs.filter(club => {
@@ -943,6 +962,168 @@ export default function RunClubMap() {
     setFilterCity('');
     setFilterDay('');
     setSearchQuery('');
+    
+    // Ajuster la carte à la vue globale après effacement des filtres
+    setTimeout(() => {
+      if (mapRef.current) {
+        const map = mapRef.current;
+        map.setView([46.5, 2.5], 6, { animate: true, duration: 1 });
+      }
+    }, 100);
+  };
+
+  // Fonctions wrapper pour ajuster automatiquement la carte
+  const handleCityFilterChange = (city: string) => {
+    setFilterCity(city);
+    setTimeout(() => {
+      if (mapRef.current && clubs.length > 0) {
+        // Calculer les clubs filtrés avec la nouvelle valeur de ville
+        const currentFilteredClubs = clubs.filter(club => {
+          const cityMatch = !city || club.properties.city?.toLowerCase().includes(city.toLowerCase());
+          
+          let dayMatch = true;
+          if (filterDay) {
+            const freq = club.properties.frequency?.toLowerCase() || '';
+            const dayMappings = {
+              'monday': ['lundi', 'monday'],
+              'tuesday': ['mardi', 'tuesday'],
+              'wednesday': ['mercredi', 'wednesday'],
+              'thursday': ['jeudi', 'thursday'],
+              'friday': ['vendredi', 'friday'],
+              'saturday': ['samedi', 'saturday'],
+              'sunday': ['dimanche', 'sunday']
+            };
+            
+            const searchTerms = dayMappings[filterDay as keyof typeof dayMappings] || [];
+            dayMatch = searchTerms.some(term => freq.includes(term));
+          }
+          
+          let searchMatch = true;
+          if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            const clubName = getClubText(club, 'name').toLowerCase();
+            const clubCity = club.properties.city?.toLowerCase() || '';
+            const clubDescription = getClubText(club, 'description').toLowerCase();
+            
+            searchMatch = clubName.includes(query) || 
+                         clubCity.includes(query) || 
+                         clubDescription.includes(query);
+          }
+          
+          return cityMatch && dayMatch && searchMatch;
+        });
+
+        adjustMapToFilteredClubs(currentFilteredClubs);
+      }
+    }, 300);
+  };
+
+  const handleDayFilterChange = (day: string) => {
+    setFilterDay(day);
+    setTimeout(() => {
+      if (mapRef.current && clubs.length > 0) {
+        // Calculer les clubs filtrés avec la nouvelle valeur de jour
+        const currentFilteredClubs = clubs.filter(club => {
+          const cityMatch = !filterCity || club.properties.city?.toLowerCase().includes(filterCity.toLowerCase());
+          
+          let dayMatch = true;
+          if (day) {
+            const freq = club.properties.frequency?.toLowerCase() || '';
+            const dayMappings = {
+              'monday': ['lundi', 'monday'],
+              'tuesday': ['mardi', 'tuesday'],
+              'wednesday': ['mercredi', 'wednesday'],
+              'thursday': ['jeudi', 'thursday'],
+              'friday': ['vendredi', 'friday'],
+              'saturday': ['samedi', 'saturday'],
+              'sunday': ['dimanche', 'sunday']
+            };
+            
+            const searchTerms = dayMappings[day as keyof typeof dayMappings] || [];
+            dayMatch = searchTerms.some(term => freq.includes(term));
+          }
+          
+          let searchMatch = true;
+          if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            const clubName = getClubText(club, 'name').toLowerCase();
+            const clubCity = club.properties.city?.toLowerCase() || '';
+            const clubDescription = getClubText(club, 'description').toLowerCase();
+            
+            searchMatch = clubName.includes(query) || 
+                         clubCity.includes(query) || 
+                         clubDescription.includes(query);
+          }
+          
+          return cityMatch && dayMatch && searchMatch;
+        });
+
+        adjustMapToFilteredClubs(currentFilteredClubs);
+      }
+    }, 300);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setTimeout(() => {
+      if (mapRef.current && clubs.length > 0) {
+        // Calculer les clubs filtrés avec la nouvelle valeur de recherche
+        const currentFilteredClubs = clubs.filter(club => {
+          const cityMatch = !filterCity || club.properties.city?.toLowerCase().includes(filterCity.toLowerCase());
+          
+          let dayMatch = true;
+          if (filterDay) {
+            const freq = club.properties.frequency?.toLowerCase() || '';
+            const dayMappings = {
+              'monday': ['lundi', 'monday'],
+              'tuesday': ['mardi', 'tuesday'],
+              'wednesday': ['mercredi', 'wednesday'],
+              'thursday': ['jeudi', 'thursday'],
+              'friday': ['vendredi', 'friday'],
+              'saturday': ['samedi', 'saturday'],
+              'sunday': ['dimanche', 'sunday']
+            };
+            
+            const searchTerms = dayMappings[filterDay as keyof typeof dayMappings] || [];
+            dayMatch = searchTerms.some(term => freq.includes(term));
+          }
+          
+          let searchMatch = true;
+          if (query.trim()) {
+            const searchTerm = query.toLowerCase().trim();
+            const clubName = getClubText(club, 'name').toLowerCase();
+            const clubCity = club.properties.city?.toLowerCase() || '';
+            const clubDescription = getClubText(club, 'description').toLowerCase();
+            
+            searchMatch = clubName.includes(searchTerm) || 
+                         clubCity.includes(searchTerm) || 
+                         clubDescription.includes(searchTerm);
+          }
+          
+          return cityMatch && dayMatch && searchMatch;
+        });
+
+        adjustMapToFilteredClubs(currentFilteredClubs);
+      }
+    }, 300);
+  };
+
+  // Fonction pour gérer les clics sur un club
+  const handleClubClick = (club: RunClubFeature) => {
+    if (mapRef.current) {
+      const map = mapRef.current;
+      // Utiliser le même format d'ID que dans ClusteredMarkers
+      const clubId = `${club.properties.name}-${club.geometry.coordinates[0]}-${club.geometry.coordinates[1]}`;
+      
+      // Centrer la carte sur le club avec un zoom élevé pour éviter le clustering
+      map.setView([club.geometry.coordinates[1], club.geometry.coordinates[0]], 16);
+      
+      // Définir le club sélectionné pour ouvrir sa popup
+      setSelectedClubId(clubId);
+      
+      // Fermer l'overlay
+      setShowOverlay(false);
+    }
   };
 
   return (
@@ -1149,7 +1330,7 @@ export default function RunClubMap() {
                     type="text"
                     placeholder={t.search}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '12px 12px 12px 40px',
@@ -1164,7 +1345,7 @@ export default function RunClubMap() {
                   />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery('')}
+                      onClick={() => handleSearchChange('')}
                       style={{
                         position: 'absolute',
                         right: '8px',
@@ -1206,7 +1387,7 @@ export default function RunClubMap() {
                     </label>
                     <select
                       value={filterCity}
-                      onChange={(e) => setFilterCity(e.target.value)}
+                      onChange={(e) => handleCityFilterChange(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '8px',
@@ -1236,7 +1417,7 @@ export default function RunClubMap() {
                     </label>
                     <select
                       value={filterDay}
-                      onChange={(e) => setFilterDay(e.target.value)}
+                      onChange={(e) => handleDayFilterChange(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '8px',
@@ -1268,12 +1449,40 @@ export default function RunClubMap() {
                       color: 'white',
                       fontSize: '14px',
                       cursor: 'pointer',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      marginBottom: '8px'
                     }}
                   >
                     ✕ {t.clear}
                   </button>
                 )}
+
+                {/* Bouton pour revenir à la vue globale */}
+                <button
+                  onClick={() => {
+                    if (mapRef.current) {
+                      const map = mapRef.current;
+                      map.setView([46.5, 2.5], 6, { animate: true, duration: 1 });
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    color: 'white',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  🌍 {language === 'fr' ? 'Vue globale' : 'Global view'}
+                </button>
               </div>
               
               {/* Liste des clubs mobile avec scroll optimisé */}
@@ -1662,7 +1871,7 @@ export default function RunClubMap() {
                     type="text"
                     placeholder={t.search}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '10px 12px 10px 40px',
@@ -1686,7 +1895,7 @@ export default function RunClubMap() {
                   />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery('')}
+                      onClick={() => handleSearchChange('')}
                       style={{
                         position: 'absolute',
                         right: '8px',
@@ -1729,7 +1938,7 @@ export default function RunClubMap() {
                     </label>
                     <select
                       value={filterCity}
-                      onChange={(e) => setFilterCity(e.target.value)}
+                      onChange={(e) => handleCityFilterChange(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '6px 8px',
@@ -1758,7 +1967,7 @@ export default function RunClubMap() {
                     </label>
                     <select
                       value={filterDay}
-                      onChange={(e) => setFilterDay(e.target.value)}
+                      onChange={(e) => handleDayFilterChange(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '6px 8px',
@@ -1793,6 +2002,31 @@ export default function RunClubMap() {
                       ✕ {t.clear}
                     </button>
                   )}
+
+                  {/* Bouton pour revenir à la vue globale - Desktop */}
+                  <button
+                    onClick={() => {
+                      if (mapRef.current) {
+                        const map = mapRef.current;
+                        map.setView([46.5, 2.5], 6, { animate: true, duration: 1 });
+                      }
+                    }}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      color: 'white',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    🌍 {language === 'fr' ? 'Vue globale' : 'Global view'}
+                  </button>
                 </div>
               </div>
               
