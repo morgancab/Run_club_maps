@@ -395,8 +395,6 @@ export default function RunClubMap() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [language, setLanguage] = useState<Language>('fr');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [isTablet, setIsTablet] = useState(window.innerWidth > 768 && window.innerWidth <= 1024);
-  const [isTouchDevice, setIsTouchDevice] = useState('ontouchstart' in window);
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const mapRef = useRef<any>(null);
@@ -406,8 +404,6 @@ export default function RunClubMap() {
     const handleResize = () => {
       const width = window.innerWidth;
       setIsMobile(width <= 768);
-      setIsTablet(width > 768 && width <= 1024);
-      setIsTouchDevice('ontouchstart' in window);
     };
 
     window.addEventListener('resize', handleResize);
