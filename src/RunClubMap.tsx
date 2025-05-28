@@ -1445,40 +1445,12 @@ export default function RunClubMap() {
                       color: 'white',
                       fontSize: '14px',
                       cursor: 'pointer',
-                      fontWeight: 'bold',
-                      marginBottom: '8px'
+                      fontWeight: 'bold'
                     }}
                   >
                     ✕ {t.clear}
                   </button>
                 )}
-
-                {/* Bouton pour revenir à la vue globale */}
-                <button
-                  onClick={() => {
-                    if (mapRef.current) {
-                      const map = mapRef.current;
-                      map.setView([46.5, 2.5], 6, { animate: true, duration: 1 });
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    backgroundColor: 'rgba(255,255,255,0.15)',
-                    color: 'white',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  🌍 {language === 'fr' ? 'Vue globale' : 'Global view'}
-                </button>
               </div>
               
               {/* Liste des clubs mobile avec scroll optimisé */}
@@ -1998,31 +1970,6 @@ export default function RunClubMap() {
                       ✕ {t.clear}
                     </button>
                   )}
-
-                  {/* Bouton pour revenir à la vue globale - Desktop */}
-                  <button
-                    onClick={() => {
-                      if (mapRef.current) {
-                        const map = mapRef.current;
-                        map.setView([46.5, 2.5], 6, { animate: true, duration: 1 });
-                      }
-                    }}
-                    style={{
-                      padding: '6px 10px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      backgroundColor: 'rgba(255,255,255,0.15)',
-                      color: 'white',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    🌍 {language === 'fr' ? 'Vue globale' : 'Global view'}
-                  </button>
                 </div>
               </div>
               
