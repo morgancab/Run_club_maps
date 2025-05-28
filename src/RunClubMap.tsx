@@ -1317,10 +1317,15 @@ export default function RunClubMap() {
             </div>
             
             {/* Liste des clubs */}
-            <div style={{
-              maxHeight: isMobile ? 'calc(70vh - 120px)' : 'calc(75vh - 140px)',
-              overflowY: 'auto'
-            }}>
+            <div 
+              className="clubs-list-container"
+              style={{
+                maxHeight: isMobile ? 'calc(70vh - 120px)' : 'calc(75vh - 140px)',
+                overflowY: 'scroll',
+                paddingBottom: '60px',
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#ff6b35 #f1f1f1'
+              }}>
               {filteredClubs.length === 0 ? (
                 <div style={{
                   padding: '40px 20px',
@@ -1855,6 +1860,79 @@ export default function RunClubMap() {
           }
           50% { 
             transform: translateY(-8px); 
+          }
+        }
+        
+        /* Styles pour la barre de scroll personnalisée */
+        .clubs-list-container::-webkit-scrollbar {
+          width: 14px;
+          height: 14px;
+          /* Forcer l'affichage permanent */
+          display: block !important;
+        }
+        
+        .clubs-list-container::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 7px;
+          margin: 8px 0 20px 0; /* Marge en bas pour empêcher le slider de descendre trop */
+          border: 1px solid #e0e0e0;
+          /* Toujours visible */
+          display: block !important;
+        }
+        
+        .clubs-list-container::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #ff6b35 0%, #e55a2b 100%);
+          border-radius: 7px;
+          transition: all 0.2s;
+          min-height: 40px; /* Hauteur minimale plus importante */
+          max-height: calc(100% - 40px); /* Limiter la hauteur maximale */
+          border: 2px solid #f1f1f1;
+          background-clip: padding-box;
+          /* Toujours visible */
+          display: block !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          /* Empêcher le slider de descendre trop bas */
+          margin-bottom: 15000px;
+        }
+        
+        .clubs-list-container::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #e55a2b 0%, #d14d20 100%);
+          transform: scale(1.05); /* Réduire l'effet de scale pour éviter les débordements */
+        }
+        
+        .clubs-list-container::-webkit-scrollbar-corner {
+          background: #f1f1f1;
+          display: block !important;
+        }
+        
+        /* Assurer que le scroll reste visible */
+        .clubs-list-container {
+          scrollbar-width: auto !important;
+          scrollbar-color: #ff6b35 #f1f1f1;
+          /* Forcer l'affichage permanent de la barre de scroll */
+          overflow-y: scroll !important;
+          /* Assurer un espace pour le dernier élément */
+          box-sizing: border-box;
+          /* Forcer la visibilité de la scrollbar */
+          scrollbar-gutter: stable both-edges;
+          /* Propriétés supplémentaires pour maintenir la visibilité */
+          -webkit-overflow-scrolling: touch;
+          /* Forcer la présence de la scrollbar même quand pas nécessaire */
+          overflow-scrolling: auto;
+          /* Ajouter un espace en bas pour la barre de scroll */
+          margin-bottom: 20px;
+          /* Padding interne pour le contenu */
+          padding-right: 8px;
+          /* Limiter la zone de scroll pour empêcher le slider de disparaître */
+          position: relative;
+        }
+        
+        /* Styles spécifiques pour Firefox */
+        @-moz-document url-prefix() {
+          .clubs-list-container {
+            scrollbar-width: auto !important;
+            scrollbar-color: #ff6b35 #f1f1f1 !important;
           }
         }
       `}</style>
