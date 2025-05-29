@@ -1,4 +1,4 @@
-# Guide SEO - Social Run Club Maps
+# Guide SEO - Social Club Explorer Maps
 
 ## 📈 Optimisations SEO Implémentées
 

@@ -294,7 +294,7 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
 // Système de traduction
 const translations = {
   fr: {
-    title: 'Social Run Club',
+    title: 'Social Club Explorer',
     subtitle: '🗺️ Carte Interactive',
     clubsList: 'Liste des clubs',
     loading: 'Chargement de la carte...',
@@ -308,7 +308,7 @@ const translations = {
     addClubTooltip: 'Vous connaissez un club qui devrait apparaître sur la carte ?',
     info: 'En savoir plus',
     aboutProject: 'À propos du projet',
-    projectDescription: 'Social Run Club est une carte interactive collaborative qui référence les clubs de running en France.',
+    projectDescription: 'Social Club Explorer est une carte interactive collaborative qui référence les clubs de running en France.',
     projectGoal: 'Notre objectif est de créer une communauté où chacun peut découvrir et partager des clubs de course près de chez soi.',
     howItWorks: 'Comment ça marche ?',
     step1: '🗺️ Explorez la carte pour découvrir les clubs',
@@ -338,7 +338,7 @@ const translations = {
     }
   },
   en: {
-    title: 'Social Run Club',
+    title: 'Social Club Explorer',
     subtitle: '🗺️ Interactive Maps',
     clubsList: 'Clubs list',
     loading: 'Loading map...',
@@ -352,7 +352,7 @@ const translations = {
     addClubTooltip: 'Know a club that should appear on the map?',
     info: 'Learn more',
     aboutProject: 'About the project',
-    projectDescription: 'Social Run Club is a collaborative interactive map that references running clubs in France.',
+    projectDescription: 'Social Club Explorer is a collaborative interactive map that references running clubs in France.',
     projectGoal: 'Our goal is to create a community where everyone can discover and share running clubs near them.',
     howItWorks: 'How it works?',
     step1: '🗺️ Explore the map to discover clubs',
@@ -2281,7 +2281,7 @@ export default function RunClubMap() {
                   letterSpacing: '-0.5px',
                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
                 }}>
-                  Social Run Club
+                  Social Club Explorer
                 </h2>
                 <p style={{
                   margin: '0',
