@@ -13,7 +13,8 @@ Contient toutes les images des clubs de course :
 
 ### 🎨 `/icons/`
 Contient les icônes et favicons :
-- `favicon.svg` - Favicon principal du site (thème piste d'athlétisme)
+- `SCE-logo.png` - **Logo principal Social Club Explorer** (favicon, PWA, réseaux sociaux)
+- `favicon.svg` - Favicon SVG de fallback (thème piste d'athlétisme)
 - `vite.svg` - Logo Vite (outil de build)
 
 ### 🔍 `/seo/`
@@ -43,6 +44,12 @@ Les fichiers SEO sont organisés dans `/seo/` mais restent accessibles à la rac
 
 ## 📝 Conventions de Nommage
 
+### Logo Principal
+- `SCE-logo.png` - Logo officiel Social Club Explorer
+  - Utilisé pour : favicon, PWA, réseaux sociaux, partages
+  - Tailles multiples supportées : 16x16, 32x32, 180x180, 192x192, 512x512
+  - Format PNG avec transparence recommandé
+
 ### Images des Clubs
 - Format : `nom_club.png`
 - Taille recommandée : 60x60px minimum
@@ -64,7 +71,9 @@ Lors du build (`npm run build`), tous ces fichiers sont copiés dans `/dist/` av
 - [ ] `https://votre-site.com/robots.txt` accessible
 - [ ] `https://votre-site.com/sitemap.xml` accessible  
 - [ ] `https://votre-site.com/manifest.json` accessible
-- [ ] Favicon visible dans les onglets du navigateur
+- [ ] **Logo SCE visible** dans les onglets du navigateur
+- [ ] **Logo SCE affiché** lors des partages sur réseaux sociaux
+- [ ] **PWA installable** avec le logo SCE
 
 ## 📊 Optimisations
 
@@ -72,11 +81,21 @@ Lors du build (`npm run build`), tous ces fichiers sont copiés dans `/dist/` av
 - **Compression** : Les images sont optimisées pour le web
 - **Cache** : Headers de cache longue durée (1 an)
 - **CDN** : Compatible avec les CDN
+- **Logo SCE** : Préchargé pour une affichage rapide
 
 ### SEO
 - **Gzip** : Tous les fichiers texte sont compressés
 - **Headers** : Optimisés pour le référencement
 - **Structure** : Organisation claire pour les robots
+- **Métadonnées** : Logo SCE intégré dans les données structurées
+
+## 🎨 Branding
+
+Le site utilise maintenant le **logo SCE** (Social Club Explorer) comme identité visuelle principale :
+- **Favicon** : Icône dans les onglets du navigateur
+- **PWA** : Icône de l'application installée
+- **Réseaux sociaux** : Image lors des partages
+- **Apple Touch Icon** : Icône sur iOS/Safari
 
 ---
 

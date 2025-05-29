@@ -1,6 +1,6 @@
 {
   "name": "Social Club Explorer Maps - Carte Interactive des Clubs de Course",
-  "short_name": "Run Club Maps",
+  "short_name": "SCE Maps",
   "description": "Découvrez et rejoignez les clubs de course à pied près de chez vous avec notre carte interactive",
   "start_url": "/",
   "display": "standalone",
@@ -12,15 +12,27 @@
   "categories": ["sports", "health", "lifestyle"],
   "icons": [
     {
+      "src": "/icons/SCE-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/SCE-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/SCE-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/icons/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/header-background.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
       "purpose": "any"
     }
   ],
@@ -41,7 +53,7 @@
       "url": "/?action=search",
       "icons": [
         {
-          "src": "/icons/favicon.svg",
+          "src": "/icons/SCE-logo.png",
           "sizes": "96x96"
         }
       ]
