@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
+import { useSEO, useClubStructuredData } from './hooks/useSEO';
 
 interface RunClubFeature {
   type: 'Feature';
@@ -118,7 +119,7 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
   clubs: RunClubFeature[]; 
   getClubText: (club: RunClubFeature, field: 'name' | 'frequency' | 'description') => string;
   t: any;
-  selectedClubId?: string;
+  selectedClubId: string | undefined;
 }) {
   const map = useMap();
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -399,6 +400,34 @@ export default function RunClubMap() {
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const mapRef = useRef<any>(null);
 
+  // Fonction pour obtenir les traductions
+  const t = translations[language];
+
+  // Générer les données structurées pour les clubs
+  const clubStructuredData = useClubStructuredData(clubs, language);
+
+  // Hook SEO dynamique
+  useSEO({
+    title: language === 'fr' 
+      ? `Carte Interactive des Clubs de Course à Pied | ${clubs.length} Clubs en France`
+      : `Interactive Running Clubs Map | ${clubs.length} Clubs in France`,
+    description: language === 'fr'
+      ? `Découvrez ${clubs.length} clubs de course à pied en France. Carte interactive avec filtres par ville et horaires. Trouvez votre communauté running idéale près de chez vous.`
+      : `Discover ${clubs.length} running clubs in France. Interactive map with city and schedule filters. Find your ideal running community near you.`,
+    keywords: language === 'fr'
+      ? `clubs course à pied, running clubs France, communauté running, carte clubs running, course à pied ${filterCity ? filterCity + ', ' : ''}sport collectif, entraînement course`
+      : `running clubs, running clubs France, running community, running clubs map, running ${filterCity ? filterCity + ', ' : ''}group sports, running training`,
+    ogTitle: language === 'fr'
+      ? `Carte Interactive des Clubs de Course à Pied | ${clubs.length} Clubs`
+      : `Interactive Running Clubs Map | ${clubs.length} Clubs`,
+    ogDescription: language === 'fr'
+      ? `Découvrez ${clubs.length} clubs de course à pied en France avec notre carte interactive. Filtres par ville et horaires disponibles.`
+      : `Discover ${clubs.length} running clubs in France with our interactive map. City and schedule filters available.`,
+    canonicalUrl: `https://run-club-maps.vercel.app/${language === 'en' ? '?lang=en' : ''}`,
+    language,
+    structuredData: clubStructuredData
+  });
+
   // Hook pour détecter les changements de taille d'écran et le type d'appareil
   useEffect(() => {
     const handleResize = () => {
@@ -409,9 +438,6 @@ export default function RunClubMap() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Fonction pour obtenir les traductions
-  const t = translations[language];
 
   // Fonction pour obtenir le texte traduit d'un club
   const getClubText = (club: RunClubFeature, field: 'name' | 'frequency' | 'description'): string => {
@@ -436,24 +462,32 @@ export default function RunClubMap() {
 
     if (features.length === 1) {
       // Si un seul point, centrer dessus avec zoom élevé
-      const coords = features[0].geometry.coordinates;
-      setMapCenter([coords[1], coords[0]]);
-      setMapZoom(10);
+      const firstFeature = features[0];
+      if (firstFeature?.geometry?.coordinates) {
+        const coords = firstFeature.geometry.coordinates;
+        setMapCenter([coords[1], coords[0]]);
+        setMapZoom(10);
+      }
       return;
     }
 
     // Calculer les limites (bounding box)
-    let minLat = features[0].geometry.coordinates[1];
-    let maxLat = features[0].geometry.coordinates[1];
-    let minLng = features[0].geometry.coordinates[0];
-    let maxLng = features[0].geometry.coordinates[0];
+    const firstFeature = features[0];
+    if (!firstFeature?.geometry?.coordinates) return;
+    
+    let minLat = firstFeature.geometry.coordinates[1];
+    let maxLat = firstFeature.geometry.coordinates[1];
+    let minLng = firstFeature.geometry.coordinates[0];
+    let maxLng = firstFeature.geometry.coordinates[0];
 
     features.forEach(feature => {
-      const [lng, lat] = feature.geometry.coordinates;
-      minLat = Math.min(minLat, lat);
-      maxLat = Math.max(maxLat, lat);
-      minLng = Math.min(minLng, lng);
-      maxLng = Math.max(maxLng, lng);
+      if (feature?.geometry?.coordinates) {
+        const [lng, lat] = feature.geometry.coordinates;
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+      }
     });
 
     // Calculer le centre
@@ -484,25 +518,31 @@ export default function RunClubMap() {
       
       if (filteredClubsToAdjust.length === 1) {
         // Un seul club : centrer avec zoom élevé
-        const coords = filteredClubsToAdjust[0].geometry.coordinates;
-        map.setView([coords[1], coords[0]], 14, { animate: true, duration: 1 });
+        const firstClub = filteredClubsToAdjust[0];
+        if (firstClub?.geometry?.coordinates) {
+          const coords = firstClub.geometry.coordinates;
+          map.setView([coords[1], coords[0]], 14, { animate: true, duration: 1 });
+        }
       } else {
         // Plusieurs clubs : calculer les limites et ajuster la vue
-        const bounds = L.latLngBounds(
-          filteredClubsToAdjust.map(clubItem => [
-            clubItem.geometry.coordinates[1], 
-            clubItem.geometry.coordinates[0]
-          ])
-        );
-        
-        // Ajouter un padding pour que les marqueurs ne soient pas collés aux bords
-        const padding = isMobile ? [20, 20] : [50, 50];
-        map.fitBounds(bounds, { 
-          animate: true, 
-          duration: 1,
-          padding: padding,
-          maxZoom: 15 // Éviter un zoom trop élevé
-        });
+        const validClubs = filteredClubsToAdjust.filter(club => club?.geometry?.coordinates);
+        if (validClubs.length > 0) {
+          const bounds = L.latLngBounds(
+            validClubs.map(clubItem => [
+              clubItem.geometry.coordinates[1], 
+              clubItem.geometry.coordinates[0]
+            ])
+          );
+          
+          // Ajouter un padding pour que les marqueurs ne soient pas collés aux bords
+          const padding = isMobile ? [20, 20] : [50, 50];
+          map.fitBounds(bounds, { 
+            animate: true, 
+            duration: 1,
+            padding: padding,
+            maxZoom: 15 // Éviter un zoom trop élevé
+          });
+        }
       }
     } else if (mapRef.current && filteredClubsToAdjust.length === 0) {
       // Aucun club trouvé : revenir à la vue globale
@@ -1123,17 +1163,17 @@ export default function RunClubMap() {
   };
 
   return (
-    <div style={{ 
+    <main style={{ 
       width: '100vw', 
       height: '100vh', 
       position: 'relative',
       animation: 'fadeIn 0.8s ease-out'
-    }}>
+    }} role="application" aria-label={language === 'fr' ? 'Carte interactive des clubs de course à pied' : 'Interactive running clubs map'}>
       {/* Interface mobile optimisée */}
       {isMobile ? (
         <>
           {/* Barre de navigation mobile en haut */}
-          <div style={{
+          <header style={{
             position: 'absolute',
             top: 0,
             left: 0,
@@ -1168,6 +1208,8 @@ export default function RunClubMap() {
                   alignItems: 'center',
                   gap: '6px'
                 }}
+                aria-label={showOverlay ? t.close : t.clubsList}
+                aria-expanded={showOverlay}
               >
                 <span>{showOverlay ? '✕' : '☰'}</span>
                 <span>{filteredClubs.length}/{clubs.length}</span>
@@ -1199,14 +1241,14 @@ export default function RunClubMap() {
             </div>
 
             {/* Contrôles droite */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }} aria-label={language === 'fr' ? 'Navigation principale' : 'Main navigation'}>
               {/* Sélecteur de langue compact */}
               <div style={{
                 backgroundColor: 'rgba(255, 107, 53, 0.1)',
                 borderRadius: '6px',
                 overflow: 'hidden',
                 display: 'flex'
-              }}>
+              }} role="group" aria-label={language === 'fr' ? 'Sélection de langue' : 'Language selection'}>
                 <button
                   onClick={() => setLanguage('fr')}
                   style={{
@@ -1219,6 +1261,8 @@ export default function RunClubMap() {
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
+                  aria-label="Français"
+                  aria-pressed={language === 'fr'}
                 >
                   🇫🇷
                 </button>
@@ -1234,6 +1278,8 @@ export default function RunClubMap() {
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
+                  aria-label="English"
+                  aria-pressed={language === 'en'}
                 >
                   🇬🇧
                 </button>
@@ -1256,15 +1302,16 @@ export default function RunClubMap() {
                   color: '#ff6b35',
                   fontWeight: 'bold'
                 }}
+                aria-label={t.info}
               >
                 ℹ️
               </button>
-            </div>
-          </div>
+            </nav>
+          </header>
 
           {/* Overlay mobile plein écran */}
           {showOverlay && (
-            <div style={{
+            <aside style={{
               position: 'fixed',
               top: '60px',
               left: 0,
@@ -1276,9 +1323,9 @@ export default function RunClubMap() {
               fontFamily: 'Arial, sans-serif',
               display: 'flex',
               flexDirection: 'column'
-            }}>
+            }} aria-label={language === 'fr' ? 'Panneau de filtres et liste des clubs' : 'Filters panel and clubs list'}>
               {/* Header des filtres mobile */}
-              <div style={{
+              <header style={{
                 padding: '16px',
                 background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
                 color: 'white',
@@ -1290,20 +1337,20 @@ export default function RunClubMap() {
                   alignItems: 'center',
                   marginBottom: '16px'
                 }}>
-                  <h3 style={{
+                  <h2 style={{
                     margin: '0',
                     fontSize: '18px',
                     fontWeight: 'bold'
                   }}>
                     🏃‍♂️ Run Clubs
-                  </h3>
+                  </h2>
                   <div style={{
                     backgroundColor: 'rgba(255,255,255,0.2)',
                     padding: '4px 12px',
                     borderRadius: '20px',
                     fontSize: '14px',
                     fontWeight: 'bold'
-                  }}>
+                  }} aria-live="polite">
                     {filteredClubs.length}/{clubs.length}
                   </div>
                 </div>
@@ -1451,7 +1498,7 @@ export default function RunClubMap() {
                     ✕ {t.clear}
                   </button>
                 )}
-              </div>
+              </header>
               
               {/* Liste des clubs mobile avec scroll optimisé */}
               <div style={{
@@ -1601,7 +1648,7 @@ export default function RunClubMap() {
                   ))
                 )}
               </div>
-            </div>
+            </aside>
           )}
         </>
       ) : (
@@ -2524,6 +2571,6 @@ export default function RunClubMap() {
           }
         }
       `}</style>
-    </div>
+    </main>
   );
 } 

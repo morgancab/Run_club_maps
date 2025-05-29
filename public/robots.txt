@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://run-club-maps.vercel.app/sitemap.xml
+
+# Optimisations pour les moteurs de recherche
+Crawl-delay: 1
+
+# Bloquer les fichiers non nécessaires pour le SEO
+Disallow: /node_modules/
+Disallow: /src/
+Disallow: /*.json$
+Disallow: /api/
+Disallow: /scripts/
+
+# Autoriser les ressources importantes
+Allow: /favicon.svg
+Allow: /header-background.jpg
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.svg$ 

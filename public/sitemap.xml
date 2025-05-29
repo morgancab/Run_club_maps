@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- Page principale -->
+  <url>
+    <loc>https://run-club-maps.vercel.app/</loc>
+    <lastmod>2024-12-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://run-club-maps.vercel.app/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://run-club-maps.vercel.app/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://run-club-maps.vercel.app/"/>
+  </url>
+  
+  <!-- Version anglaise -->
+  <url>
+    <loc>https://run-club-maps.vercel.app/?lang=en</loc>
+    <lastmod>2024-12-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://run-club-maps.vercel.app/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://run-club-maps.vercel.app/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://run-club-maps.vercel.app/"/>
+  </url>
+  
+</urlset> 
