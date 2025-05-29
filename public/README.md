@@ -1,6 +1,6 @@
 # Organisation du Dossier Public
 
-Ce dossier contient tous les fichiers statiques de l'application **Social Club Explorer Maps**.
+Ce dossier contient tous les fichiers statiques de l'application **Sport Club Explorer Maps**.
 
 ## 📁 Structure des Dossiers
 
@@ -13,7 +13,7 @@ Contient toutes les images des clubs de course :
 
 ### 🎨 `/icons/`
 Contient les icônes et favicons :
-- `SCE-logo.png` - **Logo principal Social Club Explorer** (favicon, PWA, réseaux sociaux)
+- `SCE-logo.png` - **Logo principal Sport Club Explorer** (favicon, PWA, réseaux sociaux)
 - `favicon.svg` - Favicon SVG de fallback (thème piste d'athlétisme)
 - `vite.svg` - Logo Vite (outil de build)
 
@@ -45,7 +45,7 @@ Les fichiers SEO sont organisés dans `/seo/` mais restent accessibles à la rac
 ## 📝 Conventions de Nommage
 
 ### Logo Principal
-- `SCE-logo.png` - Logo officiel Social Club Explorer
+- `SCE-logo.png` - Logo officiel Sport Club Explorer
   - Utilisé pour : favicon, PWA, réseaux sociaux, partages
   - Tailles multiples supportées : 16x16, 32x32, 180x180, 192x192, 512x512
   - Format PNG avec transparence recommandé
@@ -91,7 +91,7 @@ Lors du build (`npm run build`), tous ces fichiers sont copiés dans `/dist/` av
 
 ## 🎨 Branding
 
-Le site utilise maintenant le **logo SCE** (Social Club Explorer) comme identité visuelle principale :
+Le site utilise maintenant le **logo SCE** (Sport Club Explorer) comme identité visuelle principale :
 - **Favicon** : Icône dans les onglets du navigateur
 - **PWA** : Icône de l'application installée
 - **Réseaux sociaux** : Image lors des partages
