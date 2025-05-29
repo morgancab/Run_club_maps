@@ -1676,38 +1676,51 @@ export default function RunClubMap() {
               border: '1px solid rgba(255, 107, 53, 0.2)',
               minWidth: 'fit-content'
             }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <div style={{
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: '#ff6b35',
-                  borderRadius: '50%',
-                  animation: 'pulse 2s infinite'
-                }}></div>
-                <h1 style={{
-                  margin: '0',
-                  fontSize: '22px',
-                  fontWeight: '700',
-                  color: '#2d3748',
-                  letterSpacing: '-0.5px'
-                }}>
-                  {t.title}
-                </h1>
-              </div>
-              <div style={{
-                fontSize: '13px',
-                color: '#ff6b35',
-                fontWeight: '600',
-                textAlign: 'left',
-                marginTop: '4px',
-                letterSpacing: '1px',
-                textTransform: 'uppercase'
-              }}>
-                {t.subtitle}
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* Logo SCE */}
+                <img 
+                  src="/SCE-logo.png" 
+                  alt="Sport Club Explorer Logo"
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    objectFit: 'contain',
+                    flexShrink: 0,
+                    borderRadius: '6px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  }}
+                  onError={(e) => {
+                    console.log('❌ Erreur de chargement du logo SCE:', e);
+                    // Fallback en cas d'erreur
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+                
+                {/* Titre et sous-titre */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h1 style={{
+                    margin: '0',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: '#2d3748',
+                    letterSpacing: '-0.3px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {t.title}
+                  </h1>
+                  <div style={{
+                    fontSize: '10px',
+                    color: '#ff6b35',
+                    fontWeight: '600',
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase'
+                  }}>
+                    {t.subtitle}
+                  </div>
+                </div>
               </div>
             </div>
 
