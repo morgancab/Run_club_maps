@@ -12,7 +12,7 @@
   "categories": ["sports", "health", "lifestyle"],
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/icons/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
@@ -41,7 +41,7 @@
       "url": "/?action=search",
       "icons": [
         {
-          "src": "/favicon.svg",
+          "src": "/icons/favicon.svg",
           "sizes": "96x96"
         }
       ]

@@ -1,5 +1,10 @@
 # Optimisations SEO et performances pour Apache
 
+# Redirections pour les fichiers SEO organisés
+RewriteEngine On
+RewriteRule ^robots\.txt$ /seo/robots.txt [L]
+RewriteRule ^sitemap\.xml$ /seo/sitemap.xml [L]
+
 # Compression GZIP
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/plain
