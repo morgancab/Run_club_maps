@@ -373,6 +373,7 @@ const translations = {
     contactUs: 'Si vous constatez une erreur ou souhaitez proposer une correction, n\'hésitez pas à nous contacter et à contribuer à l\'amélioration du projet.',
     backToMap: 'Retour à la carte',
     clearFilters: 'Effacer les filtres',
+    findYourClub: 'Trouve ton club',
     days: {
       monday: 'Lundi',
       tuesday: 'Mardi', 
@@ -422,6 +423,7 @@ const translations = {
     contactUs: 'If you notice an error or would like to suggest a correction, please do not hesitate to contact us and contribute to improving the project.',
     backToMap: 'Back to Map',
     clearFilters: 'Clear Filters',
+    findYourClub: 'Find Your Club',
     days: {
       monday: 'Monday',
       tuesday: 'Tuesday',
@@ -2628,6 +2630,47 @@ export default function RunClubMap() {
           aria-label={t.clearFilters}
         >
           🗑️ {t.clearFilters}
+        </button>
+      )}
+
+      {/* Bouton Trouve ton club - Mobile uniquement et si aucun filtre actif */}
+      {isMobile && !showOverlay && !filterCity && !filterDay && !searchQuery.trim() && (
+        <button
+          onClick={() => setShowOverlay(true)}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1001,
+            backgroundColor: '#ff6b35',
+            color: 'white',
+            border: 'none',
+            borderRadius: '25px',
+            padding: '12px 20px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 12px rgba(255, 107, 53, 0.4)',
+            transition: 'all 0.2s ease',
+            fontFamily: 'Arial, sans-serif',
+            minHeight: '44px',
+            minWidth: '160px'
+          }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.backgroundColor = '#e55a2b';
+            e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.backgroundColor = '#ff6b35';
+            e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+          }}
+          aria-label={t.findYourClub}
+        >
+          🔍 {t.findYourClub}
         </button>
       )}
 
