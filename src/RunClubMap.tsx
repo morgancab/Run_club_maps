@@ -1303,22 +1303,26 @@ export default function RunClubMap() {
               {/* Sélecteur de langue compact */}
               <div style={{
                 backgroundColor: 'rgba(255, 107, 53, 0.1)',
-                borderRadius: '4px',
+                borderRadius: '6px',
                 overflow: 'hidden',
                 display: 'flex'
               }} role="group" aria-label={language === 'fr' ? 'Sélection de langue' : 'Language selection'}>
                 <button
                   onClick={() => setLanguage('fr')}
                   style={{
-                    padding: '4px 6px',
+                    padding: '6px 8px',
                     border: 'none',
                     backgroundColor: language === 'fr' ? '#ff6b35' : 'transparent',
                     color: language === 'fr' ? 'white' : '#ff6b35',
-                    fontSize: '9px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    minWidth: '24px'
+                    minWidth: '30px',
+                    minHeight: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   aria-label="Français"
                   aria-pressed={language === 'fr'}
@@ -1328,15 +1332,19 @@ export default function RunClubMap() {
                 <button
                   onClick={() => setLanguage('en')}
                   style={{
-                    padding: '4px 6px',
+                    padding: '6px 8px',
                     border: 'none',
                     backgroundColor: language === 'en' ? '#ff6b35' : 'transparent',
                     color: language === 'en' ? 'white' : '#ff6b35',
-                    fontSize: '9px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    minWidth: '24px'
+                    minWidth: '30px',
+                    minHeight: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   aria-label="English"
                   aria-pressed={language === 'en'}
