@@ -372,6 +372,7 @@ const translations = {
     disclaimerText: 'Les données affichées sur cette carte sont fournies à titre indicatif et peuvent ne pas être à jour. Nous vous recommandons de vérifier directement auprès des clubs (horaires, lieux, contacts) avant de vous déplacer.',
     contactUs: 'Si vous constatez une erreur ou souhaitez proposer une correction, n\'hésitez pas à nous contacter et à contribuer à l\'amélioration du projet.',
     backToMap: 'Retour à la carte',
+    clearFilters: 'Effacer les filtres',
     days: {
       monday: 'Lundi',
       tuesday: 'Mardi', 
@@ -420,6 +421,7 @@ const translations = {
     disclaimerText: 'The data displayed on this map is provided for informational purposes only and may not be up to date. We recommend verifying directly with the clubs (schedules, locations, contacts) before visiting.',
     contactUs: 'If you notice an error or would like to suggest a correction, please do not hesitate to contact us and contribute to improving the project.',
     backToMap: 'Back to Map',
+    clearFilters: 'Clear Filters',
     days: {
       monday: 'Monday',
       tuesday: 'Tuesday',
@@ -2586,6 +2588,47 @@ export default function RunClubMap() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bouton Effacer les filtres - Mobile uniquement et si filtres actifs */}
+      {isMobile && !showOverlay && (filterCity || filterDay || searchQuery.trim()) && (
+        <button
+          onClick={clearFilters}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1001,
+            backgroundColor: '#ff6b35',
+            color: 'white',
+            border: 'none',
+            borderRadius: '25px',
+            padding: '12px 20px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 12px rgba(255, 107, 53, 0.4)',
+            transition: 'all 0.2s ease',
+            fontFamily: 'Arial, sans-serif',
+            minHeight: '44px',
+            minWidth: '160px'
+          }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.backgroundColor = '#e55a2b';
+            e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.backgroundColor = '#ff6b35';
+            e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+          }}
+          aria-label={t.clearFilters}
+        >
+          🗑️ {t.clearFilters}
+        </button>
       )}
 
       {/* Styles CSS globaux pour les animations et l'adaptation mobile */}
