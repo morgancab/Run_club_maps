@@ -371,6 +371,7 @@ const translations = {
     disclaimer: 'Avertissement Important',
     disclaimerText: 'Les données affichées sur cette carte sont fournies à titre indicatif et peuvent ne pas être à jour. Nous vous recommandons de vérifier directement auprès des clubs (horaires, lieux, contacts) avant de vous déplacer.',
     contactUs: 'Si vous constatez une erreur ou souhaitez proposer une correction, n\'hésitez pas à nous contacter et à contribuer à l\'amélioration du projet.',
+    backToMap: 'Retour à la carte',
     days: {
       monday: 'Lundi',
       tuesday: 'Mardi', 
@@ -418,6 +419,7 @@ const translations = {
     disclaimer: 'Important Disclaimer',
     disclaimerText: 'The data displayed on this map is provided for informational purposes only and may not be up to date. We recommend verifying directly with the clubs (schedules, locations, contacts) before visiting.',
     contactUs: 'If you notice an error or would like to suggest a correction, please do not hesitate to contact us and contribute to improving the project.',
+    backToMap: 'Back to Map',
     days: {
       monday: 'Monday',
       tuesday: 'Tuesday',
@@ -1213,7 +1215,10 @@ export default function RunClubMap() {
     <main style={{ 
       width: '100vw', 
       height: '100vh', 
-      position: 'relative',
+      position: isMobile ? 'fixed' : 'relative',
+      top: 0,
+      left: 0,
+      overflow: 'hidden',
       animation: 'fadeIn 0.8s ease-out'
     }} role="application" aria-label={language === 'fr' ? 'Carte interactive des clubs de course à pied' : 'Interactive running clubs map'}>
       {/* Interface mobile optimisée */}
@@ -1229,31 +1234,33 @@ export default function RunClubMap() {
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(10px)',
             borderBottom: '1px solid rgba(255, 107, 53, 0.2)',
-            padding: '12px 16px',
+            padding: '8px 12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+            minHeight: '50px'
           }}>
             {/* Bouton menu et titre */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
               <button
                 onClick={() => setShowOverlay(!showOverlay)}
                 style={{
                   backgroundColor: '#ff6b35',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  fontSize: '12px',
+                  borderRadius: '6px',
+                  padding: '6px 8px',
+                  fontSize: '11px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
-                  minHeight: '36px',
+                  minHeight: '32px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '4px',
+                  flexShrink: 0
                 }}
                 aria-label={showOverlay ? t.close : t.clubsList}
                 aria-expanded={showOverlay}
@@ -1262,13 +1269,13 @@ export default function RunClubMap() {
                 <span>{filteredClubs.length}/{clubs.length}</span>
               </button>
               
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                 <h1 style={{
                   margin: '0',
-                  fontSize: '16px',
+                  fontSize: '14px',
                   fontWeight: '700',
                   color: '#2d3748',
-                  letterSpacing: '-0.3px',
+                  letterSpacing: '-0.2px',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
@@ -1276,11 +1283,14 @@ export default function RunClubMap() {
                   {t.title}
                 </h1>
                 <div style={{
-                  fontSize: '10px',
+                  fontSize: '9px',
                   color: '#ff6b35',
                   fontWeight: '600',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase'
+                  letterSpacing: '0.3px',
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
                 }}>
                   {t.subtitle}
                 </div>
@@ -1288,25 +1298,26 @@ export default function RunClubMap() {
             </div>
 
             {/* Contrôles droite */}
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }} aria-label={language === 'fr' ? 'Navigation principale' : 'Main navigation'}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }} aria-label={language === 'fr' ? 'Navigation principale' : 'Main navigation'}>
               {/* Sélecteur de langue compact */}
               <div style={{
                 backgroundColor: 'rgba(255, 107, 53, 0.1)',
-                borderRadius: '6px',
+                borderRadius: '4px',
                 overflow: 'hidden',
                 display: 'flex'
               }} role="group" aria-label={language === 'fr' ? 'Sélection de langue' : 'Language selection'}>
                 <button
                   onClick={() => setLanguage('fr')}
                   style={{
-                    padding: '6px 8px',
+                    padding: '4px 6px',
                     border: 'none',
                     backgroundColor: language === 'fr' ? '#ff6b35' : 'transparent',
                     color: language === 'fr' ? 'white' : '#ff6b35',
-                    fontSize: '10px',
+                    fontSize: '9px',
                     fontWeight: '600',
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    minWidth: '24px'
                   }}
                   aria-label="Français"
                   aria-pressed={language === 'fr'}
@@ -1316,14 +1327,15 @@ export default function RunClubMap() {
                 <button
                   onClick={() => setLanguage('en')}
                   style={{
-                    padding: '6px 8px',
+                    padding: '4px 6px',
                     border: 'none',
                     backgroundColor: language === 'en' ? '#ff6b35' : 'transparent',
                     color: language === 'en' ? 'white' : '#ff6b35',
-                    fontSize: '10px',
+                    fontSize: '9px',
                     fontWeight: '600',
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    minWidth: '24px'
                   }}
                   aria-label="English"
                   aria-pressed={language === 'en'}
@@ -1338,16 +1350,17 @@ export default function RunClubMap() {
                 style={{
                   backgroundColor: 'rgba(255, 107, 53, 0.1)',
                   border: '1px solid #ff6b35',
-                  borderRadius: '6px',
-                  width: '32px',
-                  height: '32px',
+                  borderRadius: '4px',
+                  width: '28px',
+                  height: '28px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '14px',
+                  fontSize: '12px',
                   color: '#ff6b35',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  flexShrink: 0
                 }}
                 aria-label={t.info}
               >
@@ -1360,7 +1373,7 @@ export default function RunClubMap() {
           {showOverlay && (
             <aside style={{
               position: 'fixed',
-              top: '60px',
+              top: '50px',
               left: 0,
               right: 0,
               bottom: 0,
@@ -1373,7 +1386,7 @@ export default function RunClubMap() {
             }} aria-label={language === 'fr' ? 'Panneau de filtres et liste des clubs' : 'Filters panel and clubs list'}>
               {/* Header des filtres mobile */}
               <header style={{
-                padding: '16px',
+                padding: '12px',
                 background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
                 color: 'white',
                 flexShrink: 0
@@ -1382,20 +1395,20 @@ export default function RunClubMap() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '16px'
+                  marginBottom: '12px'
                 }}>
                   <h2 style={{
                     margin: '0',
-                    fontSize: '18px',
+                    fontSize: '16px',
                     fontWeight: 'bold'
                   }}>
                     🏃‍♂️ Run Clubs
                   </h2>
                   <div style={{
                     backgroundColor: 'rgba(255,255,255,0.2)',
-                    padding: '4px 12px',
-                    borderRadius: '20px',
-                    fontSize: '14px',
+                    padding: '3px 10px',
+                    borderRadius: '15px',
+                    fontSize: '13px',
                     fontWeight: 'bold'
                   }} aria-live="polite">
                     {filteredClubs.length}/{clubs.length}
@@ -1403,13 +1416,13 @@ export default function RunClubMap() {
                 </div>
                 
                 {/* Barre de recherche mobile */}
-                <div style={{ marginBottom: '16px', position: 'relative' }}>
+                <div style={{ marginBottom: '10px', position: 'relative' }}>
                   <div style={{
                     position: 'absolute',
-                    left: '12px',
+                    left: '10px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    fontSize: '16px',
+                    fontSize: '14px',
                     color: '#666',
                     pointerEvents: 'none',
                     zIndex: 1
@@ -1423,8 +1436,8 @@ export default function RunClubMap() {
                     onChange={(e) => handleSearchChange(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '12px 12px 12px 40px',
-                      borderRadius: '8px',
+                      padding: '10px 10px 10px 35px',
+                      borderRadius: '6px',
                       border: '2px solid rgba(255,255,255,0.3)',
                       fontSize: '16px', // Évite le zoom sur iOS
                       backgroundColor: 'rgba(255,255,255,0.9)',
@@ -1438,16 +1451,16 @@ export default function RunClubMap() {
                       onClick={() => handleSearchChange('')}
                       style={{
                         position: 'absolute',
-                        right: '8px',
+                        right: '6px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         background: 'none',
                         border: 'none',
-                        fontSize: '16px',
+                        fontSize: '14px',
                         color: '#666',
                         cursor: 'pointer',
-                        padding: '4px',
-                        borderRadius: '4px',
+                        padding: '3px',
+                        borderRadius: '3px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -1462,14 +1475,14 @@ export default function RunClubMap() {
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
-                  gap: '12px',
-                  marginBottom: '12px'
+                  gap: '8px',
+                  marginBottom: '8px'
                 }}>
                   <div>
                     <label style={{
                       display: 'block',
-                      fontSize: '12px',
-                      marginBottom: '6px',
+                      fontSize: '11px',
+                      marginBottom: '4px',
                       opacity: 0.9,
                       fontWeight: '600'
                     }}>
@@ -1480,10 +1493,10 @@ export default function RunClubMap() {
                       onChange={(e) => handleCityFilterChange(e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '8px',
-                        borderRadius: '6px',
+                        padding: '6px',
+                        borderRadius: '5px',
                         border: 'none',
-                        fontSize: '14px',
+                        fontSize: '13px',
                         backgroundColor: 'rgba(255,255,255,0.9)',
                         color: '#333'
                       }}
@@ -1498,8 +1511,8 @@ export default function RunClubMap() {
                   <div>
                     <label style={{
                       display: 'block',
-                      fontSize: '12px',
-                      marginBottom: '6px',
+                      fontSize: '11px',
+                      marginBottom: '4px',
                       opacity: 0.9,
                       fontWeight: '600'
                     }}>
@@ -1510,10 +1523,10 @@ export default function RunClubMap() {
                       onChange={(e) => handleDayFilterChange(e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '8px',
-                        borderRadius: '6px',
+                        padding: '6px',
+                        borderRadius: '5px',
                         border: 'none',
-                        fontSize: '14px',
+                        fontSize: '13px',
                         backgroundColor: 'rgba(255,255,255,0.9)',
                         color: '#333'
                       }}
@@ -1532,12 +1545,12 @@ export default function RunClubMap() {
                     onClick={clearFilters}
                     style={{
                       width: '100%',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      borderRadius: '5px',
                       border: 'none',
                       backgroundColor: 'rgba(255,255,255,0.2)',
                       color: 'white',
-                      fontSize: '14px',
+                      fontSize: '12px',
                       cursor: 'pointer',
                       fontWeight: 'bold'
                     }}
@@ -1694,6 +1707,52 @@ export default function RunClubMap() {
                     </div>
                   ))
                 )}
+              </div>
+              
+              {/* Bouton de retour à la carte centré en bas */}
+              <div style={{
+                position: 'sticky',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '16px',
+                backgroundColor: 'white',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'center',
+                zIndex: 10
+              }}>
+                <button
+                  onClick={() => setShowOverlay(false)}
+                  style={{
+                    backgroundColor: '#ff6b35',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '14px 24px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 16px rgba(255, 107, 53, 0.3)',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    minWidth: '200px',
+                    justifyContent: 'center'
+                  }}
+                  onTouchStart={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.95)';
+                    e.currentTarget.style.backgroundColor = '#e55a2b';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.backgroundColor = '#ff6b35';
+                  }}
+                >
+                  <span>🗺️</span>
+                  <span>{t.backToMap}</span>
+                </button>
               </div>
             </aside>
           )}
@@ -2228,7 +2287,7 @@ export default function RunClubMap() {
         style={{ 
           width: '100%', 
           height: '100%',
-          marginTop: isMobile ? '60px' : '0' // Décaler la carte sur mobile pour la barre de navigation
+          marginTop: isMobile ? '50px' : '0' // Décaler la carte sur mobile pour la barre de navigation
         }}
         scrollWheelZoom={true}
         zoomControl={false}
@@ -2523,6 +2582,25 @@ export default function RunClubMap() {
 
       {/* Styles CSS globaux pour les animations et l'adaptation mobile */}
       <style>{`
+        /* Empêcher le scroll global sur toutes les plateformes */
+        html, body {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          overflow: hidden;
+          position: fixed;
+          width: 100%;
+        }
+        
+        #root {
+          height: 100vh;
+          width: 100vw;
+          overflow: hidden;
+          position: fixed;
+          top: 0;
+          left: 0;
+        }
+        
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -2619,6 +2697,43 @@ export default function RunClubMap() {
         
         /* Améliorations tactiles pour mobile */
         @media (max-width: 768px) {
+          /* Empêcher absolument tout scroll sur mobile */
+          html, body {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            -webkit-overflow-scrolling: auto !important;
+            touch-action: pan-x pan-y !important;
+          }
+          
+          #root {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+          }
+          
+          /* Empêcher le rubber band effect et le bounce sur iOS */
+          * {
+            -webkit-overflow-scrolling: auto !important;
+            overscroll-behavior: none !important;
+          }
+          
+          /* Forcer la carte à occuper l'espace restant */
+          .leaflet-container {
+            position: fixed !important;
+            top: 50px !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: calc(100vh - 50px) !important;
+            overflow: hidden !important;
+          }
+          
           /* Améliorer la taille des zones tactiles */
           button, select, input {
             min-height: 44px;
