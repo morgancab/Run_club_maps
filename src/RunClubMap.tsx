@@ -36,6 +36,28 @@ interface RunClubFeature {
 
 // Fonction pour créer une icône personnalisée avec l'image du club
 const createCustomIcon = (imageUrl: string, clubName: string) => {
+  // Corriger le chemin de l'image si nécessaire
+  let correctedImageUrl = imageUrl;
+  
+  if (imageUrl) {
+    // Si c'est une URL du site qui pointe vers un fichier PNG/JPG à la racine
+    if (imageUrl.includes('run-club-maps.vercel.app/') && 
+        (imageUrl.includes('.png') || imageUrl.includes('.jpg') || imageUrl.includes('.jpeg')) &&
+        !imageUrl.includes('/images/')) {
+      // Extraire le nom de fichier et le corriger
+      const fileName = imageUrl.split('/').pop();
+      correctedImageUrl = `/images/${fileName}`;
+      console.log(`🔧 Correction URL Vercel pour ${clubName}:`, imageUrl, '→', correctedImageUrl);
+    }
+    // Si c'est juste un nom de fichier local
+    else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
+      correctedImageUrl = `/images/${imageUrl}`;
+      console.log(`🔧 Correction chemin local pour ${clubName}:`, imageUrl, '→', correctedImageUrl);
+    } else {
+      console.log(`✅ Chemin image OK pour ${clubName}:`, imageUrl);
+    }
+  }
+
   return L.divIcon({
     html: `
       <div style="
@@ -51,7 +73,7 @@ const createCustomIcon = (imageUrl: string, clubName: string) => {
         justify-content: center;
       ">
         <img 
-          src="${imageUrl}" 
+          src="${correctedImageUrl}" 
           alt="${clubName}"
           style="
             width: 44px;
@@ -59,7 +81,7 @@ const createCustomIcon = (imageUrl: string, clubName: string) => {
             border-radius: 50%;
             object-fit: cover;
           "
-          onerror="this.style.display='none'; this.parentElement.innerHTML='🏃‍♂️';"
+          onerror="console.log('❌ Erreur chargement image:', '${correctedImageUrl}'); this.style.display='none'; this.parentElement.innerHTML='🏃‍♂️';"
         />
       </div>
     `,
@@ -216,11 +238,30 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
       // Stocker la référence du marqueur
       markersRef.current.set(clubId, marker);
 
+      // Fonction pour corriger le chemin d'une image
+      const getCorrectImagePath = (imageUrl: string) => {
+        if (!imageUrl) return '';
+        
+        // Si c'est une URL du site qui pointe vers un fichier PNG/JPG à la racine
+        if (imageUrl.includes('run-club-maps.vercel.app/') && 
+            (imageUrl.includes('.png') || imageUrl.includes('.jpg') || imageUrl.includes('.jpeg')) &&
+            !imageUrl.includes('/images/')) {
+          const fileName = imageUrl.split('/').pop();
+          return `/images/${fileName}`;
+        }
+        // Si c'est juste un nom de fichier local
+        else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
+          return `/images/${imageUrl}`;
+        }
+        
+        return imageUrl;
+      };
+
       // Créer le contenu du popup
       const popupContent = `
         <div style="min-width: 280px; font-family: Arial, sans-serif; line-height: 1.4;">
           <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ff6b35;">
-            ${club.properties.image ? `<img src="${club.properties.image}" alt="${club.properties.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 12px; object-fit: cover; border: 3px solid #ff6b35;" />` : ''}
+            ${club.properties.image ? `<img src="${getCorrectImagePath(club.properties.image)}" alt="${club.properties.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 12px; object-fit: cover; border: 3px solid #ff6b35;" />` : ''}
             <h3 style="margin: 0; color: #ff6b35; font-size: 18px; font-weight: bold;">${getClubText(club, 'name')}</h3>
           </div>
           ${club.properties.city ? `
