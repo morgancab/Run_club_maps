@@ -1240,7 +1240,8 @@ export default function RunClubMap() {
             justifyContent: 'space-between',
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
-            minHeight: '50px'
+            height: '50px',
+            boxSizing: 'border-box'
           }}>
             {/* Bouton menu et titre */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
@@ -2286,8 +2287,7 @@ export default function RunClubMap() {
         zoom={mapZoom}
         style={{ 
           width: '100%', 
-          height: '100%',
-          marginTop: isMobile ? '50px' : '0' // Décaler la carte sur mobile pour la barre de navigation
+          height: '100%'
         }}
         scrollWheelZoom={true}
         zoomControl={false}
@@ -2732,6 +2732,8 @@ export default function RunClubMap() {
             width: 100vw !important;
             height: calc(100vh - 50px) !important;
             overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           
           /* Améliorer la taille des zones tactiles */
