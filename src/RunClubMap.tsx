@@ -151,29 +151,70 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
     const markerClusterGroup = (L as any).markerClusterGroup({
       iconCreateFunction: function(cluster: any) {
         const count = cluster.getChildCount();
+        const size = count < 10 ? 50 : count < 100 ? 60 : 70;
+        
         return L.divIcon({
           html: `
             <div style="
-              width: 50px;
-              height: 50px;
+              width: ${size}px;
+              height: ${size}px;
               border-radius: 50%;
-              background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-              border: 3px solid white;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              background: linear-gradient(135deg, rgba(255, 107, 53, 0.95) 0%, rgba(247, 147, 30, 0.95) 50%, rgba(255, 140, 66, 0.95) 100%);
+              border: 2px solid rgba(255, 255, 255, 0.8);
+              box-shadow: 
+                0 8px 32px rgba(255, 107, 53, 0.4),
+                0 4px 16px rgba(0, 0, 0, 0.1),
+                inset 0 2px 4px rgba(255, 255, 255, 0.3),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+              backdrop-filter: blur(10px);
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
-              font-weight: bold;
-              font-size: ${count > 99 ? '12px' : '14px'};
-              font-family: Arial, sans-serif;
+              font-weight: 800;
+              font-size: ${count > 99 ? Math.max(12, 16 - Math.floor(count/100)) : count > 9 ? '14px' : '16px'};
+              font-family: 'Arial', sans-serif;
+              text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+              position: relative;
+              transform: scale(1);
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             ">
-              ${count}
+              <div style="
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                border-radius: 50%;
+                background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), transparent 50%, rgba(255, 255, 255, 0.1));
+                pointer-events: none;
+              "></div>
+              <span style="
+                position: relative;
+                z-index: 2;
+                display: flex;
+                align-items: center;
+                gap: 2px;
+              ">
+                <span style="font-variant-numeric: tabular-nums;">${count}</span>
+              </span>
+              <div style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: ${size + 20}px;
+                height: ${size + 20}px;
+                border-radius: 50%;
+                border: 1px solid rgba(255, 107, 53, 0.2);
+                transform: translate(-50%, -50%) scale(0);
+                animation: pulse-ring 2s infinite ease-out;
+                pointer-events: none;
+              "></div>
             </div>
           `,
-          className: 'custom-cluster-icon',
-          iconSize: [50, 50],
-          iconAnchor: [25, 25]
+          className: 'custom-cluster-icon-modern',
+          iconSize: [size, size],
+          iconAnchor: [size/2, size/2]
         });
       },
       maxClusterRadius: 80,
@@ -2734,6 +2775,34 @@ export default function RunClubMap() {
         /* Animation pour les clusters */
         .custom-cluster-icon {
           animation: clusterAppear 0.2s ease-out;
+        }
+        
+        /* Nouveau design de cluster moderne */
+        .custom-cluster-icon-modern {
+          animation: clusterAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .custom-cluster-icon-modern:hover div:first-child {
+          transform: scale(1.1);
+          box-shadow: 
+            0 12px 40px rgba(255, 107, 53, 0.5),
+            0 6px 20px rgba(0, 0, 0, 0.15),
+            inset 0 2px 4px rgba(255, 255, 255, 0.4),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        @keyframes pulse-ring {
+          0% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0;
+          }
         }
         
         @keyframes clusterAppear {
