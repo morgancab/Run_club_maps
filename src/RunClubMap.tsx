@@ -368,6 +368,9 @@ const translations = {
     frequency: 'Fréquence',
     socialNetworks: 'Réseaux sociaux',
     visitSite: 'Visiter le site',
+    disclaimer: 'Avertissement Important',
+    disclaimerText: 'Les données affichées sur cette carte sont fournies à titre indicatif et peuvent ne pas être à jour. Nous vous recommandons de vérifier directement auprès des clubs (horaires, lieux, contacts) avant de vous déplacer.',
+    contactUs: 'Si vous constatez une erreur ou souhaitez proposer une correction, n\'hésitez pas à nous contacter et à contribuer à l\'amélioration du projet.',
     days: {
       monday: 'Lundi',
       tuesday: 'Mardi', 
@@ -411,11 +414,14 @@ const translations = {
     description: 'Description',
     frequency: 'Frequency',
     socialNetworks: 'Social Networks',
-    visitSite: 'Visit website',
+    visitSite: 'Visit Site',
+    disclaimer: 'Important Disclaimer',
+    disclaimerText: 'The data displayed on this map is provided for informational purposes only and may not be up to date. We recommend verifying directly with the clubs (schedules, locations, contacts) before visiting.',
+    contactUs: 'If you notice an error or would like to suggest a correction, please do not hesitate to contact us and contribute to improving the project.',
     days: {
       monday: 'Monday',
       tuesday: 'Tuesday',
-      wednesday: 'Wednesday', 
+      wednesday: 'Wednesday',
       thursday: 'Thursday',
       friday: 'Friday',
       saturday: 'Saturday',
@@ -2423,7 +2429,8 @@ export default function RunClubMap() {
                 backgroundColor: '#fff5f0',
                 border: '2px solid #ff6b35',
                 borderRadius: '12px',
-                padding: '20px'
+                padding: '20px',
+                marginTop: '8px'
               }}>
                 <h3 style={{
                   margin: '0 0 12px 0',
@@ -2468,6 +2475,46 @@ export default function RunClubMap() {
                   <span>➕</span>
                   {t.suggestClub}
                 </button>
+              </div>
+
+              {/* Section d'avertissement sur la fiabilité des données */}
+              <div style={{
+                backgroundColor: '#fff8e1',
+                border: '2px solid #ff9800',
+                borderRadius: '12px',
+                padding: '20px',
+                marginTop: '32px',
+                marginBottom: '24px'
+              }}>
+                <h3 style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#f57c00',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>⚠️</span>
+                  {t.disclaimer}
+                </h3>
+                <p style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  color: '#5d4e00'
+                }}>
+                  {t.disclaimerText}
+                </p>
+                <p style={{
+                  margin: '0',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  color: '#5d4e00',
+                  fontWeight: '500'
+                }}>
+                  {t.contactUs}
+                </p>
               </div>
             </div>
           </div>
