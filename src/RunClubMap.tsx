@@ -503,20 +503,36 @@ export default function RunClubMap() {
   // Hook SEO dynamique
   useSEO({
     title: language === 'fr' 
-      ? `Carte Interactive des Clubs de Course à Pied | ${clubs.length} Clubs en France`
-      : `Interactive Running Clubs Map | ${clubs.length} Clubs in France`,
+      ? clubs.length > 0 
+        ? `Carte Interactive des Clubs de Course à Pied | ${clubs.length} Clubs en France`
+        : 'Carte Interactive des Clubs de Course à Pied en France'
+      : clubs.length > 0
+        ? `Interactive Running Clubs Map | ${clubs.length} Clubs in France`
+        : 'Interactive Running Clubs Map in France',
     description: language === 'fr'
-      ? `Découvrez ${clubs.length} clubs de course à pied en France. Carte interactive avec filtres par ville et horaires. Trouvez votre communauté running idéale près de chez vous.`
-      : `Discover ${clubs.length} running clubs in France. Interactive map with city and schedule filters. Find your ideal running community near you.`,
+      ? clubs.length > 0
+        ? `Découvrez ${clubs.length} clubs de course à pied en France. Carte interactive avec filtres par ville et horaires. Trouvez votre communauté running idéale près de chez vous.`
+        : 'Découvrez les clubs de course à pied en France. Carte interactive avec filtres par ville et horaires. Trouvez votre communauté running idéale près de chez vous.'
+      : clubs.length > 0
+        ? `Discover ${clubs.length} running clubs in France. Interactive map with city and schedule filters. Find your ideal running community near you.`
+        : 'Discover running clubs in France. Interactive map with city and schedule filters. Find your ideal running community near you.',
     keywords: language === 'fr'
       ? `clubs course à pied, running clubs France, communauté running, carte clubs running, course à pied ${filterCity ? filterCity + ', ' : ''}sport collectif, entraînement course`
       : `running clubs, running clubs France, running community, running clubs map, running ${filterCity ? filterCity + ', ' : ''}group sports, running training`,
     ogTitle: language === 'fr'
-      ? `Carte Interactive des Clubs de Course à Pied | ${clubs.length} Clubs`
-      : `Interactive Running Clubs Map | ${clubs.length} Clubs`,
+      ? clubs.length > 0
+        ? `Carte Interactive des Clubs de Course à Pied | ${clubs.length} Clubs`
+        : 'Carte Interactive des Clubs de Course à Pied en France'
+      : clubs.length > 0
+        ? `Interactive Running Clubs Map | ${clubs.length} Clubs`
+        : 'Interactive Running Clubs Map in France',
     ogDescription: language === 'fr'
-      ? `Découvrez ${clubs.length} clubs de course à pied en France avec notre carte interactive. Filtres par ville et horaires disponibles.`
-      : `Discover ${clubs.length} running clubs in France with our interactive map. City and schedule filters available.`,
+      ? clubs.length > 0
+        ? `Découvrez ${clubs.length} clubs de course à pied en France avec notre carte interactive. Filtres par ville et horaires disponibles.`
+        : 'Découvrez les clubs de course à pied en France avec notre carte interactive. Filtres par ville et horaires disponibles.'
+      : clubs.length > 0
+        ? `Discover ${clubs.length} running clubs in France with our interactive map. City and schedule filters available.`
+        : 'Discover running clubs in France with our interactive map. City and schedule filters available.',
     canonicalUrl: `https://run-club-maps.vercel.app/${language === 'en' ? '?lang=en' : ''}`,
     language,
     structuredData: clubStructuredData
