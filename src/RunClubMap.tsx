@@ -2676,42 +2676,165 @@ export default function RunClubMap() {
 
       {/* Bouton Trouve ton club - Mobile uniquement et si aucun filtre actif */}
       {isMobile && !showOverlay && !filterCity && !filterDay && !searchQuery.trim() && (
+        <div style={{
+          position: 'fixed',
+          bottom: '30px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1001,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          {/* Bouton Suggérer un club */}
+          <button
+            onClick={() => window.open('https://forms.gle/H4r6NMeHp1dtCq1U9', '_blank')}
+            style={{
+              backgroundColor: '#f7931e',
+              color: 'white',
+              border: 'none',
+              borderRadius: '25px',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 12px rgba(247, 147, 30, 0.4)',
+              transition: 'all 0.2s ease',
+              fontFamily: 'Arial, sans-serif',
+              minHeight: '44px',
+              minWidth: '140px'
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.backgroundColor = '#e6831a';
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.backgroundColor = '#f7931e';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            aria-label={t.suggestClub}
+          >
+            ➕ {t.suggestClub}
+          </button>
+
+          {/* Bouton Trouve ton club */}
+          <button
+            onClick={() => setShowOverlay(true)}
+            style={{
+              backgroundColor: '#ff6b35',
+              color: 'white',
+              border: 'none',
+              borderRadius: '25px',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 12px rgba(255, 107, 53, 0.4)',
+              transition: 'all 0.2s ease',
+              fontFamily: 'Arial, sans-serif',
+              minHeight: '44px',
+              minWidth: '140px'
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.backgroundColor = '#e55a2b';
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.backgroundColor = '#ff6b35';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            aria-label={t.findYourClub}
+          >
+            🔍 {t.findYourClub}
+          </button>
+        </div>
+      )}
+
+      {/* Bouton Trouve ton club - Desktop uniquement et si aucun filtre actif */}
+      {!isMobile && !filterCity && !filterDay && !searchQuery.trim() && (
         <button
           onClick={() => setShowOverlay(true)}
           style={{
             position: 'fixed',
-            bottom: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            bottom: '90px',
+            right: '20px',
             zIndex: 1001,
             backgroundColor: '#ff6b35',
             color: 'white',
             border: 'none',
-            borderRadius: '25px',
-            padding: '12px 20px',
-            fontSize: '14px',
+            borderRadius: '12px',
+            padding: '14px 18px',
+            fontSize: '15px',
             fontWeight: '600',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 12px rgba(255, 107, 53, 0.4)',
-            transition: 'all 0.2s ease',
+            gap: '10px',
+            boxShadow: '0 6px 20px rgba(255, 107, 53, 0.4)',
+            transition: 'all 0.3s ease',
             fontFamily: 'Arial, sans-serif',
-            minHeight: '44px',
-            minWidth: '160px'
+            minWidth: '180px'
           }}
-          onTouchStart={(e) => {
+          onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = '#e55a2b';
-            e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.5)';
           }}
-          onTouchEnd={(e) => {
+          onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = '#ff6b35';
-            e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.4)';
           }}
           aria-label={t.findYourClub}
         >
           🔍 {t.findYourClub}
+        </button>
+      )}
+
+      {/* Bouton Suggérer un club - Desktop uniquement */}
+      {!isMobile && (
+        <button
+          onClick={() => window.open('https://forms.gle/H4r6NMeHp1dtCq1U9', '_blank')}
+          style={{
+            position: 'fixed',
+            bottom: '35px',
+            right: '20px',
+            zIndex: 1001,
+            backgroundColor: '#f7931e',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '14px 18px',
+            fontSize: '15px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: '0 6px 20px rgba(247, 147, 30, 0.4)',
+            transition: 'all 0.3s ease',
+            fontFamily: 'Arial, sans-serif',
+            minWidth: '180px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#e6831a';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 25px rgba(247, 147, 30, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#f7931e';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(247, 147, 30, 0.4)';
+          }}
+          aria-label={t.suggestClub}
+        >
+          ➕ {t.suggestClub}
         </button>
       )}
 
