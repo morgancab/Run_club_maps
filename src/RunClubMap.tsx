@@ -415,6 +415,9 @@ const translations = {
     backToMap: 'Retour à la carte',
     clearFilters: 'Effacer les filtres',
     findYourClub: 'Trouve ton club',
+    followUs: 'Suivez-nous',
+    followUsText: 'Restez connecté avec la communauté Sport Club Explorer sur Instagram pour découvrir de nouveaux clubs et partager vos expériences de course !',
+    visitInstagram: 'Visiter notre Instagram',
     days: {
       monday: 'Lundi',
       tuesday: 'Mardi', 
@@ -465,6 +468,9 @@ const translations = {
     backToMap: 'Back to Map',
     clearFilters: 'Clear Filters',
     findYourClub: 'Find Your Club',
+    followUs: 'Follow Us',
+    followUsText: 'Stay connected with the Sport Club Explorer community on Instagram to discover new clubs and share your running experiences!',
+    visitInstagram: 'Visit our Instagram',
     days: {
       monday: 'Monday',
       tuesday: 'Tuesday',
@@ -2602,6 +2608,141 @@ export default function RunClubMap() {
                 >
                   <span>➕</span>
                   {t.suggestClub}
+                </button>
+              </div>
+
+              {/* Section Instagram */}
+              <div style={{
+                backgroundColor: '#fdf2f8',
+                border: '2px solid #E4405F',
+                borderRadius: '12px',
+                padding: '20px',
+                marginTop: '24px'
+              }}>
+                <h3 style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#E4405F',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <defs>
+                      <linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#f09433" />
+                        <stop offset="25%" stopColor="#e6683c" />
+                        <stop offset="50%" stopColor="#dc2743" />
+                        <stop offset="75%" stopColor="#cc2366" />
+                        <stop offset="100%" stopColor="#bc1888" />
+                      </linearGradient>
+                    </defs>
+                    <rect
+                      x="2"
+                      y="2"
+                      width="20"
+                      height="20"
+                      rx="6"
+                      fill="url(#instagram-gradient)"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="4"
+                      stroke="white"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                    <circle
+                      cx="18"
+                      cy="6"
+                      r="1.5"
+                      fill="white"
+                    />
+                  </svg>
+                  {t.followUs}
+                </h3>
+                <p style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  color: '#666'
+                }}>
+                  {t.followUsText}
+                </p>
+                <button
+                  onClick={() => {
+                    window.open('https://www.instagram.com/sport_club_explorer/', '_blank');
+                    setShowInfoPopup(false);
+                  }}
+                  style={{
+                    backgroundColor: '#E4405F',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#d63384';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#E4405F';
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <defs>
+                      <linearGradient id="instagram-gradient-btn" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#f09433" />
+                        <stop offset="25%" stopColor="#e6683c" />
+                        <stop offset="50%" stopColor="#dc2743" />
+                        <stop offset="75%" stopColor="#cc2366" />
+                        <stop offset="100%" stopColor="#bc1888" />
+                      </linearGradient>
+                    </defs>
+                    <rect
+                      x="2"
+                      y="2"
+                      width="20"
+                      height="20"
+                      rx="6"
+                      fill="white"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="4"
+                      stroke="url(#instagram-gradient-btn)"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                    <circle
+                      cx="18"
+                      cy="6"
+                      r="1.5"
+                      fill="url(#instagram-gradient-btn)"
+                    />
+                  </svg>
+                  {t.visitInstagram}
                 </button>
               </div>
 
