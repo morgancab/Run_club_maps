@@ -3075,43 +3075,51 @@ export default function RunClubMap() {
           }
         }
         
-        /* Améliorer la croix de fermeture des pop-ups sur mobile */
+        /* Améliorer la croix de fermeture des pop-ups sur toutes les plateformes */
+        .leaflet-popup-close-button {
+          width: 36px !important;
+          height: 36px !important;
+          font-size: 18px !important;
+          font-weight: bold !important;
+          line-height: 34px !important;
+          background-color: rgba(255, 107, 53, 0.1) !important;
+          color: #ff6b35 !important;
+          border-radius: 50% !important;
+          border: 2px solid rgba(255, 107, 53, 0.3) !important;
+          top: 8px !important;
+          right: 8px !important;
+          text-align: center !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+          transition: all 0.2s ease !important;
+          z-index: 1000 !important;
+        }
+        
+        .leaflet-popup-close-button:hover,
+        .leaflet-popup-close-button:active {
+          background-color: #ff6b35 !important;
+          color: white !important;
+          transform: scale(1.1) !important;
+          border-color: #ff6b35 !important;
+        }
+        
+        /* Améliorer la zone tactile globale */
+        .leaflet-popup-close-button::before {
+          content: '';
+          position: absolute;
+          top: -5px;
+          left: -5px;
+          right: -5px;
+          bottom: -5px;
+          z-index: -1;
+        }
+        
+        /* Améliorer encore plus la croix sur mobile */
         @media (max-width: 768px) {
           .leaflet-popup-close-button {
             width: 40px !important;
             height: 40px !important;
             font-size: 20px !important;
-            font-weight: bold !important;
             line-height: 38px !important;
-            background-color: rgba(255, 107, 53, 0.1) !important;
-            color: #ff6b35 !important;
-            border-radius: 50% !important;
-            border: 2px solid rgba(255, 107, 53, 0.3) !important;
-            top: 8px !important;
-            right: 8px !important;
-            text-align: center !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-            transition: all 0.2s ease !important;
-            z-index: 1000 !important;
-          }
-          
-          .leaflet-popup-close-button:hover,
-          .leaflet-popup-close-button:active {
-            background-color: #ff6b35 !important;
-            color: white !important;
-            transform: scale(1.1) !important;
-            border-color: #ff6b35 !important;
-          }
-          
-          /* Améliorer la zone tactile globale */
-          .leaflet-popup-close-button::before {
-            content: '';
-            position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            z-index: -1;
           }
         }
       `}</style>
