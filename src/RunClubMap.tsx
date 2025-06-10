@@ -36,27 +36,31 @@ interface RunClubFeature {
 
 // Fonction pour créer une icône personnalisée avec l'image du club
 const createCustomIcon = (imageUrl: string, clubName: string) => {
-  // Corriger le chemin de l'image si nécessaire
-  let correctedImageUrl = imageUrl;
-  
-  if (imageUrl) {
+  // Fonction pour corriger le chemin de l'image
+  const getCorrectImagePath = (imageUrl: string, clubName?: string) => {
+    if (!imageUrl) return '';
+    
     // Si c'est une URL du site qui pointe vers un fichier PNG/JPG à la racine
     if (imageUrl.includes('run-club-maps.vercel.app/') && 
         (imageUrl.includes('.png') || imageUrl.includes('.jpg') || imageUrl.includes('.jpeg')) &&
         !imageUrl.includes('/images/')) {
-      // Extraire le nom de fichier et le corriger
       const fileName = imageUrl.split('/').pop();
-      correctedImageUrl = `/images/${fileName}`;
-      console.log(`🔧 Correction URL Vercel pour ${clubName}:`, imageUrl, '→', correctedImageUrl);
+      const correctedPath = `/images/${fileName}`;
+      console.log(`🔧 Correction URL Vercel pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
+      return correctedPath;
     }
     // Si c'est juste un nom de fichier local
     else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
-      correctedImageUrl = `/images/${imageUrl}`;
-      console.log(`🔧 Correction chemin local pour ${clubName}:`, imageUrl, '→', correctedImageUrl);
+      const correctedPath = `/images/${imageUrl}`;
+      console.log(`🔧 Correction chemin local pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
+      return correctedPath;
     } else {
-      console.log(`✅ Chemin image OK pour ${clubName}:`, imageUrl);
+      console.log(`✅ Chemin image OK pour ${clubName || 'club'}:`, imageUrl);
+      return imageUrl;
     }
-  }
+  };
+  
+  const correctedImageUrl = getCorrectImagePath(imageUrl, clubName);
 
   return L.divIcon({
     html: `
@@ -280,7 +284,7 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
       markersRef.current.set(clubId, marker);
 
       // Fonction pour corriger le chemin d'une image
-      const getCorrectImagePath = (imageUrl: string) => {
+      const getCorrectImagePath = (imageUrl: string, clubName?: string) => {
         if (!imageUrl) return '';
         
         // Si c'est une URL du site qui pointe vers un fichier PNG/JPG à la racine
@@ -288,21 +292,26 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
             (imageUrl.includes('.png') || imageUrl.includes('.jpg') || imageUrl.includes('.jpeg')) &&
             !imageUrl.includes('/images/')) {
           const fileName = imageUrl.split('/').pop();
-          return `/images/${fileName}`;
+          const correctedPath = `/images/${fileName}`;
+          console.log(`🔧 Correction URL Vercel pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
+          return correctedPath;
         }
         // Si c'est juste un nom de fichier local
         else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
-          return `/images/${imageUrl}`;
+          const correctedPath = `/images/${imageUrl}`;
+          console.log(`🔧 Correction chemin local pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
+          return correctedPath;
+        } else {
+          console.log(`✅ Chemin image OK pour ${clubName || 'club'}:`, imageUrl);
+          return imageUrl;
         }
-        
-        return imageUrl;
       };
 
       // Créer le contenu du popup
       const popupContent = `
         <div style="min-width: 280px; font-family: Arial, sans-serif; line-height: 1.4;">
           <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ff6b35;">
-            ${club.properties.image ? `<img src="${getCorrectImagePath(club.properties.image)}" alt="${club.properties.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 12px; object-fit: cover; border: 3px solid #ff6b35;" />` : ''}
+            ${club.properties.image ? `<img src="${getCorrectImagePath(club.properties.image, club.properties.name)}" alt="${club.properties.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 12px; object-fit: cover; border: 3px solid #ff6b35;" />` : ''}
             <h3 style="margin: 0; color: #ff6b35; font-size: 18px; font-weight: bold;">${getClubText(club, 'name')}</h3>
           </div>
           ${club.properties.city ? `
@@ -502,6 +511,30 @@ export default function RunClubMap() {
 
   // Fonction pour obtenir les traductions
   const t = translations[language];
+
+  // Fonction globale pour corriger les chemins d'images
+  const getCorrectImagePath = (imageUrl: string, clubName?: string) => {
+    if (!imageUrl) return '';
+    
+    // Si c'est une URL du site qui pointe vers un fichier PNG/JPG à la racine
+    if (imageUrl.includes('run-club-maps.vercel.app/') && 
+        (imageUrl.includes('.png') || imageUrl.includes('.jpg') || imageUrl.includes('.jpeg')) &&
+        !imageUrl.includes('/images/')) {
+      const fileName = imageUrl.split('/').pop();
+      const correctedPath = `/images/${fileName}`;
+      console.log(`🔧 Correction URL Vercel pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
+      return correctedPath;
+    }
+    // Si c'est juste un nom de fichier local
+    else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
+      const correctedPath = `/images/${imageUrl}`;
+      console.log(`🔧 Correction chemin local pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
+      return correctedPath;
+    } else {
+      console.log(`✅ Chemin image OK pour ${clubName || 'club'}:`, imageUrl);
+      return imageUrl;
+    }
+  };
 
   // Générer les données structurées pour les clubs
   const clubStructuredData = useClubStructuredData(clubs, language);
@@ -1683,7 +1716,7 @@ export default function RunClubMap() {
                       }}>
                         {club.properties.image && (
                           <img 
-                            src={club.properties.image}
+                            src={getCorrectImagePath(club.properties.image, club.properties.name)}
                             alt={club.properties.name}
                             style={{
                               width: '40px',
@@ -1692,6 +1725,11 @@ export default function RunClubMap() {
                               objectFit: 'cover',
                               border: '2px solid #ff6b35',
                               flexShrink: 0
+                            }}
+                            onError={(e) => {
+                              console.log('❌ Erreur chargement image mobile:', getCorrectImagePath(club.properties.image || '', club.properties.name));
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
                             }}
                           />
                         )}
@@ -2260,7 +2298,7 @@ export default function RunClubMap() {
                       }}>
                         {club.properties.image && (
                           <img 
-                            src={club.properties.image}
+                            src={getCorrectImagePath(club.properties.image, club.properties.name)}
                             alt={club.properties.name}
                             style={{
                               width: '32px',
@@ -2269,6 +2307,11 @@ export default function RunClubMap() {
                               marginRight: '10px',
                               objectFit: 'cover',
                               border: '2px solid #ff6b35'
+                            }}
+                            onError={(e) => {
+                              console.log('❌ Erreur chargement image desktop:', getCorrectImagePath(club.properties.image || '', club.properties.name));
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
                             }}
                           />
                         )}
