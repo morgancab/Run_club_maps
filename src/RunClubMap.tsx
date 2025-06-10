@@ -2628,45 +2628,7 @@ export default function RunClubMap() {
                   alignItems: 'center',
                   gap: '8px'
                 }}>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <defs>
-                      <linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#f09433" />
-                        <stop offset="25%" stopColor="#e6683c" />
-                        <stop offset="50%" stopColor="#dc2743" />
-                        <stop offset="75%" stopColor="#cc2366" />
-                        <stop offset="100%" stopColor="#bc1888" />
-                      </linearGradient>
-                    </defs>
-                    <rect
-                      x="2"
-                      y="2"
-                      width="20"
-                      height="20"
-                      rx="6"
-                      fill="url(#instagram-gradient)"
-                    />
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="4"
-                      stroke="white"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <circle
-                      cx="18"
-                      cy="6"
-                      r="1.5"
-                      fill="white"
-                    />
-                  </svg>
+                  📸
                   {t.followUs}
                 </h3>
                 <p style={{
@@ -2703,45 +2665,7 @@ export default function RunClubMap() {
                     e.currentTarget.style.backgroundColor = '#E4405F';
                   }}
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <defs>
-                      <linearGradient id="instagram-gradient-btn" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#f09433" />
-                        <stop offset="25%" stopColor="#e6683c" />
-                        <stop offset="50%" stopColor="#dc2743" />
-                        <stop offset="75%" stopColor="#cc2366" />
-                        <stop offset="100%" stopColor="#bc1888" />
-                      </linearGradient>
-                    </defs>
-                    <rect
-                      x="2"
-                      y="2"
-                      width="20"
-                      height="20"
-                      rx="6"
-                      fill="white"
-                    />
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="4"
-                      stroke="url(#instagram-gradient-btn)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <circle
-                      cx="18"
-                      cy="6"
-                      r="1.5"
-                      fill="url(#instagram-gradient-btn)"
-                    />
-                  </svg>
+                  📸
                   {t.visitInstagram}
                 </button>
               </div>
