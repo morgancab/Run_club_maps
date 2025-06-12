@@ -6,6 +6,8 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
 import { useSEO, useClubStructuredData } from './hooks/useSEO';
+import { cacheService, CACHE_KEYS, CACHE_OPTIONS, type CachedClubData } from './services/cacheService';
+import { useCache } from './hooks/useCache';
 
 interface RunClubFeature {
   type: 'Feature';
@@ -537,6 +539,7 @@ export default function RunClubMap() {
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const mapRef = useRef<any>(null);
+  const { cacheStatus, updateCacheStatus } = useCache();
 
   // Fonction pour obtenir les traductions
   const t = translations[language];
@@ -714,24 +717,70 @@ export default function RunClubMap() {
   }, [isMobile]);
 
   useEffect(() => {
-    // Utiliser l'API pour récupérer les données depuis Google Sheets
-    fetch('/api/runclubs')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Erreur HTTP: ${res.status}`);
+    const loadClubsData = async () => {
+      try {
+        // 1. Vérifier d'abord le cache
+        const cachedData = cacheService.get<CachedClubData>(CACHE_KEYS.RUN_CLUBS, CACHE_OPTIONS.RUN_CLUBS);
+        
+        if (cachedData) {
+          console.log(`🚀 Chargement depuis le cache: ${cachedData.count} clubs`);
+          setClubs(cachedData.clubs);
+          calculateMapBounds(cachedData.clubs);
+          setLoading(false);
+          updateCacheStatus();
+          return;
         }
-        return res.json();
-      })
-      .then((data) => {
+
+        // 2. Pas de cache valide, charger depuis l'API
+        console.log('📡 Chargement depuis l\'API Google Sheets...');
+        const response = await fetch('/api/runclubs');
+        
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
         const features = data.features || [];
+        
+        // 3. Sauvegarder dans le cache
+        const dataToCache: CachedClubData = {
+          clubs: features,
+          fetchedAt: Date.now(),
+          count: features.length
+        };
+        
+        cacheService.set(CACHE_KEYS.RUN_CLUBS, dataToCache, CACHE_OPTIONS.RUN_CLUBS);
+        console.log(`💾 ${features.length} clubs sauvegardés dans le cache`);
+        
+        // 4. Mettre à jour l'interface
         setClubs(features);
         calculateMapBounds(features);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Erreur lors du chargement des données depuis Google Sheets:', error);
+        updateCacheStatus();
+        
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des données:', error);
         setLoading(false);
-      });
+        
+        // En cas d'erreur réseau, essayer de récupérer un ancien cache
+        const expiredCache = cacheService.get<CachedClubData>(CACHE_KEYS.RUN_CLUBS, {
+          ...CACHE_OPTIONS.RUN_CLUBS,
+          ttl: 24 * 60 * 60 * 1000 // Accepter un cache de 24h en cas d'erreur
+        });
+        
+        if (expiredCache) {
+          console.log('🔄 Utilisation d\'un cache expiré en mode dégradé');
+          setClubs(expiredCache.clubs);
+          calculateMapBounds(expiredCache.clubs);
+        }
+      }
+    };
+
+    // Nettoyer les caches expirés au démarrage
+    cacheService.clearExpiredCaches();
+    
+    // Charger les données
+    loadClubsData();
   }, []);
 
   if (loading) {
@@ -1382,6 +1431,29 @@ export default function RunClubMap() {
                 <span>{showOverlay ? '✕' : '☰'}</span>
                 <span>{filteredClubs.length}/{clubs.length}</span>
               </button>
+
+              {/* Indicateur de cache compact */}
+              {cacheStatus.isFromCache && (
+                <div style={{
+                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                  color: '#059669',
+                  fontSize: '9px',
+                  fontWeight: '600',
+                  padding: '2px 6px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '2px',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap'
+                }}
+                title={`Données du cache (${cacheStatus.cacheAge}min)`}
+                >
+                  💾
+                  <span>{cacheStatus.cacheAge}min</span>
+                </div>
+              )}
               
               <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                 <h1 style={{
@@ -2933,6 +3005,8 @@ export default function RunClubMap() {
           🔍 {t.findYourClub}
         </button>
       )}
+
+
 
       {/* Bouton Suggérer un club - Desktop uniquement */}
       {!isMobile && (
