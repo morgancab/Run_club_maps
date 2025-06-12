@@ -151,6 +151,9 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   
   useEffect(() => {
+    // Détecter si on est sur mobile pour ajuster le zoom
+    const isMobileView = window.innerWidth <= 768;
+    
     // Créer le groupe de clusters avec configuration anti-flash
     const markerClusterGroup = (L as any).markerClusterGroup({
       iconCreateFunction: function(cluster: any) {
@@ -224,7 +227,7 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
       maxClusterRadius: 80,
       spiderfyOnMaxZoom: true,
       showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
+      zoomToBoundsOnClick: false, // Désactivé pour gérer manuellement le zoom
       // Configuration anti-flash optimisée
       animate: false,                    // Désactiver l'animation générale
       animateAddingMarkers: false,       // Pas d'animation à l'ajout
@@ -247,6 +250,32 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
           ]);
         }
         return positions;
+      }
+    });
+
+    // Gérer manuellement le clic sur les clusters pour un zoom adapté au mobile
+    markerClusterGroup.on('clusterclick', function(event: any) {
+      const cluster = event.layer;
+      const bounds = cluster.getBounds();
+      
+      // Calculer le padding adapté selon la plateforme
+      if (isMobileView) {
+        // Sur mobile, ajouter plus de padding en bas pour éviter les boutons
+        map.fitBounds(bounds, {
+          paddingTopLeft: L.point(20, 80), // Padding pour la barre du haut (50px + marge)
+          paddingBottomRight: L.point(20, 120), // Padding pour les boutons du bas (hauteur boutons + marges)
+          animate: true,
+          duration: 0.5,
+          maxZoom: 14 // Zoom moins élevé sur mobile pour éviter d'être trop proche
+        });
+      } else {
+        // Sur desktop, padding standard
+        map.fitBounds(bounds, {
+          padding: L.point(50, 50),
+          animate: true,
+          duration: 0.5,
+          maxZoom: 15
+        });
       }
     });
 
