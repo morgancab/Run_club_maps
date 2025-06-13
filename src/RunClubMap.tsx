@@ -1433,7 +1433,7 @@ export default function RunClubMap() {
               </button>
 
               {/* Indicateur de cache compact */}
-              {cacheStatus.isFromCache && (
+              {cacheStatus.isFromCache && !isMobile && (
                 <div style={{
                   backgroundColor: 'rgba(34, 197, 94, 0.1)',
                   color: '#059669',
