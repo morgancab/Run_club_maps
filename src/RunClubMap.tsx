@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -1536,7 +1537,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
       animation: 'fadeIn 0.8s ease-out'
     }} role="application" aria-label={language === 'fr' ? 'Carte interactive des clubs de course à pied' : 'Interactive running clubs map'}>
       {/* Interface mobile optimisée */}
-      {isMobile ? (
+      {isMobile && (
         <>
           {/* Barre de navigation mobile en haut */}
           <header className="absolute top-0 left-0 right-0 z-[1000] flex h-[50px] items-center justify-between border-b border-ink-line bg-ink/95 px-3 py-2 font-body shadow-[0_2px_16px_rgba(0,0,0,0.25)] backdrop-blur-md box-border">
@@ -1566,10 +1567,11 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
             </div>
           </header>
 
-          {/* Overlay mobile plein écran */}
-          {showOverlay && (
+          {/* Overlay mobile plein écran — sorti du contexte d'empilement de la carte
+              via un portail, pour couvrir tout l'écran (y compris le header). */}
+          {showOverlay && createPortal(
             <aside
-              className="fixed bottom-0 left-0 right-0 top-[50px] z-[999] flex flex-col overflow-hidden bg-ink-soft font-body"
+              className="fixed inset-0 z-[1000] flex flex-col overflow-hidden bg-ink-soft font-body"
               aria-label={language === 'fr' ? 'Panneau de filtres et liste des clubs' : 'Filters panel and clubs list'}
             >
               {/* Header des filtres mobile */}
@@ -1609,7 +1611,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                     placeholder={t.search}
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="box-border w-full rounded-sm border border-white/15 bg-black/30 px-2.5 py-2.5 pl-9 text-base text-paper outline-none focus:border-accent"
+                    className="box-border w-full rounded-sm border border-white/20 bg-surface px-2.5 py-2.5 pl-9 text-base text-paper outline-none focus:border-accent"
                   />
                   {searchQuery && (
                     <button
@@ -1630,7 +1632,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                     <select
                       value={filterCity}
                       onChange={(e) => handleCityFilterChange(e.target.value)}
-                      className="w-full rounded-sm border-none bg-black/30 p-1.5 text-[13px] text-paper"
+                      className="w-full rounded-sm border border-white/20 bg-surface p-1.5 text-[13px] text-paper"
                     >
                       <option value="">{t.allCities}</option>
                       {sortedUniqueCities.map(city => (
@@ -1646,7 +1648,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                     <select
                       value={filterDay}
                       onChange={(e) => handleDayFilterChange(e.target.value)}
-                      className="w-full rounded-sm border-none bg-black/30 p-1.5 text-[13px] text-paper"
+                      className="w-full rounded-sm border border-white/20 bg-surface p-1.5 text-[13px] text-paper"
                     >
                       <option value="">{t.all}</option>
                       {sortedUniqueDays.map((day: string) => (
@@ -1771,24 +1773,19 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                   <span>{t.backToMap}</span>
                 </button>
               </div>
-            </aside>
+            </aside>,
+            document.body
           )}
         </>
-      ) : (
-        <>
-          {/* Bouton pour ouvrir/fermer l'overlay */}
-          <button
-            onClick={() => setShowOverlay(!showOverlay)}
-            className="absolute left-2.5 top-2.5 z-[1000] rounded-sm bg-accent px-4 py-3 font-body text-sm font-bold uppercase tracking-wide text-ink shadow-[0_2px_10px_rgba(255,77,28,0.35)]"
-          >
-            📍 {t.clubsList} ({filteredClubs.length}/{clubs.length})
-          </button>
+      )}
 
-          {/* Overlay desktop existant */}
-          {showOverlay && (
-            <div className="absolute left-5 top-[70px] z-[1000] w-[380px] max-h-[75vh] overflow-hidden rounded-md border border-ink-line bg-ink-soft font-body shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+      {/* Sur desktop, panneau de filtres/liste en sidebar permanente à côté de la
+          carte (plus de survol flottant) ; sur mobile, seule la carte occupe cette zone. */}
+      <div className={isMobile ? 'relative h-full w-full' : 'flex h-full w-full'}>
+        {!isMobile && (
+          <aside className="flex h-full w-[380px] shrink-0 flex-col overflow-hidden border-r border-ink-line bg-ink-soft font-body">
               {/* Header amélioré */}
-              <div className="bg-ink p-5 text-paper">
+              <div className="shrink-0 bg-ink p-5 text-paper">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="m-0 font-display text-xl font-semibold uppercase tracking-wide">
                     🏃‍♂️ Run Clubs
@@ -1824,7 +1821,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                     placeholder={t.search}
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="box-border w-full rounded-sm border border-white/15 bg-black/30 px-3 py-2.5 pl-10 text-sm text-paper outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/30"
+                    className="box-border w-full rounded-sm border border-white/20 bg-surface px-3 py-2.5 pl-10 text-sm text-paper outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/30"
                   />
                   {searchQuery && (
                     <button
@@ -1845,7 +1842,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                     <select
                       value={filterCity}
                       onChange={(e) => handleCityFilterChange(e.target.value)}
-                      className="w-full rounded-sm border-none bg-black/30 px-2 py-1.5 text-[13px] text-paper"
+                      className="w-full rounded-sm border border-white/20 bg-surface px-2 py-1.5 text-[13px] text-paper"
                     >
                       <option value="">{t.allCities}</option>
                       {sortedUniqueCities.map(city => (
@@ -1861,7 +1858,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                     <select
                       value={filterDay}
                       onChange={(e) => handleDayFilterChange(e.target.value)}
-                      className="w-full rounded-sm border-none bg-black/30 px-2 py-1.5 text-[13px] text-paper"
+                      className="w-full rounded-sm border border-white/20 bg-surface px-2 py-1.5 text-[13px] text-paper"
                     >
                       <option value="">{t.all}</option>
                       {sortedUniqueDays.map((day: string) => (
@@ -1883,11 +1880,10 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
 
               {/* Liste des clubs */}
               <div
-                className="clubs-list-container [scrollbar-color:#FF5500_#1f1f1f] [scrollbar-width:thin]"
+                className="clubs-list-container min-h-0 flex-1 [scrollbar-color:#FF5500_#1f1f1f] [scrollbar-width:thin]"
                 style={{
-                  maxHeight: 'calc(75vh - 140px)',
                   overflowY: 'scroll',
-                  paddingBottom: '60px'
+                  paddingBottom: '16px'
                 }}>
                 {filteredClubs.length === 0 ? (
                   <div className="p-10 text-center text-concrete">
@@ -1980,11 +1976,10 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                   })
                 )}
               </div>
-            </div>
-          )}
-        </>
-      )}
+          </aside>
+        )}
 
+        <div className="relative h-full min-w-0 flex-1">
       {/* Carte commune aux deux interfaces */}
       <MapContainer
         ref={mapRef}
@@ -2027,10 +2022,12 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
       <UserLocationMarker position={userLocation} />
 
       </MapContainer>
+        </div>
+      </div>
 
       {/* Popup d'information sur le projet */}
-      {showInfoPopup && (
-        <div 
+      {showInfoPopup && createPortal(
+        <div
           style={{
             position: 'fixed',
             top: 0,
@@ -2350,7 +2347,8 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Bouton Effacer les filtres - Mobile uniquement et si filtres actifs */}
