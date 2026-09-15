@@ -1,0 +1,35 @@
+# Run Club Maps
+
+App React/TypeScript (Vite) affichant des clubs de running sur une carte Leaflet, données issues d'une Google Sheet, déployée sur Vercel.
+
+## Stack
+- React 19 + TypeScript, Vite 6, Tailwind CSS 4
+- Leaflet / react-leaflet / leaflet.markercluster pour la carte
+- Backend: API Vercel serverless (`api/runclubs/index.ts`) + `lib/fetchSheet.ts` (lecture Google Sheets via `googleapis`)
+- Dev local: `scripts/dev-server.ts` (Express) simule l'API serverless
+
+## Commandes
+- `npm run dev` — lance API (Express, port 3001) + Vite en parallèle
+- `npm run build` — `tsc -b && vite build`
+- `npm run lint` — ESLint
+- `npm run test:api` / `test:api:detailed` / `test:fetchsheet` / `test:vercel` — scripts de test manuels dans `scripts/`
+
+Pas de suite de tests unitaires (Jest/Vitest) — les "test:*" sont des scripts Node ad-hoc.
+
+## Structure clé
+- `src/RunClubMap.tsx` — composant principal de la carte (le plus volumineux, lire en ciblé avec grep/offset plutôt qu'en entier si possible)
+- `src/services/cacheService.ts` + `src/hooks/useCache.ts` — cache côté client des données Sheet (voir CACHE-GUIDE.md)
+- `src/hooks/useSEO.ts` — gestion SEO dynamique (voir SEO-GUIDE.md)
+- `lib/fetchSheet.ts` — logique de fetch/parsing Google Sheets, partagée entre `api/` et `scripts/dev-server.ts`
+- `api/runclubs/index.ts` — endpoint serverless Vercel
+- `public/manifest.json` — PWA manifest
+
+## Déploiement
+Vercel. De nombreux fichiers `VERCEL-*.md` / `SOLUTION-*.md` à la racine documentent des problèmes déjà résolus (ES modules, runtime, export). **Ne pas les relire par défaut** — seulement si un problème de déploiement Vercel similaire réapparaît. Référence courante: `DEPLOYMENT.md`, `DEPLOYMENT-FINAL.md`, `vercel.json`.
+
+## Conventions pour Claude (économie de tokens)
+- Ne pas lire les fichiers `VERCEL-*.md`, `SOLUTION-*.md` sauf besoin explicite lié à un bug de build/déploiement — ce sont des post-mortems historiques, pas une doc à jour.
+- Préférer `Grep`/`Glob` ciblés à la lecture complète de `src/RunClubMap.tsx` ou `lib/fetchSheet.ts`.
+- Le dossier `dist/` est généré par le build — ne jamais l'éditer ni le lire pour comprendre le code source.
+- Variables d'env: voir `env.example` (clés Google Sheets/API) — ne jamais logger ni commit une vraie clé (`keys/` est gitignored).
+- Commits en anglais court style `type: description` (ex. `fix: clean Vercel configuration`), cohérent avec l'historique existant.
