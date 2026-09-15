@@ -46,6 +46,13 @@ export default function Hero() {
             Référencer mon club
           </a>
         </div>
+
+        <a
+          href="#decouvrir"
+          className="mt-5 inline-block text-xs font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-accent"
+        >
+          🔥 Ou découvre tes clubs façon swipe
+        </a>
       </div>
     </section>
   );

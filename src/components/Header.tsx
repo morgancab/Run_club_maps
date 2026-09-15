@@ -18,6 +18,12 @@ export default function Header({ language, setLanguage, onOpenAbout }: HeaderPro
 
       <nav className="flex items-center gap-3 text-sm sm:gap-5" aria-label="Navigation principale">
         <a
+          href="#decouvrir"
+          className="hidden font-semibold uppercase tracking-wide text-paper/70 transition-colors hover:text-paper sm:inline-block"
+        >
+          Découvrir
+        </a>
+        <a
           href="#carte"
           className="hidden font-semibold uppercase tracking-wide text-paper/70 transition-colors hover:text-paper sm:inline-block"
         >

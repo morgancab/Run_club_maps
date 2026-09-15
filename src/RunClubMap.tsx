@@ -10,7 +10,7 @@ import { useSEO, useClubStructuredData } from './hooks/useSEO';
 import { cacheService, CACHE_KEYS, CACHE_OPTIONS, type CachedClubData } from './services/cacheService';
 import { useCache } from './hooks/useCache';
 
-interface RunClubFeature {
+export interface RunClubFeature {
   type: 'Feature';
   geometry: {
     type: 'Point';
