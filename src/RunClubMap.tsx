@@ -2499,22 +2499,27 @@ export default function RunClubMap() {
         <ZoomControlBottomLeft />
         
         {/* Gestionnaire de clics pour mobile */}
-        <MapClickHandler 
-          isMobile={isMobile} 
-          showOverlay={showOverlay} 
-          setShowOverlay={setShowOverlay} 
-        />
-        
-        {/* Tuiles CartoDB Positron (fond clair et moderne) */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          subdomains="abcd"
-          maxZoom={19}
-        />
-        
-        {/* Markers avec clustering personnalisé */}
-        <ClusteredMarkers clubs={filteredClubs} getClubText={getClubText} t={t} selectedClubId={selectedClubId} />
+      <MapClickHandler 
+        isMobile={isMobile} 
+        showOverlay={showOverlay} 
+        setShowOverlay={setShowOverlay} 
+      />
+
+      {/* Fond de carte clair — style proche de CartoDB Positron */}
+      <TileLayer
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        attribution='Tiles &copy; Esri — Esri, DeLorme, NAVTEQ'
+        maxZoom={19}
+      />
+
+      {/* Markers avec clustering personnalisé */}
+      <ClusteredMarkers
+        clubs={filteredClubs}
+        getClubText={getClubText}
+        t={t}
+        selectedClubId={selectedClubId}
+      />
+
       </MapContainer>
 
       {/* Popup d'information sur le projet */}
