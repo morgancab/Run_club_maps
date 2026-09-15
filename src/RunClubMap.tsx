@@ -36,33 +36,60 @@ interface RunClubFeature {
   };
 }
 
+// Calcule la distance à vol d'oiseau (en km) entre deux points GPS (formule de Haversine)
+const haversineDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+};
+
+// Construit un lien Google Maps pour obtenir l'itinéraire vers un club
+const buildDirectionsUrl = (
+  destinationLat: number,
+  destinationLng: number,
+  origin: { lat: number; lng: number } | null
+): string => {
+  const params = new URLSearchParams({
+    api: '1',
+    destination: `${destinationLat},${destinationLng}`,
+    travelmode: 'walking'
+  });
+  if (origin) {
+    params.set('origin', `${origin.lat},${origin.lng}`);
+  }
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+};
+
 // Fonction pour créer une icône personnalisée avec l'image du club
 const createCustomIcon = (imageUrl: string, clubName: string) => {
   // Fonction pour corriger le chemin de l'image
-  const getCorrectImagePath = (imageUrl: string, clubName?: string) => {
+  const getCorrectImagePath = (imageUrl: string) => {
     if (!imageUrl) return '';
-    
+
     // Si c'est une URL du site qui pointe vers un fichier PNG/JPG à la racine
-    if (imageUrl.includes('run-club-maps.vercel.app/') && 
+    if (imageUrl.includes('run-club-maps.vercel.app/') &&
         (imageUrl.includes('.png') || imageUrl.includes('.jpg') || imageUrl.includes('.jpeg')) &&
         !imageUrl.includes('/images/')) {
       const fileName = imageUrl.split('/').pop();
       const correctedPath = `/images/${fileName}`;
-      console.log(`🔧 Correction URL Vercel pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
       return correctedPath;
     }
     // Si c'est juste un nom de fichier local
     else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
       const correctedPath = `/images/${imageUrl}`;
-      console.log(`🔧 Correction chemin local pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
       return correctedPath;
     } else {
-      console.log(`✅ Chemin image OK pour ${clubName || 'club'}:`, imageUrl);
       return imageUrl;
     }
   };
-  
-  const correctedImageUrl = getCorrectImagePath(imageUrl, clubName);
+
+  const correctedImageUrl = getCorrectImagePath(imageUrl);
 
   return L.divIcon({
     html: `
@@ -70,7 +97,7 @@ const createCustomIcon = (imageUrl: string, clubName: string) => {
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        border: 3px solid #ff6b35;
+        border: 3px solid #ff4d1c;
         overflow: hidden;
         background: white;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -87,7 +114,7 @@ const createCustomIcon = (imageUrl: string, clubName: string) => {
             border-radius: 50%;
             object-fit: cover;
           "
-          onerror="console.log('❌ Erreur chargement image:', '${correctedImageUrl}'); this.style.display='none'; this.parentElement.innerHTML='🏃‍♂️';"
+          onerror="this.style.display='none'; this.parentElement.innerHTML='🏃‍♂️';"
         />
       </div>
     `,
@@ -97,6 +124,63 @@ const createCustomIcon = (imageUrl: string, clubName: string) => {
     popupAnchor: [0, -25]
   });
 };
+
+// Composant pour afficher la position de l'utilisateur sur la carte
+function UserLocationMarker({ position }: { position: { lat: number; lng: number } | null }) {
+  const map = useMap();
+  const markerRef = useRef<L.Marker | null>(null);
+
+  useEffect(() => {
+    if (!position) {
+      if (markerRef.current) {
+        map.removeLayer(markerRef.current);
+        markerRef.current = null;
+      }
+      return;
+    }
+
+    const icon = L.divIcon({
+      html: `
+        <div style="position: relative; width: 22px; height: 22px;">
+          <div style="
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            background: rgba(255, 77, 28, 0.25);
+            animation: pulse-ring 2s infinite ease-out;
+          "></div>
+          <div style="
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: #ff4d1c;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+          "></div>
+        </div>
+      `,
+      className: 'user-location-icon',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
+    });
+
+    if (markerRef.current) {
+      markerRef.current.setLatLng([position.lat, position.lng]);
+      markerRef.current.setIcon(icon);
+    } else {
+      markerRef.current = L.marker([position.lat, position.lng], { icon, zIndexOffset: 1000 }).addTo(map);
+    }
+
+    return () => {
+      if (markerRef.current) {
+        map.removeLayer(markerRef.current);
+        markerRef.current = null;
+      }
+    };
+  }, [map, position]);
+
+  return null;
+}
 
 // Composant pour ajouter les contrôles de zoom en bas à gauche
 function ZoomControlBottomLeft() {
@@ -143,11 +227,12 @@ function MapClickHandler({ isMobile, showOverlay, setShowOverlay }: {
 }
 
 // Composant pour gérer le clustering des marqueurs
-function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: { 
-  clubs: RunClubFeature[]; 
+function ClusteredMarkers({ clubs, getClubText, t, selectedClubId, userLocation }: {
+  clubs: RunClubFeature[];
   getClubText: (club: RunClubFeature, field: 'name' | 'frequency' | 'description') => string;
   t: any;
   selectedClubId: string | undefined;
+  userLocation: { lat: number; lng: number } | null;
 }) {
   const map = useMap();
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -168,10 +253,10 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
               width: ${size}px;
               height: ${size}px;
               border-radius: 50%;
-              background: linear-gradient(135deg, rgba(255, 107, 53, 0.95) 0%, rgba(247, 147, 30, 0.95) 50%, rgba(255, 140, 66, 0.95) 100%);
+              background: linear-gradient(135deg, rgba(255, 77, 28, 0.95) 0%, rgba(247, 147, 30, 0.95) 50%, rgba(255, 140, 66, 0.95) 100%);
               border: 2px solid rgba(255, 255, 255, 0.8);
               box-shadow: 
-                0 8px 32px rgba(255, 107, 53, 0.4),
+                0 8px 32px rgba(255, 77, 28, 0.4),
                 0 4px 16px rgba(0, 0, 0, 0.1),
                 inset 0 2px 4px rgba(255, 255, 255, 0.3),
                 inset 0 -2px 4px rgba(0, 0, 0, 0.1);
@@ -214,7 +299,7 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
                 width: ${size + 20}px;
                 height: ${size + 20}px;
                 border-radius: 50%;
-                border: 1px solid rgba(255, 107, 53, 0.2);
+                border: 1px solid rgba(255, 77, 28, 0.2);
                 transform: translate(-50%, -50%) scale(0);
                 animation: pulse-ring 2s infinite ease-out;
                 pointer-events: none;
@@ -293,7 +378,11 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
         console.warn(`Coordonnées invalides pour ${club.properties.name}:`, { lat, lng });
         return;
       }
-      
+
+      // Distance jusqu'à l'utilisateur (si sa position est connue) et lien d'itinéraire
+      const distanceKm = userLocation ? haversineDistanceKm(userLocation.lat, userLocation.lng, lat, lng) : null;
+      const directionsUrl = buildDirectionsUrl(lat, lng, userLocation);
+
       // Créer le marqueur avec des options anti-flash
       const marker = L.marker([lat, lng], {
         icon: createCustomIcon(
@@ -315,64 +404,65 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
       markersRef.current.set(clubId, marker);
 
       // Fonction pour corriger le chemin d'une image
-      const getCorrectImagePath = (imageUrl: string, clubName?: string) => {
+      const getCorrectImagePath = (imageUrl: string) => {
         if (!imageUrl) return '';
-        
+
         // Si c'est une URL du site qui pointe vers un fichier PNG/JPG à la racine
-        if (imageUrl.includes('run-club-maps.vercel.app/') && 
+        if (imageUrl.includes('run-club-maps.vercel.app/') &&
             (imageUrl.includes('.png') || imageUrl.includes('.jpg') || imageUrl.includes('.jpeg')) &&
             !imageUrl.includes('/images/')) {
           const fileName = imageUrl.split('/').pop();
           const correctedPath = `/images/${fileName}`;
-          console.log(`🔧 Correction URL Vercel pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
           return correctedPath;
         }
         // Si c'est juste un nom de fichier local
         else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
           const correctedPath = `/images/${imageUrl}`;
-          console.log(`🔧 Correction chemin local pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
           return correctedPath;
         } else {
-          console.log(`✅ Chemin image OK pour ${clubName || 'club'}:`, imageUrl);
           return imageUrl;
         }
       };
 
       // Créer le contenu du popup
       const popupContent = `
-        <div style="min-width: 280px; font-family: Arial, sans-serif; line-height: 1.4;">
-          <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ff6b35;">
-            ${club.properties.image ? `<img src="${getCorrectImagePath(club.properties.image, club.properties.name)}" alt="${club.properties.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 12px; object-fit: cover; border: 3px solid #ff6b35;" />` : ''}
-            <h3 style="margin: 0; color: #ff6b35; font-size: 18px; font-weight: bold;">${getClubText(club, 'name')}</h3>
+        <div class="min-w-[280px] font-body leading-snug">
+          <div class="mb-3 flex items-center gap-3 border-b-2 border-ink pb-2.5">
+            ${club.properties.image ? `<img src="${getCorrectImagePath(club.properties.image)}" alt="${club.properties.name}" class="h-[50px] w-[50px] shrink-0 rounded-full border-2 border-accent object-cover" />` : ''}
+            <div class="min-w-0 flex-1">
+              <h3 class="m-0 font-display text-lg font-bold uppercase leading-tight tracking-tight text-ink">${getClubText(club, 'name')}</h3>
+              ${distanceKm !== null ? `<span class="text-xs font-bold uppercase tracking-wide text-accent">📍 ${distanceKm < 1 ? Math.round(distanceKm * 1000) + ' m' : distanceKm.toFixed(1) + ' km'}</span>` : ''}
+            </div>
           </div>
+          <a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" class="mb-3 flex items-center justify-center gap-2 rounded-sm bg-ink px-3 py-2 text-xs font-bold uppercase tracking-wide text-paper no-underline">🧭 ${t.getDirections}</a>
           ${club.properties.city ? `
-            <div style="margin-bottom: 12px;">
-              <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: bold; color: #333;">📍 ${t.city}</h4>
-              <p style="margin: 0; font-size: 14px; color: #666;">${club.properties.city}</p>
+            <div class="mb-3">
+              <h4 class="m-0 mb-1 text-xs font-bold uppercase tracking-wide text-concrete">📍 ${t.city}</h4>
+              <p class="m-0 text-sm text-ink">${club.properties.city}</p>
             </div>
           ` : ''}
           ${(club.properties.frequency || club.properties.frequency_en) ? `
-            <div style="margin-bottom: 12px;">
-              <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: bold; color: #333;">⏰ ${t.frequency}</h4>
-              <p style="margin: 0; font-size: 14px; color: #666;">${getClubText(club, 'frequency')}</p>
+            <div class="mb-3">
+              <h4 class="m-0 mb-1 text-xs font-bold uppercase tracking-wide text-concrete">⏰ ${t.frequency}</h4>
+              <p class="m-0 text-sm text-ink">${getClubText(club, 'frequency')}</p>
             </div>
           ` : ''}
           ${(club.properties.description || club.properties.description_en) ? `
-            <div style="margin-bottom: 15px;">
-              <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: bold; color: #333;">📝 ${t.description}</h4>
-              <p style="margin: 0; font-size: 14px; color: #666; line-height: 1.5;">${getClubText(club, 'description')}</p>
+            <div class="mb-3.5">
+              <h4 class="m-0 mb-1 text-xs font-bold uppercase tracking-wide text-concrete">📝 ${t.description}</h4>
+              <p class="m-0 text-sm leading-snug text-ink">${getClubText(club, 'description')}</p>
             </div>
           ` : ''}
           ${club.properties.social && Object.keys(club.properties.social).length > 0 ? `
             <div>
-              <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold; color: #333;">🌐 ${t.socialNetworks}</h4>
-              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                ${club.properties.social.website ? `<a href="${club.properties.social.website}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #ff6b35; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #fff5f0; border-radius: 12px; border: 1px solid #ff6b35;">🔗 ${t.site}</a>` : ''}
-                ${club.properties.social.instagram ? `<a href="${club.properties.social.instagram}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #E4405F; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #fdf2f8; border-radius: 12px; border: 1px solid #E4405F;">📷 Instagram</a>` : ''}
-                ${club.properties.social.facebook ? `<a href="${club.properties.social.facebook}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #1877F2; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #eff6ff; border-radius: 12px; border: 1px solid #1877F2;">📘 Facebook</a>` : ''}
-                ${club.properties.social.tiktok ? `<a href="${club.properties.social.tiktok}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #000000; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #f9fafb; border-radius: 12px; border: 1px solid #000000;">🎵 TikTok</a>` : ''}
-                ${club.properties.social.whatsapp ? `<a href="${club.properties.social.whatsapp}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #25D366; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #f0fdf4; border-radius: 12px; border: 1px solid #25D366;">💬 WhatsApp</a>` : ''}
-                ${club.properties.social.strava ? `<a href="${club.properties.social.strava}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #FC4C02; text-decoration: none; font-size: 13px; font-weight: bold; padding: 6px 10px; background-color: #fff7ed; border-radius: 12px; border: 1px solid #FC4C02;">🏃 Strava</a>` : ''}
+              <h4 class="m-0 mb-2 text-xs font-bold uppercase tracking-wide text-concrete">🌐 ${t.socialNetworks}</h4>
+              <div class="flex flex-wrap gap-2">
+                ${club.properties.social.website ? `<a href="${club.properties.social.website}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-accent bg-accent px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🔗 ${t.site}</a>` : ''}
+                ${club.properties.social.instagram ? `<a href="${club.properties.social.instagram}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">📷 Instagram</a>` : ''}
+                ${club.properties.social.facebook ? `<a href="${club.properties.social.facebook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">📘 Facebook</a>` : ''}
+                ${club.properties.social.tiktok ? `<a href="${club.properties.social.tiktok}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🎵 TikTok</a>` : ''}
+                ${club.properties.social.whatsapp ? `<a href="${club.properties.social.whatsapp}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">💬 WhatsApp</a>` : ''}
+                ${club.properties.social.strava ? `<a href="${club.properties.social.strava}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🏃 Strava</a>` : ''}
               </div>
             </div>
           ` : ''}
@@ -395,7 +485,7 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId }: {
       map.removeLayer(markerClusterGroup);
       markersRef.current.clear();
     };
-  }, [map, clubs, getClubText, t]);
+  }, [map, clubs, getClubText, t, userLocation]);
 
   // Effet pour ouvrir la popup du club sélectionné
   useEffect(() => {
@@ -458,6 +548,12 @@ const translations = {
     followUs: 'Suivez-nous',
     followUsText: 'Restez connecté avec la communauté Sport Club Explorer sur Instagram pour découvrir de nouveaux clubs et partager vos expériences de course !',
     visitInstagram: 'Visiter notre Instagram',
+    getDirections: 'Itinéraire',
+    nearMe: 'Près de moi',
+    locating: 'Localisation...',
+    sortedByDistance: 'Triés par distance',
+    locationDenied: 'Localisation refusée. Autorisez l\'accès à votre position pour voir les clubs les plus proches.',
+    locationError: 'Impossible de récupérer votre position.',
     days: {
       monday: 'Lundi',
       tuesday: 'Mardi', 
@@ -511,6 +607,12 @@ const translations = {
     followUs: 'Follow Us',
     followUsText: 'Stay connected with the Sport Club Explorer community on Instagram to discover new clubs and share your running experiences!',
     visitInstagram: 'Visit our Instagram',
+    getDirections: 'Directions',
+    nearMe: 'Near me',
+    locating: 'Locating...',
+    sortedByDistance: 'Sorted by distance',
+    locationDenied: 'Location access denied. Allow location access to see the closest clubs.',
+    locationError: 'Unable to get your location.',
     days: {
       monday: 'Monday',
       tuesday: 'Tuesday',
@@ -538,32 +640,65 @@ export default function RunClubMap() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'granted' | 'denied' | 'error'>('idle');
   const mapRef = useRef<any>(null);
   const { cacheStatus, updateCacheStatus } = useCache();
+
+  // Demande la position de l'utilisateur, centre la carte dessus et trie les clubs par distance
+  const handleLocateMe = useCallback(() => {
+    if (geoStatus === 'loading') return;
+
+    if (userLocation) {
+      // Bouton "actif" : un second clic désactive le tri par distance
+      setUserLocation(null);
+      setGeoStatus('idle');
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setGeoStatus('error');
+      return;
+    }
+
+    setGeoStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        setGeoStatus('granted');
+        setShowOverlay(true);
+        if (mapRef.current) {
+          mapRef.current.setView([latitude, longitude], 12, { animate: true, duration: 1 });
+        }
+      },
+      (error) => {
+        setGeoStatus(error.code === error.PERMISSION_DENIED ? 'denied' : 'error');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
+  }, [geoStatus, userLocation]);
 
   // Fonction pour obtenir les traductions
   const t = translations[language];
 
   // Fonction globale pour corriger les chemins d'images
-  const getCorrectImagePath = (imageUrl: string, clubName?: string) => {
+  const getCorrectImagePath = (imageUrl: string) => {
     if (!imageUrl) return '';
-    
+
     // Si c'est une URL du site qui pointe vers un fichier PNG/JPG à la racine
-    if (imageUrl.includes('run-club-maps.vercel.app/') && 
+    if (imageUrl.includes('run-club-maps.vercel.app/') &&
         (imageUrl.includes('.png') || imageUrl.includes('.jpg') || imageUrl.includes('.jpeg')) &&
         !imageUrl.includes('/images/')) {
       const fileName = imageUrl.split('/').pop();
       const correctedPath = `/images/${fileName}`;
-      console.log(`🔧 Correction URL Vercel pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
       return correctedPath;
     }
     // Si c'est juste un nom de fichier local
     else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
       const correctedPath = `/images/${imageUrl}`;
-      console.log(`🔧 Correction chemin local pour ${clubName || 'club'}:`, imageUrl, '→', correctedPath);
       return correctedPath;
     } else {
-      console.log(`✅ Chemin image OK pour ${clubName || 'club'}:`, imageUrl);
       return imageUrl;
     }
   };
@@ -723,7 +858,6 @@ export default function RunClubMap() {
         const cachedData = cacheService.get<CachedClubData>(CACHE_KEYS.RUN_CLUBS, CACHE_OPTIONS.RUN_CLUBS);
         
         if (cachedData) {
-          console.log(`🚀 Chargement depuis le cache: ${cachedData.count} clubs`);
           setClubs(cachedData.clubs);
           calculateMapBounds(cachedData.clubs);
           setLoading(false);
@@ -732,7 +866,6 @@ export default function RunClubMap() {
         }
 
         // 2. Pas de cache valide, charger depuis l'API
-        console.log('📡 Chargement depuis l\'API Google Sheets...');
         const response = await fetch('/api/runclubs');
         
         if (!response.ok) {
@@ -750,7 +883,6 @@ export default function RunClubMap() {
         };
         
         cacheService.set(CACHE_KEYS.RUN_CLUBS, dataToCache, CACHE_OPTIONS.RUN_CLUBS);
-        console.log(`💾 ${features.length} clubs sauvegardés dans le cache`);
         
         // 4. Mettre à jour l'interface
         setClubs(features);
@@ -769,7 +901,6 @@ export default function RunClubMap() {
         });
         
         if (expiredCache) {
-          console.log('🔄 Utilisation d\'un cache expiré en mode dégradé');
           setClubs(expiredCache.clubs);
           calculateMapBounds(expiredCache.clubs);
         }
@@ -792,7 +923,7 @@ export default function RunClubMap() {
         flexDirection: 'column',
         alignItems: 'center', 
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #0e0e0e 0%, #1a1a1a 100%)',
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
         position: 'relative',
         overflow: 'hidden'
@@ -805,9 +936,9 @@ export default function RunClubMap() {
           width: '100%',
           height: '100%',
           background: `
-            radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 20% 80%, rgba(255, 77, 28, 0.15) 0%, transparent 50%),
             radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(255, 107, 53, 0.08) 0%, transparent 50%)
+            radial-gradient(circle at 40% 40%, rgba(255, 77, 28, 0.08) 0%, transparent 50%)
           `
         }}></div>
 
@@ -854,7 +985,7 @@ export default function RunClubMap() {
               transformOrigin: '80px 80px'
             }}>
               <g transform="translate(145, 80)">
-                <circle cx="0" cy="0" r="8" fill="#ff6b35" />
+                <circle cx="0" cy="0" r="8" fill="#ff4d1c" />
                 <text x="0" y="2" textAnchor="middle" fontSize="10" fill="white">🏃‍♂️</text>
               </g>
             </g>
@@ -866,7 +997,7 @@ export default function RunClubMap() {
               transformOrigin: '80px 80px'
             }}>
               <g transform="translate(145, 80)">
-                <circle cx="0" cy="0" r="7" fill="#f7931e" />
+                <circle cx="0" cy="0" r="7" fill="#d63d12" />
                 <text x="0" y="2" textAnchor="middle" fontSize="9" fill="white">🏃‍♀️</text>
               </g>
             </g>
@@ -888,31 +1019,31 @@ export default function RunClubMap() {
               cx="80"
               cy="80"
               r="25"
-              fill="rgba(255, 107, 53, 0.2)"
+              fill="rgba(255, 77, 28, 0.2)"
               style={{
                 animation: 'pulse 2s ease-in-out infinite'
               }}
             />
             
             {/* Icône de carte au centre */}
-            <text x="80" y="88" textAnchor="middle" fontSize="24" fill="#ff6b35">
+            <text x="80" y="88" textAnchor="middle" fontSize="24" fill="#ff4d1c">
               🗺️
             </text>
 
             {/* Points de clubs qui apparaissent */}
-            <circle cx="110" cy="50" r="3" fill="#ff6b35" style={{
+            <circle cx="110" cy="50" r="3" fill="#ff4d1c" style={{
               animation: 'popInPlace 2s ease-in-out infinite',
               transformOrigin: '110px 50px'
             }} />
-            <circle cx="50" cy="110" r="3" fill="#ff6b35" style={{
+            <circle cx="50" cy="110" r="3" fill="#ff4d1c" style={{
               animation: 'popInPlace 2s ease-in-out infinite 0.5s',
               transformOrigin: '50px 110px'
             }} />
-            <circle cx="110" cy="110" r="3" fill="#ff6b35" style={{
+            <circle cx="110" cy="110" r="3" fill="#ff4d1c" style={{
               animation: 'popInPlace 2s ease-in-out infinite 1s',
               transformOrigin: '110px 110px'
             }} />
-            <circle cx="50" cy="50" r="3" fill="#ff6b35" style={{
+            <circle cx="50" cy="50" r="3" fill="#ff4d1c" style={{
               animation: 'popInPlace 2s ease-in-out infinite 1.5s',
               transformOrigin: '50px 50px'
             }} />
@@ -924,6 +1055,9 @@ export default function RunClubMap() {
           color: 'white',
           fontSize: '28px',
           fontWeight: '700',
+          fontFamily: '"Space Grotesk", Inter, system-ui, sans-serif',
+          textTransform: 'uppercase',
+          letterSpacing: '0.02em',
           marginBottom: '12px',
           textAlign: 'center',
           zIndex: 2,
@@ -963,7 +1097,7 @@ export default function RunClubMap() {
           <div style={{
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(90deg, transparent, #ff6b35, #f7931e, #ff6b35, transparent)',
+            background: 'linear-gradient(90deg, transparent, #ff4d1c, #d63d12, #ff4d1c, transparent)',
             animation: 'runningProgress 2.5s ease-in-out infinite'
           }}></div>
           
@@ -994,7 +1128,7 @@ export default function RunClubMap() {
             <div style={{
               fontSize: '24px',
               fontWeight: 'bold',
-              color: '#ff6b35',
+              color: '#ff4d1c',
               animation: 'countUp 2s ease-out infinite'
             }}>
               🏃‍♂️
@@ -1011,7 +1145,7 @@ export default function RunClubMap() {
             <div style={{
               fontSize: '24px',
               fontWeight: 'bold',
-              color: '#f7931e',
+              color: '#d63d12',
               animation: 'countUp 2s ease-out infinite 0.3s'
             }}>
               🗺️
@@ -1176,6 +1310,22 @@ export default function RunClubMap() {
     
     return cityMatch && dayMatch && searchMatch;
   });
+
+  // Distance jusqu'à un club depuis la position de l'utilisateur (null si inconnue)
+  const getClubDistanceKm = (club: RunClubFeature): number | null => {
+    if (!userLocation) return null;
+    const [lng, lat] = club.geometry.coordinates;
+    if (isNaN(lat) || isNaN(lng)) return null;
+    return haversineDistanceKm(userLocation.lat, userLocation.lng, lat, lng);
+  };
+
+  const formatDistanceKm = (distanceKm: number): string =>
+    distanceKm < 1 ? `${Math.round(distanceKm * 1000)} m` : `${distanceKm.toFixed(1)} km`;
+
+  // Si la position de l'utilisateur est connue, les clubs les plus proches sont affichés en premier
+  const sortedFilteredClubs = userLocation
+    ? [...filteredClubs].sort((a, b) => (getClubDistanceKm(a) ?? Infinity) - (getClubDistanceKm(b) ?? Infinity))
+    : filteredClubs;
 
   // Obtenir les villes uniques pour le filtre
   const uniqueCities = [...new Set(clubs.map(club => club.properties.city).filter(Boolean))] as string[];
@@ -1387,44 +1537,12 @@ export default function RunClubMap() {
       {isMobile ? (
         <>
           {/* Barre de navigation mobile en haut */}
-          <header style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 1000,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderBottom: '1px solid rgba(255, 107, 53, 0.2)',
-            padding: '8px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
-            height: '50px',
-            boxSizing: 'border-box'
-          }}>
+          <header className="absolute top-0 left-0 right-0 z-[1000] flex h-[50px] items-center justify-between border-b border-ink-line bg-ink/95 px-3 py-2 font-body shadow-[0_2px_16px_rgba(0,0,0,0.25)] backdrop-blur-md box-border">
             {/* Bouton menu et titre */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               <button
                 onClick={() => setShowOverlay(!showOverlay)}
-                style={{
-                  backgroundColor: '#ff6b35',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 8px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
-                  minHeight: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  flexShrink: 0
-                }}
+                className="flex min-h-[32px] shrink-0 items-center gap-1 rounded-sm bg-accent px-2 py-1.5 text-[11px] font-bold text-ink shadow-[0_2px_10px_rgba(255,77,28,0.35)]"
                 aria-label={showOverlay ? t.close : t.clubsList}
                 aria-expanded={showOverlay}
               >
@@ -1434,81 +1552,32 @@ export default function RunClubMap() {
 
               {/* Indicateur de cache compact */}
               {cacheStatus.isFromCache && !isMobile && (
-                <div style={{
-                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                  color: '#059669',
-                  fontSize: '9px',
-                  fontWeight: '600',
-                  padding: '2px 6px',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '2px',
-                  border: '1px solid rgba(34, 197, 94, 0.2)',
-                  flexShrink: 0,
-                  whiteSpace: 'nowrap'
-                }}
-                title={`Données du cache (${cacheStatus.cacheAge}min)`}
+                <div
+                  className="flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-sm border border-emerald-400/30 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-400"
+                  title={`Données du cache (${cacheStatus.cacheAge}min)`}
                 >
                   💾
                   <span>{cacheStatus.cacheAge}min</span>
                 </div>
               )}
-              
-              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                <h1 style={{
-                  margin: '0',
-                  fontSize: '14px',
-                  fontWeight: '700',
-                  color: '#2d3748',
-                  letterSpacing: '-0.2px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
+
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <h1 className="m-0 truncate font-display text-sm font-semibold uppercase tracking-tight text-paper">
                   {t.title}
                 </h1>
-                <div style={{
-                  fontSize: '9px',
-                  color: '#ff6b35',
-                  fontWeight: '600',
-                  letterSpacing: '0.3px',
-                  textTransform: 'uppercase',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
+                <div className="truncate text-[9px] font-semibold uppercase tracking-wider text-accent">
                   {t.subtitle}
                 </div>
               </div>
             </div>
 
             {/* Contrôles droite */}
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }} aria-label={language === 'fr' ? 'Navigation principale' : 'Main navigation'}>
+            <nav className="flex shrink-0 items-center gap-1.5" aria-label={language === 'fr' ? 'Navigation principale' : 'Main navigation'}>
               {/* Sélecteur de langue compact */}
-              <div style={{
-                backgroundColor: 'rgba(255, 107, 53, 0.1)',
-                borderRadius: '6px',
-                overflow: 'hidden',
-                display: 'flex'
-              }} role="group" aria-label={language === 'fr' ? 'Sélection de langue' : 'Language selection'}>
+              <div className="flex overflow-hidden rounded-sm border border-ink-line bg-ink-soft" role="group" aria-label={language === 'fr' ? 'Sélection de langue' : 'Language selection'}>
                 <button
                   onClick={() => setLanguage('fr')}
-                  style={{
-                    padding: '6px 8px',
-                    border: 'none',
-                    backgroundColor: language === 'fr' ? '#ff6b35' : 'transparent',
-                    color: language === 'fr' ? 'white' : '#ff6b35',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    minWidth: '30px',
-                    minHeight: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
+                  className={`flex min-h-[32px] min-w-[30px] items-center justify-center px-2 py-1.5 text-[11px] font-semibold transition-colors ${language === 'fr' ? 'bg-accent text-ink' : 'text-paper/70'}`}
                   aria-label="Français"
                   aria-pressed={language === 'fr'}
                 >
@@ -1516,21 +1585,7 @@ export default function RunClubMap() {
                 </button>
                 <button
                   onClick={() => setLanguage('en')}
-                  style={{
-                    padding: '6px 8px',
-                    border: 'none',
-                    backgroundColor: language === 'en' ? '#ff6b35' : 'transparent',
-                    color: language === 'en' ? 'white' : '#ff6b35',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    minWidth: '30px',
-                    minHeight: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
+                  className={`flex min-h-[32px] min-w-[30px] items-center justify-center px-2 py-1.5 text-[11px] font-semibold transition-colors ${language === 'en' ? 'bg-accent text-ink' : 'text-paper/70'}`}
                   aria-label="English"
                   aria-pressed={language === 'en'}
                 >
@@ -1541,21 +1596,7 @@ export default function RunClubMap() {
               {/* Bouton info compact */}
               <button
                 onClick={() => setShowInfoPopup(true)}
-                style={{
-                  backgroundColor: 'rgba(255, 107, 53, 0.1)',
-                  border: '1px solid #ff6b35',
-                  borderRadius: '4px',
-                  width: '28px',
-                  height: '28px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '12px',
-                  color: '#ff6b35',
-                  fontWeight: 'bold',
-                  flexShrink: 0
-                }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-accent bg-accent/10 text-xs font-bold text-accent"
                 aria-label={t.info}
               >
                 ℹ️
@@ -1565,62 +1606,40 @@ export default function RunClubMap() {
 
           {/* Overlay mobile plein écran */}
           {showOverlay && (
-            <aside style={{
-              position: 'fixed',
-              top: '50px',
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'white',
-              zIndex: 999,
-              overflow: 'hidden',
-              fontFamily: 'Arial, sans-serif',
-              display: 'flex',
-              flexDirection: 'column'
-            }} aria-label={language === 'fr' ? 'Panneau de filtres et liste des clubs' : 'Filters panel and clubs list'}>
+            <aside
+              className="fixed bottom-0 left-0 right-0 top-[50px] z-[999] flex flex-col overflow-hidden bg-white font-body"
+              aria-label={language === 'fr' ? 'Panneau de filtres et liste des clubs' : 'Filters panel and clubs list'}
+            >
               {/* Header des filtres mobile */}
-              <header style={{
-                padding: '12px',
-                background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
-                color: 'white',
-                flexShrink: 0
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '12px'
-                }}>
-                  <h2 style={{
-                    margin: '0',
-                    fontSize: '16px',
-                    fontWeight: 'bold'
-                  }}>
+              <header className="shrink-0 bg-ink p-3 text-paper">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="m-0 font-display text-base font-semibold uppercase tracking-wide">
                     🏃‍♂️ Run Clubs
                   </h2>
-                  <div style={{
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    padding: '3px 10px',
-                    borderRadius: '15px',
-                    fontSize: '13px',
-                    fontWeight: 'bold'
-                  }} aria-live="polite">
+                  <div className="rounded-sm bg-white/10 px-2.5 py-0.5 text-[13px] font-bold text-accent" aria-live="polite">
                     {filteredClubs.length}/{clubs.length}
                   </div>
                 </div>
-                
+
+                {/* Géolocalisation : tri des clubs par distance */}
+                <button
+                  onClick={handleLocateMe}
+                  disabled={geoStatus === 'loading'}
+                  className={`mb-2.5 flex w-full items-center justify-center gap-1.5 rounded-sm border px-2.5 py-2 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-70 ${
+                    userLocation ? 'border-accent bg-accent text-ink' : 'border-white/20 bg-white/10 text-paper'
+                  }`}
+                >
+                  {geoStatus === 'loading' ? `📍 ${t.locating}` : userLocation ? `✕ ${t.sortedByDistance}` : `📍 ${t.nearMe}`}
+                </button>
+                {(geoStatus === 'denied' || geoStatus === 'error') && (
+                  <p className="mb-2.5 text-[11px] leading-snug text-accent">
+                    {geoStatus === 'denied' ? t.locationDenied : t.locationError}
+                  </p>
+                )}
+
                 {/* Barre de recherche mobile */}
-                <div style={{ marginBottom: '10px', position: 'relative' }}>
-                  <div style={{
-                    position: 'absolute',
-                    left: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    fontSize: '14px',
-                    color: '#666',
-                    pointerEvents: 'none',
-                    zIndex: 1
-                  }}>
+                <div className="relative mb-2.5">
+                  <div className="pointer-events-none absolute left-2.5 top-1/2 z-[1] -translate-y-1/2 text-sm text-concrete">
                     🔍
                   </div>
                   <input
@@ -1628,72 +1647,28 @@ export default function RunClubMap() {
                     placeholder={t.search}
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 10px 10px 35px',
-                      borderRadius: '6px',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      fontSize: '16px', // Évite le zoom sur iOS
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      color: '#333',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
+                    className="box-border w-full rounded-sm border border-white/15 bg-white/95 px-2.5 py-2.5 pl-9 text-base text-ink outline-none focus:border-accent"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => handleSearchChange('')}
-                      style={{
-                        position: 'absolute',
-                        right: '6px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '14px',
-                        color: '#666',
-                        cursor: 'pointer',
-                        padding: '3px',
-                        borderRadius: '3px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
+                      className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-sm p-0.5 text-sm text-concrete"
                     >
                       ✕
                     </button>
                   )}
                 </div>
-                
+
                 {/* Filtres mobile en grille */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '8px',
-                  marginBottom: '8px'
-                }}>
+                <div className="mb-2 grid grid-cols-2 gap-2">
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '11px',
-                      marginBottom: '4px',
-                      opacity: 0.9,
-                      fontWeight: '600'
-                    }}>
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-paper/80">
                       {t.city}
                     </label>
                     <select
                       value={filterCity}
                       onChange={(e) => handleCityFilterChange(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '6px',
-                        borderRadius: '5px',
-                        border: 'none',
-                        fontSize: '13px',
-                        backgroundColor: 'rgba(255,255,255,0.9)',
-                        color: '#333'
-                      }}
+                      className="w-full rounded-sm border-none bg-white/95 p-1.5 text-[13px] text-ink"
                     >
                       <option value="">{t.allCities}</option>
                       {sortedUniqueCities.map(city => (
@@ -1701,29 +1676,15 @@ export default function RunClubMap() {
                       ))}
                     </select>
                   </div>
-                  
+
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '11px',
-                      marginBottom: '4px',
-                      opacity: 0.9,
-                      fontWeight: '600'
-                    }}>
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-paper/80">
                       {t.day}
                     </label>
                     <select
                       value={filterDay}
                       onChange={(e) => handleDayFilterChange(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '6px',
-                        borderRadius: '5px',
-                        border: 'none',
-                        fontSize: '13px',
-                        backgroundColor: 'rgba(255,255,255,0.9)',
-                        color: '#333'
-                      }}
+                      className="w-full rounded-sm border-none bg-white/95 p-1.5 text-[13px] text-ink"
                     >
                       <option value="">{t.all}</option>
                       {sortedUniqueDays.map((day: string) => (
@@ -1737,17 +1698,7 @@ export default function RunClubMap() {
                 {(filterCity || filterDay || searchQuery) && (
                   <button
                     onClick={clearFilters}
-                    style={{
-                      width: '100%',
-                      padding: '6px 10px',
-                      borderRadius: '5px',
-                      border: 'none',
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                      color: 'white',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
+                    className="w-full rounded-sm border-none bg-white/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper"
                   >
                     ✕ {t.clear}
                   </button>
@@ -1755,199 +1706,104 @@ export default function RunClubMap() {
               </header>
               
               {/* Liste des clubs mobile avec scroll optimisé */}
-              <div style={{
-                flex: 1,
-                overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch', // Scroll fluide sur iOS
-                padding: '0 16px 16px 16px'
-              }}>
+              <div className="flex-1 overflow-y-auto px-4 pb-4 [-webkit-overflow-scrolling:touch]">
                 {filteredClubs.length === 0 ? (
-                  <div style={{
-                    padding: '40px 20px',
-                    textAlign: 'center',
-                    color: '#666'
-                  }}>
-                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-                    <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
+                  <div className="p-10 text-center text-concrete">
+                    <div className="mb-4 text-5xl">🔍</div>
+                    <p className="m-0 font-display text-base font-bold uppercase tracking-wide text-ink">
                       {t.noClubsFound}
                     </p>
-                    <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
+                    <p className="mt-2 mb-0 text-sm">
                       {t.tryModifyFilters}
                     </p>
                   </div>
                 ) : (
-                  filteredClubs.map((club, idx) => (
+                  sortedFilteredClubs.map((club, idx) => {
+                    const distanceKm = getClubDistanceKm(club);
+                    const [clubLng, clubLat] = club.geometry.coordinates;
+                    return (
                     <div
                       key={idx}
                       onClick={() => handleClubClick(club)}
-                      style={{
-                        padding: '16px',
-                        borderBottom: idx < filteredClubs.length - 1 ? '1px solid #eee' : 'none',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s',
-                        // Amélioration tactile
-                        minHeight: '44px', // Taille minimale tactile
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px'
-                      }}
-                      onTouchStart={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                      onTouchEnd={(e) => setTimeout(() => e.currentTarget.style.backgroundColor = 'white', 150)}
+                      className={`flex min-h-11 flex-col gap-2 py-4 transition-colors active:bg-paper ${idx < sortedFilteredClubs.length - 1 ? 'border-b border-paper-line' : ''}`}
                     >
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px'
-                      }}>
+                      <div className="flex items-center gap-3">
                         {club.properties.image && (
-                          <img 
-                            src={getCorrectImagePath(club.properties.image, club.properties.name)}
+                          <img
+                            src={getCorrectImagePath(club.properties.image)}
                             alt={club.properties.name}
-                            style={{
-                              width: '40px',
-                              height: '40px',
-                              borderRadius: '50%',
-                              objectFit: 'cover',
-                              border: '2px solid #ff6b35',
-                              flexShrink: 0
-                            }}
+                            className="h-10 w-10 shrink-0 rounded-full border-2 border-accent object-cover"
                             onError={(e) => {
-                              console.log('❌ Erreur chargement image mobile:', getCorrectImagePath(club.properties.image || '', club.properties.name));
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
                             }}
                           />
                         )}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <h4 style={{
-                            margin: '0',
-                            fontSize: '16px',
-                            color: '#ff6b35',
-                            fontWeight: 'bold',
-                            lineHeight: '1.2'
-                          }}>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="m-0 font-display text-base font-bold uppercase leading-tight tracking-tight text-ink">
                             {getClubText(club, 'name')}
                           </h4>
-                          {club.properties.city && (
-                            <div style={{
-                              fontSize: '12px',
-                              color: '#666',
-                              marginTop: '2px'
-                            }}>
-                              📍 {club.properties.city}
-                            </div>
-                          )}
+                          <div className="mt-0.5 flex items-center gap-2 text-xs text-concrete">
+                            {club.properties.city && <span>📍 {club.properties.city}</span>}
+                            {distanceKm !== null && (
+                              <span className="font-bold uppercase tracking-wide text-accent">
+                                {formatDistanceKm(distanceKm)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      
+
                       {(club.properties.frequency || club.properties.frequency_en) && (
-                        <div style={{
-                          fontSize: '13px',
-                          color: '#666',
-                          padding: '6px 10px',
-                          backgroundColor: '#f8f9fa',
-                          borderRadius: '6px',
-                          display: 'inline-block',
-                          alignSelf: 'flex-start'
-                        }}>
+                        <div className="inline-block self-start rounded-sm bg-ink px-2.5 py-1.5 text-[13px] font-medium text-paper">
                           ⏰ {getClubText(club, 'frequency')}
                         </div>
                       )}
-                      
+
                       {(club.properties.description || club.properties.description_en) && (
-                        <p style={{
-                          margin: '0',
-                          fontSize: '14px',
-                          color: '#666',
-                          lineHeight: '1.4',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden'
-                        }}>
+                        <p className="m-0 line-clamp-2 text-sm leading-snug text-concrete">
                           {getClubText(club, 'description')}
                         </p>
                       )}
-                      
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginTop: '4px'
-                      }}>
-                        <span style={{
-                          fontSize: '12px',
-                          color: '#999',
-                          fontWeight: '500'
-                        }}>
+
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium uppercase tracking-wide text-concrete">
                           📍 {t.clickToLocate}
                         </span>
-                        {club.properties.social?.website && (
+                        <div className="flex items-center gap-2">
                           <a
-                            href={club.properties.social.website}
+                            href={buildDirectionsUrl(clubLat, clubLng, userLocation)}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            style={{
-                              color: '#ff6b35',
-                              textDecoration: 'none',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              padding: '4px 8px',
-                              backgroundColor: '#fff5f0',
-                              borderRadius: '4px',
-                              border: '1px solid #ff6b35'
-                            }}
+                            className="rounded-sm bg-ink px-2 py-1 text-xs font-bold uppercase tracking-wide text-paper no-underline"
                           >
-                            🔗 {t.site}
+                            🧭 {t.getDirections}
                           </a>
-                        )}
+                          {club.properties.social?.website && (
+                            <a
+                              href={club.properties.social.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded-sm border border-accent px-2 py-1 text-xs font-bold uppercase tracking-wide text-accent no-underline"
+                            >
+                              🔗 {t.site}
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
-              
+
               {/* Bouton de retour à la carte centré en bas */}
-              <div style={{
-                position: 'sticky',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                padding: '16px',
-                backgroundColor: 'white',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'center',
-                zIndex: 10
-              }}>
+              <div className="sticky bottom-0 left-0 right-0 z-10 flex justify-center border-t border-paper-line bg-white p-4">
                 <button
                   onClick={() => setShowOverlay(false)}
-                  style={{
-                    backgroundColor: '#ff6b35',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '12px',
-                    padding: '14px 24px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 16px rgba(255, 107, 53, 0.3)',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    minWidth: '200px',
-                    justifyContent: 'center'
-                  }}
-                  onTouchStart={(e) => {
-                    e.currentTarget.style.transform = 'scale(0.95)';
-                    e.currentTarget.style.backgroundColor = '#e55a2b';
-                  }}
-                  onTouchEnd={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.backgroundColor = '#ff6b35';
-                  }}
+                  className="flex min-w-[200px] items-center justify-center gap-2 rounded-sm bg-accent px-6 py-3.5 text-base font-bold uppercase tracking-wide text-ink shadow-[0_4px_16px_rgba(255,77,28,0.35)] transition-transform active:scale-95"
                 >
                   <span>🗺️</span>
                   <span>{t.backToMap}</span>
@@ -1959,70 +1815,28 @@ export default function RunClubMap() {
       ) : (
         <>
           {/* Titre du site en haut à droite */}
-          <div style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            zIndex: 1000,
-            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            alignItems: 'flex-end',
-            maxWidth: 'calc(100vw - 20px)'
-          }}>
+          <div className="absolute right-2.5 top-2.5 z-[1000] flex max-w-[calc(100vw-20px)] flex-col items-end gap-2 font-body">
             {/* Titre du site */}
-            <div style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              padding: '16px 20px',
-              borderRadius: '12px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 107, 53, 0.2)',
-              minWidth: 'fit-content'
-            }}>
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="min-w-fit rounded-md border border-ink-line bg-ink/95 px-5 py-4 shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-md">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
                 {/* Logo SCE */}
-                <img 
-                  src="/SCE-logo.png" 
+                <img
+                  src="/SCE-logo.png"
                   alt="Sport Club Explorer Logo"
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    objectFit: 'contain',
-                    flexShrink: 0,
-                    borderRadius: '6px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                  }}
+                  className="h-10 w-10 shrink-0 rounded-sm object-contain shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
                   onError={(e) => {
-                    console.log('❌ Erreur de chargement du logo SCE:', e);
                     // Fallback en cas d'erreur
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                   }}
                 />
-                
+
                 {/* Titre et sous-titre */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h1 style={{
-                    margin: '0',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    color: '#2d3748',
-                    letterSpacing: '-0.3px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
+                <div className="min-w-0 flex-1">
+                  <h1 className="m-0 whitespace-nowrap font-display text-base font-semibold uppercase tracking-tight text-paper">
                     {t.title}
                   </h1>
-                  <div style={{
-                    fontSize: '10px',
-                    color: '#ff6b35',
-                    fontWeight: '600',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase'
-                  }}>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">
                     {t.subtitle}
                   </div>
                 </div>
@@ -2030,41 +1844,16 @@ export default function RunClubMap() {
             </div>
 
             {/* Sélecteur de langue */}
-            <div style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '8px',
-              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 107, 53, 0.2)',
-              overflow: 'hidden'
-            }}>
+            <div className="overflow-hidden rounded-sm border border-ink-line bg-ink/95 shadow-[0_2px_12px_rgba(0,0,0,0.2)] backdrop-blur-md">
               <button
                 onClick={() => setLanguage('fr')}
-                style={{
-                  padding: '8px 12px',
-                  border: 'none',
-                  backgroundColor: language === 'fr' ? '#ff6b35' : 'transparent',
-                  color: language === 'fr' ? 'white' : '#666',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
+                className={`px-3 py-2 text-xs font-semibold transition-colors ${language === 'fr' ? 'bg-accent text-ink' : 'text-paper/70'}`}
               >
                 🇫🇷 FR
               </button>
               <button
                 onClick={() => setLanguage('en')}
-                style={{
-                  padding: '8px 12px',
-                  border: 'none',
-                  backgroundColor: language === 'en' ? '#ff6b35' : 'transparent',
-                  color: language === 'en' ? 'white' : '#666',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
+                className={`px-3 py-2 text-xs font-semibold transition-colors ${language === 'en' ? 'bg-accent text-ink' : 'text-paper/70'}`}
               >
                 🇬🇧 EN
               </button>
@@ -2074,44 +1863,9 @@ export default function RunClubMap() {
             <button
               onClick={() => setShowInfoPopup(true)}
               title={t.info}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                border: '2px solid #ff6b35',
-                borderRadius: '12px',
-                width: '40px',
-                height: '40px',
-                cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(255, 107, 53, 0.2)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '18px',
-                color: '#ff6b35',
-                fontWeight: 'bold',
-                position: 'relative',
-                overflow: 'hidden'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#ff6b35';
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.4)';
-                e.currentTarget.style.color = 'white';
-                e.currentTarget.style.borderColor = '#ff6b35';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.2)';
-                e.currentTarget.style.color = '#ff6b35';
-                e.currentTarget.style.borderColor = '#ff6b35';
-              }}
+              className="group flex h-10 w-10 items-center justify-center rounded-sm border-2 border-accent bg-ink/95 text-lg font-bold text-accent shadow-[0_4px_16px_rgba(255,77,28,0.25)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 hover:bg-accent hover:text-ink hover:shadow-[0_8px_25px_rgba(255,77,28,0.4)]"
             >
-              <span style={{
-                display: 'inline-block',
-                transition: 'transform 0.3s ease'
-              }}>
+              <span className="inline-block transition-transform duration-300">
                 ℹ️
               </span>
             </button>
@@ -2120,84 +1874,44 @@ export default function RunClubMap() {
           {/* Bouton pour ouvrir/fermer l'overlay */}
           <button
             onClick={() => setShowOverlay(!showOverlay)}
-            style={{
-              position: 'absolute',
-              top: '10px',
-              left: '10px',
-              zIndex: 1000,
-              backgroundColor: '#ff6b35',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-              fontFamily: 'Arial, sans-serif'
-            }}
+            className="absolute left-2.5 top-2.5 z-[1000] rounded-sm bg-accent px-4 py-3 font-body text-sm font-bold uppercase tracking-wide text-ink shadow-[0_2px_10px_rgba(255,77,28,0.35)]"
           >
             📍 {t.clubsList} ({filteredClubs.length}/{clubs.length})
           </button>
 
           {/* Overlay desktop existant */}
           {showOverlay && (
-            <div style={{
-              position: 'absolute',
-              top: '70px',
-              left: '20px',
-              width: '380px',
-              maxHeight: '75vh',
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-              zIndex: 1000,
-              overflow: 'hidden',
-              fontFamily: 'Arial, sans-serif',
-              border: '1px solid rgba(255, 107, 53, 0.1)'
-            }}>
+            <div className="absolute left-5 top-[70px] z-[1000] w-[380px] max-h-[75vh] overflow-hidden rounded-md border border-ink-line bg-white font-body shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
               {/* Header amélioré */}
-              <div style={{
-                padding: '20px',
-                background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
-                color: 'white'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '16px'
-                }}>
-                  <h3 style={{
-                    margin: '0',
-                    fontSize: '20px',
-                    fontWeight: 'bold'
-                  }}>
+              <div className="bg-ink p-5 text-paper">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="m-0 font-display text-xl font-semibold uppercase tracking-wide">
                     🏃‍♂️ Run Clubs
                   </h3>
-                  <div style={{
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    padding: '4px 12px',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                  }}>
+                  <div className="rounded-sm bg-white/10 px-3 py-1 text-sm font-bold text-accent">
                     {filteredClubs.length}/{clubs.length}
                   </div>
                 </div>
-                
+
+                {/* Géolocalisation : tri des clubs par distance */}
+                <button
+                  onClick={handleLocateMe}
+                  disabled={geoStatus === 'loading'}
+                  className={`mb-3 flex w-full items-center justify-center gap-1.5 rounded-sm border px-3 py-2 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-70 ${
+                    userLocation ? 'border-accent bg-accent text-ink' : 'border-white/20 bg-white/10 text-paper hover:bg-white/15'
+                  }`}
+                >
+                  {geoStatus === 'loading' ? `📍 ${t.locating}` : userLocation ? `✕ ${t.sortedByDistance}` : `📍 ${t.nearMe}`}
+                </button>
+                {(geoStatus === 'denied' || geoStatus === 'error') && (
+                  <p className="mb-3 text-[11px] leading-snug text-accent">
+                    {geoStatus === 'denied' ? t.locationDenied : t.locationError}
+                  </p>
+                )}
+
                 {/* Barre de recherche */}
-                <div style={{ marginBottom: '16px', position: 'relative' }}>
-                  <div style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    fontSize: '16px',
-                    color: '#666',
-                    pointerEvents: 'none',
-                    zIndex: 1
-                  }}>
+                <div className="relative mb-4">
+                  <div className="pointer-events-none absolute left-3 top-1/2 z-[1] -translate-y-1/2 text-base text-concrete">
                     🔍
                   </div>
                   <input
@@ -2205,82 +1919,28 @@ export default function RunClubMap() {
                     placeholder={t.search}
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px 10px 40px',
-                      borderRadius: '8px',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      fontSize: '14px',
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      color: '#333',
-                      outline: 'none',
-                      transition: 'border-color 0.2s, box-shadow 0.2s',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = 'rgba(255,255,255,0.6)';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(255,255,255,0.3)';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    className="box-border w-full rounded-sm border border-white/15 bg-white/95 px-3 py-2.5 pl-10 text-sm text-ink outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/30"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => handleSearchChange('')}
-                      style={{
-                        position: 'absolute',
-                        right: '8px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '16px',
-                        color: '#666',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        borderRadius: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                      onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.1)'}
-                      onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'transparent'}
+                      className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-sm p-1 text-base text-concrete hover:bg-black/10"
                     >
                       ✕
                     </button>
                   )}
                 </div>
-                
+
                 {/* Filtres */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr auto',
-                  gap: '8px',
-                  alignItems: 'end'
-                }}>
+                <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '12px',
-                      marginBottom: '4px',
-                      opacity: 0.9
-                    }}>
+                    <label className="mb-1 block text-xs uppercase tracking-wide text-paper/80">
                       {t.city}
                     </label>
                     <select
                       value={filterCity}
                       onChange={(e) => handleCityFilterChange(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '6px 8px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        fontSize: '13px',
-                        backgroundColor: 'rgba(255,255,255,0.9)',
-                        color: '#333'
-                      }}
+                      className="w-full rounded-sm border-none bg-white/95 px-2 py-1.5 text-[13px] text-ink"
                     >
                       <option value="">{t.allCities}</option>
                       {sortedUniqueCities.map(city => (
@@ -2288,28 +1948,15 @@ export default function RunClubMap() {
                       ))}
                     </select>
                   </div>
-                  
+
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '12px',
-                      marginBottom: '4px',
-                      opacity: 0.9
-                    }}>
+                    <label className="mb-1 block text-xs uppercase tracking-wide text-paper/80">
                       {t.day}
                     </label>
                     <select
                       value={filterDay}
                       onChange={(e) => handleDayFilterChange(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '6px 8px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        fontSize: '13px',
-                        backgroundColor: 'rgba(255,255,255,0.9)',
-                        color: '#333'
-                      }}
+                      className="w-full rounded-sm border-none bg-white/95 px-2 py-1.5 text-[13px] text-ink"
                     >
                       <option value="">{t.all}</option>
                       {sortedUniqueDays.map((day: string) => (
@@ -2317,165 +1964,115 @@ export default function RunClubMap() {
                       ))}
                     </select>
                   </div>
-                  
+
                   {(filterCity || filterDay || searchQuery) && (
                     <button
                       onClick={clearFilters}
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        backgroundColor: 'rgba(255,255,255,0.2)',
-                        color: 'white',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold'
-                      }}
+                      className="rounded-sm border-none bg-white/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper"
                     >
                       ✕ {t.clear}
                     </button>
                   )}
                 </div>
               </div>
-              
+
               {/* Liste des clubs */}
               <div 
-                className="clubs-list-container"
+                className="clubs-list-container [scrollbar-color:#ff4d1c_#f1f1f1] [scrollbar-width:thin]"
                 style={{
                   maxHeight: 'calc(75vh - 140px)',
                   overflowY: 'scroll',
-                  paddingBottom: '60px',
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: '#ff6b35 #f1f1f1'
+                  paddingBottom: '60px'
                 }}>
                 {filteredClubs.length === 0 ? (
-                  <div style={{
-                    padding: '40px 20px',
-                    textAlign: 'center',
-                    color: '#666'
-                  }}>
-                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-                    <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
+                  <div className="p-10 text-center text-concrete">
+                    <div className="mb-4 text-5xl">🔍</div>
+                    <p className="m-0 font-display text-base font-bold uppercase tracking-wide text-ink">
                       {t.noClubsFound}
                     </p>
-                    <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
+                    <p className="mt-2 mb-0 text-sm">
                       {t.tryModifyFilters}
                     </p>
                   </div>
                 ) : (
-                  filteredClubs.map((club, idx) => (
+                  sortedFilteredClubs.map((club, idx) => {
+                    const distanceKm = getClubDistanceKm(club);
+                    const [clubLng, clubLat] = club.geometry.coordinates;
+                    return (
                     <div
                       key={idx}
                       onClick={() => handleClubClick(club)}
-                      style={{
-                        padding: '16px',
-                        borderBottom: idx < filteredClubs.length - 1 ? '1px solid #eee' : 'none',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                      className={`cursor-pointer p-4 transition-colors hover:bg-paper ${idx < sortedFilteredClubs.length - 1 ? 'border-b border-paper-line' : ''}`}
                     >
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        marginBottom: '8px'
-                      }}>
+                      <div className="mb-2 flex items-center">
                         {club.properties.image && (
-                          <img 
-                            src={getCorrectImagePath(club.properties.image, club.properties.name)}
+                          <img
+                            src={getCorrectImagePath(club.properties.image)}
                             alt={club.properties.name}
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '50%',
-                              marginRight: '10px',
-                              objectFit: 'cover',
-                              border: '2px solid #ff6b35'
-                            }}
+                            className="mr-2.5 h-8 w-8 rounded-full border-2 border-accent object-cover"
                             onError={(e) => {
-                              console.log('❌ Erreur chargement image desktop:', getCorrectImagePath(club.properties.image || '', club.properties.name));
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
                             }}
                           />
                         )}
-                        <div style={{ flex: 1 }}>
-                          <h4 style={{
-                            margin: '0',
-                            fontSize: '16px',
-                            color: '#ff6b35',
-                            fontWeight: 'bold'
-                          }}>
+                        <div className="flex-1">
+                          <h4 className="m-0 font-display text-base font-bold uppercase tracking-tight text-ink">
                             {getClubText(club, 'name')}
                           </h4>
-                          {club.properties.city && (
-                            <div style={{
-                              fontSize: '12px',
-                              color: '#666',
-                              marginTop: '2px'
-                            }}>
-                              📍 {club.properties.city}
-                            </div>
-                          )}
+                          <div className="mt-0.5 flex items-center gap-2 text-xs text-concrete">
+                            {club.properties.city && <span>📍 {club.properties.city}</span>}
+                            {distanceKm !== null && (
+                              <span className="font-bold uppercase tracking-wide text-accent">
+                                {formatDistanceKm(distanceKm)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      
+
                       {(club.properties.frequency || club.properties.frequency_en) && (
-                        <div style={{
-                          fontSize: '13px',
-                          color: '#666',
-                          marginBottom: '8px',
-                          padding: '4px 8px',
-                          backgroundColor: '#f8f9fa',
-                          borderRadius: '6px',
-                          display: 'inline-block'
-                        }}>
+                        <div className="mb-2 inline-block rounded-sm bg-ink px-2 py-1 text-[13px] font-medium text-paper">
                           ⏰ {getClubText(club, 'frequency')}
                         </div>
                       )}
-                      
+
                       {(club.properties.description || club.properties.description_en) && (
-                        <p style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '14px',
-                          color: '#666',
-                          lineHeight: '1.4'
-                        }}>
+                        <p className="mb-2 mt-0 text-sm leading-snug text-concrete">
                           {getClubText(club, 'description')}
                         </p>
                       )}
-                      
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}>
-                        <span style={{
-                          fontSize: '12px',
-                          color: '#999'
-                        }}>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs uppercase tracking-wide text-concrete">
                           📍 {t.clickToLocate}
                         </span>
-                        {club.properties.social?.website && (
+                        <div className="flex items-center gap-3">
                           <a
-                            href={club.properties.social.website}
+                            href={buildDirectionsUrl(clubLat, clubLng, userLocation)}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            style={{
-                              color: '#ff6b35',
-                              textDecoration: 'none',
-                              fontSize: '12px',
-                              fontWeight: 'bold'
-                            }}
+                            className="text-xs font-bold uppercase tracking-wide text-ink no-underline"
                           >
-                            🔗 {t.site}
+                            🧭 {t.getDirections}
                           </a>
-                        )}
+                          {club.properties.social?.website && (
+                            <a
+                              href={club.properties.social.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-xs font-bold uppercase tracking-wide text-accent no-underline"
+                            >
+                              🔗 {t.site}
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -2518,7 +2115,11 @@ export default function RunClubMap() {
         getClubText={getClubText}
         t={t}
         selectedClubId={selectedClubId}
+        userLocation={userLocation}
       />
+
+      {/* Position de l'utilisateur */}
+      <UserLocationMarker position={userLocation} />
 
       </MapContainer>
 
@@ -2561,7 +2162,7 @@ export default function RunClubMap() {
             {/* Header du popup amélioré */}
             <div style={{
               background: `
-                linear-gradient(135deg, rgba(255, 107, 53, 0.85) 0%, rgba(247, 147, 30, 0.85) 50%, rgba(255, 140, 66, 0.85) 100%),
+                linear-gradient(135deg, rgba(255, 77, 28, 0.85) 0%, rgba(247, 147, 30, 0.85) 50%, rgba(255, 140, 66, 0.85) 100%),
                 url('/header-background.jpg') center/cover no-repeat
               `,
               color: 'white',
@@ -2650,7 +2251,7 @@ export default function RunClubMap() {
                   margin: '0 0 16px 0',
                   fontSize: '18px',
                   fontWeight: '600',
-                  color: '#ff6b35'
+                  color: '#ff4d1c'
                 }}>
                   {t.howItWorks}
                 </h3>
@@ -2668,7 +2269,7 @@ export default function RunClubMap() {
                       <div style={{
                         width: '24px',
                         height: '24px',
-                        backgroundColor: '#ff6b35',
+                        backgroundColor: '#ff4d1c',
                         color: 'white',
                         borderRadius: '50%',
                         display: 'flex',
@@ -2693,8 +2294,8 @@ export default function RunClubMap() {
 
               {/* Section contribution */}
               <div style={{
-                backgroundColor: '#fff5f0',
-                border: '2px solid #ff6b35',
+                backgroundColor: '#ffe4d8',
+                border: '2px solid #ff4d1c',
                 borderRadius: '12px',
                 padding: '20px',
                 marginTop: '8px'
@@ -2703,7 +2304,7 @@ export default function RunClubMap() {
                   margin: '0 0 12px 0',
                   fontSize: '18px',
                   fontWeight: '600',
-                  color: '#ff6b35',
+                  color: '#ff4d1c',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px'
@@ -2725,7 +2326,7 @@ export default function RunClubMap() {
                     setShowInfoPopup(false);
                   }}
                   style={{
-                    backgroundColor: '#ff6b35',
+                    backgroundColor: '#ff4d1c',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
@@ -2857,7 +2458,7 @@ export default function RunClubMap() {
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 1001,
-            backgroundColor: '#ff6b35',
+            backgroundColor: '#ff4d1c',
             color: 'white',
             border: 'none',
             borderRadius: '25px',
@@ -2868,18 +2469,18 @@ export default function RunClubMap() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            boxShadow: '0 4px 12px rgba(255, 107, 53, 0.4)',
+            boxShadow: '0 4px 12px rgba(255, 77, 28, 0.4)',
             transition: 'all 0.2s ease',
-            fontFamily: 'Arial, sans-serif',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             minHeight: '44px',
             minWidth: '160px'
           }}
           onTouchStart={(e) => {
-            e.currentTarget.style.backgroundColor = '#e55a2b';
+            e.currentTarget.style.backgroundColor = '#c73a13';
             e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
           }}
           onTouchEnd={(e) => {
-            e.currentTarget.style.backgroundColor = '#ff6b35';
+            e.currentTarget.style.backgroundColor = '#ff4d1c';
             e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
           }}
           aria-label={t.clearFilters}
@@ -2904,7 +2505,7 @@ export default function RunClubMap() {
           <button
             onClick={() => window.open('https://forms.gle/H4r6NMeHp1dtCq1U9', '_blank')}
             style={{
-              backgroundColor: '#f7931e',
+              backgroundColor: '#d63d12',
               color: 'white',
               border: 'none',
               borderRadius: '25px',
@@ -2917,7 +2518,7 @@ export default function RunClubMap() {
               gap: '6px',
               boxShadow: '0 4px 12px rgba(247, 147, 30, 0.4)',
               transition: 'all 0.2s ease',
-              fontFamily: 'Arial, sans-serif',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
               minHeight: '44px',
               minWidth: '140px'
             }}
@@ -2926,7 +2527,7 @@ export default function RunClubMap() {
               e.currentTarget.style.transform = 'scale(0.95)';
             }}
             onTouchEnd={(e) => {
-              e.currentTarget.style.backgroundColor = '#f7931e';
+              e.currentTarget.style.backgroundColor = '#d63d12';
               e.currentTarget.style.transform = 'scale(1)';
             }}
             aria-label={t.suggestClub}
@@ -2938,7 +2539,7 @@ export default function RunClubMap() {
           <button
             onClick={() => setShowOverlay(true)}
             style={{
-              backgroundColor: '#ff6b35',
+              backgroundColor: '#ff4d1c',
               color: 'white',
               border: 'none',
               borderRadius: '25px',
@@ -2949,18 +2550,18 @@ export default function RunClubMap() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              boxShadow: '0 4px 12px rgba(255, 107, 53, 0.4)',
+              boxShadow: '0 4px 12px rgba(255, 77, 28, 0.4)',
               transition: 'all 0.2s ease',
-              fontFamily: 'Arial, sans-serif',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
               minHeight: '44px',
               minWidth: '140px'
             }}
             onTouchStart={(e) => {
-              e.currentTarget.style.backgroundColor = '#e55a2b';
+              e.currentTarget.style.backgroundColor = '#c73a13';
               e.currentTarget.style.transform = 'scale(0.95)';
             }}
             onTouchEnd={(e) => {
-              e.currentTarget.style.backgroundColor = '#ff6b35';
+              e.currentTarget.style.backgroundColor = '#ff4d1c';
               e.currentTarget.style.transform = 'scale(1)';
             }}
             aria-label={t.findYourClub}
@@ -2979,7 +2580,7 @@ export default function RunClubMap() {
             bottom: '90px',
             right: '20px',
             zIndex: 1001,
-            backgroundColor: '#ff6b35',
+            backgroundColor: '#ff4d1c',
             color: 'white',
             border: 'none',
             borderRadius: '12px',
@@ -2990,20 +2591,20 @@ export default function RunClubMap() {
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            boxShadow: '0 6px 20px rgba(255, 107, 53, 0.4)',
+            boxShadow: '0 6px 20px rgba(255, 77, 28, 0.4)',
             transition: 'all 0.3s ease',
-            fontFamily: 'Arial, sans-serif',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             minWidth: '180px'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#e55a2b';
+            e.currentTarget.style.backgroundColor = '#c73a13';
             e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 53, 0.5)';
+            e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 77, 28, 0.5)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#ff6b35';
+            e.currentTarget.style.backgroundColor = '#ff4d1c';
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.4)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 77, 28, 0.4)';
           }}
           aria-label={t.findYourClub}
         >
@@ -3022,7 +2623,7 @@ export default function RunClubMap() {
             bottom: '35px',
             right: '20px',
             zIndex: 1001,
-            backgroundColor: '#f7931e',
+            backgroundColor: '#d63d12',
             color: 'white',
             border: 'none',
             borderRadius: '12px',
@@ -3035,7 +2636,7 @@ export default function RunClubMap() {
             gap: '10px',
             boxShadow: '0 6px 20px rgba(247, 147, 30, 0.4)',
             transition: 'all 0.3s ease',
-            fontFamily: 'Arial, sans-serif',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             minWidth: '180px'
           }}
           onMouseEnter={(e) => {
@@ -3044,7 +2645,7 @@ export default function RunClubMap() {
             e.currentTarget.style.boxShadow = '0 8px 25px rgba(247, 147, 30, 0.5)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#f7931e';
+            e.currentTarget.style.backgroundColor = '#d63d12';
             e.currentTarget.style.transform = 'translateY(0)';
             e.currentTarget.style.boxShadow = '0 6px 20px rgba(247, 147, 30, 0.4)';
           }}
@@ -3124,7 +2725,7 @@ export default function RunClubMap() {
         .custom-cluster-icon-modern:hover div:first-child {
           transform: scale(1.1);
           box-shadow: 
-            0 12px 40px rgba(255, 107, 53, 0.5),
+            0 12px 40px rgba(255, 77, 28, 0.5),
             0 6px 20px rgba(0, 0, 0, 0.15),
             inset 0 2px 4px rgba(255, 255, 255, 0.4),
             inset 0 -2px 4px rgba(0, 0, 0, 0.1);
@@ -3171,7 +2772,7 @@ export default function RunClubMap() {
         }
         
         .clubs-list-container::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #ff6b35 0%, #e55a2b 50%, #d14d20 100%);
+          background: linear-gradient(180deg, #ff4d1c 0%, #c73a13 50%, #a8300f 100%);
           border-radius: 8px;
           transition: all 0.3s ease;
           min-height: 30px;
@@ -3183,16 +2784,16 @@ export default function RunClubMap() {
           visibility: visible !important;
           margin-bottom: 20px;
           box-shadow: 
-            0 2px 8px rgba(255, 107, 53, 0.3),
+            0 2px 8px rgba(255, 77, 28, 0.3),
             0 1px 3px rgba(0, 0, 0, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
         
         .clubs-list-container::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #e55a2b 0%, #d14d20 50%, #b8421a 100%);
+          background: linear-gradient(180deg, #c73a13 0%, #a8300f 50%, #7a2409 100%);
           transform: scale(1.02);
           box-shadow: 
-            0 4px 12px rgba(255, 107, 53, 0.4),
+            0 4px 12px rgba(255, 77, 28, 0.4),
             0 2px 6px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
@@ -3268,7 +2869,7 @@ export default function RunClubMap() {
           
           /* Améliorer les interactions tactiles */
           * {
-            -webkit-tap-highlight-color: rgba(255, 107, 53, 0.2);
+            -webkit-tap-highlight-color: rgba(255, 77, 28, 0.2);
           }
           
           /* Optimiser les transitions pour mobile */
@@ -3298,10 +2899,10 @@ export default function RunClubMap() {
           font-size: 18px !important;
           font-weight: bold !important;
           line-height: 34px !important;
-          background-color: rgba(255, 107, 53, 0.1) !important;
-          color: #ff6b35 !important;
+          background-color: rgba(255, 77, 28, 0.1) !important;
+          color: #ff4d1c !important;
           border-radius: 50% !important;
-          border: 2px solid rgba(255, 107, 53, 0.3) !important;
+          border: 2px solid rgba(255, 77, 28, 0.3) !important;
           top: 8px !important;
           right: 8px !important;
           text-align: center !important;
@@ -3312,10 +2913,10 @@ export default function RunClubMap() {
         
         .leaflet-popup-close-button:hover,
         .leaflet-popup-close-button:active {
-          background-color: #ff6b35 !important;
+          background-color: #ff4d1c !important;
           color: white !important;
           transform: scale(1.1) !important;
-          border-color: #ff6b35 !important;
+          border-color: #ff4d1c !important;
         }
         
         /* Améliorer la zone tactile globale */

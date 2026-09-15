@@ -27,7 +27,6 @@ class CacheService {
       };
 
       localStorage.setItem(key, JSON.stringify(cacheData));
-      console.log(`💾 Cache sauvegardé: ${key} (${JSON.stringify(data).length} caractères)`);
     } catch (error) {
       console.warn('⚠️ Erreur lors de la sauvegarde du cache:', error);
       // Si le localStorage est plein, essayer de nettoyer les anciens caches
@@ -42,7 +41,6 @@ class CacheService {
     try {
       const cachedItem = localStorage.getItem(key);
       if (!cachedItem) {
-        console.log(`📭 Aucun cache trouvé pour: ${key}`);
         return null;
       }
 
@@ -52,7 +50,6 @@ class CacheService {
 
       // Vérifier la version
       if (cacheData.version !== expectedVersion) {
-        console.log(`🔄 Version du cache obsolète pour ${key}: ${cacheData.version} → ${expectedVersion}`);
         this.remove(key);
         return null;
       }
@@ -60,14 +57,10 @@ class CacheService {
       // Vérifier l'expiration
       const isExpired = Date.now() - cacheData.timestamp > ttl;
       if (isExpired) {
-        const ageMinutes = Math.round((Date.now() - cacheData.timestamp) / (1000 * 60));
-        console.log(`⏰ Cache expiré pour ${key} (âge: ${ageMinutes} minutes)`);
         this.remove(key);
         return null;
       }
 
-      const ageMinutes = Math.round((Date.now() - cacheData.timestamp) / (1000 * 60));
-      console.log(`✅ Cache récupéré: ${key} (âge: ${ageMinutes} minutes)`);
       return cacheData.data;
     } catch (error) {
       console.warn('⚠️ Erreur lors de la lecture du cache:', error);
@@ -81,7 +74,6 @@ class CacheService {
    */
   remove(key: string): void {
     localStorage.removeItem(key);
-    console.log(`🗑️ Cache supprimé: ${key}`);
   }
 
   /**
@@ -119,14 +111,7 @@ class CacheService {
       }
     }
 
-    keysToRemove.forEach(key => {
-      localStorage.removeItem(key);
-      console.log(`🧹 Cache expiré nettoyé: ${key}`);
-    });
-
-    if (keysToRemove.length > 0) {
-      console.log(`🧹 ${keysToRemove.length} caches expirés nettoyés`);
-    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
   }
 
   /**
@@ -154,7 +139,6 @@ class CacheService {
     }
 
     cacheKeys.forEach(key => localStorage.removeItem(key));
-    console.log(`🧹 ${cacheKeys.length} caches supprimés`);
   }
 
   /**

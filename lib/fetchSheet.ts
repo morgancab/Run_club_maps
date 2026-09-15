@@ -44,7 +44,6 @@ if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
     }
     
     credentials = rawCredentials;
-    console.log('✅ Credentials Google chargées depuis les variables d\'environnement');
   } catch (error) {
     console.error('❌ Erreur lors du parsing des credentials Google:', error);
     throw new Error('Format invalide pour GOOGLE_SERVICE_ACCOUNT_KEY. Vérifiez que c\'est un JSON valide.');
@@ -55,7 +54,6 @@ if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
     credentials = JSON.parse(
       readFileSync(path.join(process.cwd(), 'keys/google-service-account.json'), 'utf8')
     );
-    console.log('✅ Credentials Google chargées depuis le fichier local');
   } catch (error) {
     console.error('❌ Erreur lors du chargement du fichier de credentials:', error);
     throw new Error('Clé de service Google non trouvée. Vérifiez le fichier keys/google-service-account.json ou la variable d\'environnement GOOGLE_SERVICE_ACCOUNT_KEY');
@@ -69,22 +67,8 @@ const auth = new GoogleAuth({
 
 export async function fetchRunClubs(): Promise<RunClubFeature[]> {
   try {
-    console.log('🔐 Initialisation de l\'authentification Google...');
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: 'v4', auth: authClient as any });
-
-    // D'abord, essayons de récupérer les métadonnées de la feuille
-    console.log('🔍 Vérification de la structure de la Google Sheet...');
-    
-    try {
-      const metadata = await sheets.spreadsheets.get({
-        spreadsheetId: '1hsOICQY2d527Dah8-rLBlUApPmHgETKPfJxrhKazBhA',
-      });
-      
-      console.log('📋 Feuilles disponibles:', metadata.data.sheets?.map(s => s.properties?.title));
-    } catch (metaError) {
-      console.warn('⚠️ Impossible de récupérer les métadonnées:', metaError);
-    }
 
     // Essayons différentes plages pour trouver les données
     const possibleRanges = [
@@ -97,20 +81,15 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
     ];
 
     let res;
-    let usedRange = '';
 
     for (const range of possibleRanges) {
       try {
-        console.log(`🔍 Test de la plage: ${range}`);
         res = await sheets.spreadsheets.values.get({
           spreadsheetId: '1hsOICQY2d527Dah8-rLBlUApPmHgETKPfJxrhKazBhA',
           range: range,
         });
-        usedRange = range;
-        console.log(`✅ Plage trouvée: ${range}`);
         break;
-      } catch (rangeError) {
-        console.log(`❌ Plage ${range} échouée:`, (rangeError as any).message);
+      } catch {
         continue;
       }
     }
@@ -131,9 +110,6 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
       return [];
     }
 
-    console.log(`📊 ${rows.length} lignes trouvées dans la plage ${usedRange}`);
-    console.log('🔍 Première ligne d\'exemple:', rows[0]);
-
     // Mapper les lignes vers le format GeoJSON selon la structure réelle
     return rows.map((row, index) => {
       // Structure réelle: H=latitude (index 7), I=longitude (index 8)
@@ -148,12 +124,6 @@ export async function fetchRunClubs(): Promise<RunClubFeature[]> {
         });
         return null;
       }
-
-      console.log(`✅ Ligne ${index + 2}: ${row[0]} à [${longitude}, ${latitude}]`);
-      console.log(`🔍 Debug colonnes (${row.length} colonnes):`, {
-        'N (13)': row[13] || 'vide',
-        'O (14)': row[14] || 'vide'
-      });
 
       return {
         type: 'Feature' as const,
