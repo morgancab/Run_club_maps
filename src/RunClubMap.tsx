@@ -11,6 +11,8 @@ import { cacheService, CACHE_KEYS, CACHE_OPTIONS, type CachedClubData } from './
 import { useCache } from './hooks/useCache';
 import { haversineDistanceKm, formatDistanceKm, type UserLocation } from './utils/geo';
 import type { GeoStatus } from './hooks/useGeolocation';
+import SocialIcon from './components/SocialIcon';
+import { getSocialIconMarkup } from './utils/socialIcons';
 
 export interface RunClubFeature {
   type: 'Feature';
@@ -428,12 +430,12 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId, userLocation 
             <div>
               <h4 class="m-0 mb-2 text-xs font-bold uppercase tracking-wide text-concrete">🌐 ${t.socialNetworks}</h4>
               <div class="flex flex-wrap gap-2">
-                ${club.properties.social.website ? `<a href="${club.properties.social.website}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-accent bg-accent px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🔗 ${t.site}</a>` : ''}
-                ${club.properties.social.instagram ? `<a href="${club.properties.social.instagram}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">📷 Instagram</a>` : ''}
-                ${club.properties.social.facebook ? `<a href="${club.properties.social.facebook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">📘 Facebook</a>` : ''}
-                ${club.properties.social.tiktok ? `<a href="${club.properties.social.tiktok}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🎵 TikTok</a>` : ''}
-                ${club.properties.social.whatsapp ? `<a href="${club.properties.social.whatsapp}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">💬 WhatsApp</a>` : ''}
-                ${club.properties.social.strava ? `<a href="${club.properties.social.strava}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🏃 Strava</a>` : ''}
+                ${club.properties.social.website ? `<a href="${club.properties.social.website}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-accent bg-accent px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">${getSocialIconMarkup('website')} ${t.site}</a>` : ''}
+                ${club.properties.social.instagram ? `<a href="${club.properties.social.instagram}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">${getSocialIconMarkup('instagram')} Instagram</a>` : ''}
+                ${club.properties.social.facebook ? `<a href="${club.properties.social.facebook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">${getSocialIconMarkup('facebook')} Facebook</a>` : ''}
+                ${club.properties.social.tiktok ? `<a href="${club.properties.social.tiktok}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">${getSocialIconMarkup('tiktok')} TikTok</a>` : ''}
+                ${club.properties.social.whatsapp ? `<a href="${club.properties.social.whatsapp}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">${getSocialIconMarkup('whatsapp')} WhatsApp</a>` : ''}
+                ${club.properties.social.strava ? `<a href="${club.properties.social.strava}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">${getSocialIconMarkup('strava')} Strava</a>` : ''}
               </div>
             </div>
           ` : ''}
@@ -1686,9 +1688,9 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="rounded-sm border border-accent px-2 py-1 text-xs font-bold uppercase tracking-wide text-accent no-underline"
+                            className="inline-flex items-center gap-1 rounded-sm border border-accent px-2 py-1 text-xs font-bold uppercase tracking-wide text-accent no-underline"
                           >
-                            🔗 {t.site}
+                            <SocialIcon network="website" className="h-3 w-3" /> {t.site}
                           </a>
                         )}
                       </div>
@@ -1890,9 +1892,9 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-xs font-bold uppercase tracking-wide text-accent no-underline"
+                            className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-accent no-underline"
                           >
-                            🔗 {t.site}
+                            <SocialIcon network="website" className="h-3 w-3" /> {t.site}
                           </a>
                         )}
                       </div>
