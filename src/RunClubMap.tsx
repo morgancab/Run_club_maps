@@ -607,9 +607,11 @@ interface RunClubMapProps {
    * (voir useGeolocation dans App.tsx) — null tant qu'elle n'est pas connue. */
   userLocation: UserLocation | null;
   geoStatus: GeoStatus;
+  /** Ouvre le formulaire "Proposer un club" (géré au niveau de App.tsx). */
+  onOpenSuggest: () => void;
 }
 
-export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, active = true, userLocation, geoStatus }: RunClubMapProps) {
+export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, active = true, userLocation, geoStatus, onOpenSuggest }: RunClubMapProps) {
   const [clubs, setClubs] = useState<RunClubFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
@@ -2151,7 +2153,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                 </p>
                 <button
                   onClick={() => {
-                    window.open('https://forms.gle/H4r6NMeHp1dtCq1U9', '_blank');
+                    onOpenSuggest();
                     setShowInfoPopup(false);
                   }}
                   style={{
@@ -2333,7 +2335,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         }}>
           {/* Bouton Suggérer un club */}
           <button
-            onClick={() => window.open('https://forms.gle/H4r6NMeHp1dtCq1U9', '_blank')}
+            onClick={onOpenSuggest}
             style={{
               backgroundColor: '#CC4400',
               color: 'white',
@@ -2447,7 +2449,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
       {/* Bouton Suggérer un club - Desktop uniquement */}
       {!isMobile && (
         <button
-          onClick={() => window.open('https://forms.gle/H4r6NMeHp1dtCq1U9', '_blank')}
+          onClick={onOpenSuggest}
           style={{
             position: 'absolute',
             bottom: '35px',

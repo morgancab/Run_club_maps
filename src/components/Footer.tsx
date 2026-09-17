@@ -1,4 +1,8 @@
-export default function Footer() {
+interface FooterProps {
+  onOpenSuggest: () => void
+}
+
+export default function Footer({ onOpenSuggest }: FooterProps) {
   return (
     <footer className="border-t border-ink-line bg-paper px-4 py-12 sm:px-6 lg:px-16">
       <div className="mx-auto grid max-w-6xl gap-10 sm:grid-cols-3">
@@ -22,14 +26,13 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a
-                href="https://forms.gle/H4r6NMeHp1dtCq1U9"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={onOpenSuggest}
                 className="text-ink/80 transition-colors hover:text-accent"
               >
                 Proposer un club
-              </a>
+              </button>
             </li>
             <li>
               <a

@@ -37,10 +37,28 @@ create table if not exists public.clubs (
   unique (name, city)
 );
 
+-- Statut de modération : les clubs déjà en base (import du Sheet) sont
+-- réputés validés. Les nouvelles lignes créées via le formulaire public
+-- ("Proposer un club", api/submit-club) partent en "pending" et ne sont
+-- visibles sur la carte qu'une fois repassées à "approved" dans la table
+-- Supabase — un simple changement de valeur dans l'éditeur de table suffit,
+-- pas besoin d'interface d'administration dédiée.
+alter table public.clubs add column if not exists status text not null default 'approved';
+alter table public.clubs alter column status set default 'pending';
+
+do $$ begin
+  alter table public.clubs
+    add constraint clubs_status_check check (status in ('pending', 'approved', 'rejected'));
+exception when duplicate_object then null;
+end $$;
+
+create index if not exists clubs_status_idx on public.clubs (status);
+
 -- Le site affiche les clubs publiquement, sans authentification : la lecture
--- doit donc être ouverte à tous via la clé publique "anon". Les écritures
--- (migration, ajout/édition de clubs) passent par la clé "service_role", qui
--- contourne la RLS et ne doit jamais être exposée côté navigateur.
+-- doit donc être ouverte à tous via la clé publique "anon", mais uniquement
+-- pour les clubs validés. Les écritures (migration, formulaire public de
+-- suggestion) passent par la clé "service_role", qui contourne la RLS et ne
+-- doit jamais être exposée côté navigateur.
 alter table public.clubs enable row level security;
 
 drop policy if exists "Public read access" on public.clubs;
@@ -48,7 +66,7 @@ create policy "Public read access"
   on public.clubs
   for select
   to anon, authenticated
-  using (true);
+  using (status = 'approved');
 
 -- Certains projets Supabase n'accordent pas automatiquement les privilèges
 -- par défaut aux nouvelles tables. RLS et GRANT sont deux couches séparées :

@@ -4,6 +4,7 @@ interface HeaderProps {
   language: Language
   setLanguage: (language: Language) => void
   onOpenAbout: () => void
+  onOpenSuggest: () => void
   view: 'site' | 'swipe'
   onGoHome: () => void
   onGoCarte: () => void
@@ -14,6 +15,7 @@ export default function Header({
   language,
   setLanguage,
   onOpenAbout,
+  onOpenSuggest,
   view,
   onGoHome,
   onGoCarte,
@@ -86,14 +88,13 @@ export default function Header({
           </button>
         </div>
 
-        <a
-          href="https://forms.gle/H4r6NMeHp1dtCq1U9"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={onOpenSuggest}
           className="hidden shrink-0 whitespace-nowrap rounded-sm bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink shadow-[0_2px_10px_rgba(255,85,0,0.3)] transition-transform hover:-translate-y-0.5 sm:inline-block sm:px-5 sm:text-sm"
         >
           Proposer un club
-        </a>
+        </button>
       </nav>
     </header>
   );

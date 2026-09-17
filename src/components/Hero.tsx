@@ -1,8 +1,9 @@
 interface HeroProps {
   onGoSwipe: () => void
+  onOpenSuggest: () => void
 }
 
-export default function Hero({ onGoSwipe }: HeroProps) {
+export default function Hero({ onGoSwipe, onOpenSuggest }: HeroProps) {
   return (
     <section
       id="accueil"
@@ -75,14 +76,13 @@ export default function Hero({ onGoSwipe }: HeroProps) {
           >
             ↓ Voir la carte
           </a>
-          <a
-            href="https://forms.gle/H4r6NMeHp1dtCq1U9"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={onOpenSuggest}
             className="flex-1 rounded-md border border-ink-line px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-ink transition-colors hover:border-accent hover:text-accent sm:flex-none sm:px-7 sm:py-3.5 sm:text-sm"
           >
             Référencer mon club
-          </a>
+          </button>
         </div>
 
         <button

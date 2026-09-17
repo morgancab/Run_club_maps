@@ -6,7 +6,9 @@ App React/TypeScript (Vite) affichant des clubs de running sur une carte Leaflet
 - React 19 + TypeScript, Vite 6, Tailwind CSS 4
 - Leaflet / react-leaflet / leaflet.markercluster pour la carte
 - Backend: API Vercel serverless (`api/runclubs/index.ts`) + `lib/fetchClubs.ts` (lecture table Supabase `clubs` via `@supabase/supabase-js`)
-- Dev local: `scripts/dev-server.ts` (Express) simule l'API serverless
+- `api/submit-club/index.ts` — formulaire public "Proposer un club" ([SuggestClubModal.tsx](src/components/SuggestClubModal.tsx)) : upload du logo vers Supabase Storage + insertion en base avec `status = 'pending'`. N'apparaît sur la carte publique qu'après passage manuel à `status = 'approved'` dans la table Supabase.
+- `api/geocode/index.ts` — proxy vers Nominatim (OpenStreetMap) pour la suggestion d'adresse du formulaire ; sans clé API, mais nécessite un en-tête `User-Agent` que seul un appel serveur peut fixer (d'où le proxy plutôt qu'un appel direct depuis le navigateur).
+- Dev local: `scripts/dev-server.ts` (Express) simule les trois routes serverless ci-dessus
 - Ancienne source de données (Google Sheet) conservée uniquement pour la migration ponctuelle : `lib/fetchSheet.ts` + `scripts/migrate-sheet-to-supabase.ts`
 
 ## Commandes
@@ -14,6 +16,8 @@ App React/TypeScript (Vite) affichant des clubs de running sur une carte Leaflet
 - `npm run build` — `tsc -b && vite build`
 - `npm run lint` — ESLint
 - `npm run migrate:supabase` — importe/ré-importe les clubs du Google Sheet vers Supabase (upsert sur name+city)
+- `npm run migrate:images` — re-héberge les images de clubs (liens externes fragiles) dans Supabase Storage
+- `npm run migrate:instagram-avatars` — tentative (peu fiable, Instagram bloque en général) de récupérer une photo de profil Instagram pour les clubs à l'image cassée
 - `npm run test:api` / `test:api:detailed` / `test:fetchsheet` / `test:vercel` — scripts de test manuels dans `scripts/`
 
 Pas de suite de tests unitaires (Jest/Vitest) — les "test:*" sont des scripts Node ad-hoc.
@@ -37,5 +41,5 @@ Vercel. De nombreux fichiers `VERCEL-*.md` / `SOLUTION-*.md` à la racine docume
 - Ne pas lire les fichiers `VERCEL-*.md`, `SOLUTION-*.md` sauf besoin explicite lié à un bug de build/déploiement — ce sont des post-mortems historiques, pas une doc à jour.
 - Préférer `Grep`/`Glob` ciblés à la lecture complète de `src/RunClubMap.tsx` ou `lib/fetchSheet.ts`.
 - Le dossier `dist/` est généré par le build — ne jamais l'éditer ni le lire pour comprendre le code source.
-- Variables d'env: voir `env.example` (Supabase + Google Sheets pour la migration) — ne jamais logger ni commit une vraie clé (`keys/`, `.env`, `.env.local` sont gitignorés). `SUPABASE_SERVICE_ROLE_KEY` ne doit jamais être exposée côté client ni ajoutée aux env vars Vercel du site déployé — elle ne sert qu'en local pour la migration.
+- Variables d'env: voir `env.example` (Supabase + Google Sheets pour la migration) — ne jamais logger ni commit une vraie clé (`keys/`, `.env`, `.env.local` sont gitignorés). `SUPABASE_SERVICE_ROLE_KEY` ne doit jamais être exposée côté client (elle ne doit apparaître que dans du code qui tourne sur le serveur : `api/*`, `scripts/*`), mais elle DOIT être présente dans les env vars Vercel du site déployé depuis l'ajout de `api/submit-club` — ne pas réappliquer l'ancienne consigne « jamais sur Vercel ».
 - Commits en anglais court style `type: description` (ex. `fix: clean Vercel configuration`), cohérent avec l'historique existant.

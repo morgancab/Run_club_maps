@@ -113,9 +113,15 @@ function rowToFeature(row: ClubRow): RunClubFeature | null {
 export async function fetchRunClubs(): Promise<RunClubFeature[]> {
   const supabase = getSupabaseClient();
 
+  // "approved" uniquement : les clubs "pending" (soumis via le formulaire
+  // public) ou "rejected" ne doivent pas apparaître sur la carte publique.
+  // La policy RLS (voir supabase/schema.sql) l'impose déjà côté base, ce
+  // filtre explicite documente l'intention et protège même si la policy
+  // venait à changer.
   const { data, error } = await supabase
     .from('clubs')
     .select('*')
+    .eq('status', 'approved')
     .order('id', { ascending: true });
 
   if (error) {
