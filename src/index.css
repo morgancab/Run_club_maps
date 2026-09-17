@@ -1,40 +1,48 @@
 @import "tailwindcss";
 
 /*
- * Design system — direction artistique "Dark mode premium / Activewear"
- * Fond noir profond, texte clair, accent orange vif pour les CTA et
- * les éléments actifs. Typographie condensée en majuscules, minimaliste
- * et dynamique.
+ * Design system — direction artistique "Running Performance"
+ * Fond clair et lumineux, texte encre pour le contraste, accent orange vif
+ * réservé aux actions et aux données clés. Typographie sportive condensée,
+ * chiffres de performance traités comme des éléments visuels à part entière.
+ * Le noir n'apparaît plus que ponctuellement (puces, éléments de contraste).
  */
 @theme {
   --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  /* Réservée aux grands chiffres (distance, allure, nombre de clubs...) —
+     un condensé "tableau de bord" qui leur donne une vraie personnalité. */
+  --font-stat: "Bebas Neue", "Space Grotesk", sans-serif;
 
-  /* "ink" = fonds sombres (du plus profond au plus clair) */
-  --color-ink: #0a0a0a;
-  --color-ink-soft: #121212;
-  --color-ink-line: #262626;
+  /* "paper" = surfaces claires, l'essentiel du site */
+  --color-paper: #ffffff;
+  --color-paper-soft: #f4f5f1;
+  --color-paper-line: #e6e7e1;
 
-  /* "surface" = fond des champs de formulaire (recherche, selects),
-     nettement plus clair que les panneaux pour rester visible dessus */
-  --color-surface: #232323;
+  /* champ de formulaire : légèrement teinté pour rester visible sur blanc */
+  --color-surface: #f1f2ed;
 
-  /* "paper" = texte clair sur fond sombre */
-  --color-paper: #f5f5f5;
-  --color-concrete: #a3a3a3;
-  --color-paper-line: #262626;
+  /* "ink" = texte et poignée d'éléments à fort contraste (puces, badges) */
+  --color-ink: #13161a;
+  --color-ink-soft: #20242b;
+  --color-ink-line: #e6e7e1;
+  --color-concrete: #6b716f;
 
-  /* accent orange vif — CTA, éléments actifs, liens */
+  /* accent orange vif — CTA, liens actifs, chiffres clés */
   --color-accent: #ff5500;
   --color-accent-dark: #cc4400;
-  --color-accent-soft: #3a1f10;
+  --color-accent-soft: #fff1e6;
+
+  /* vert performance — progression, indicateurs positifs, parcimonieux */
+  --color-positive: #17a34a;
+  --color-positive-soft: #e9f8ee;
 }
 
 :root {
   font-family: var(--font-body);
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: dark;
+  color-scheme: light;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -55,6 +63,11 @@ html {
 
 body {
   min-width: 320px;
-  background-color: var(--color-ink);
-  color: var(--color-paper);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: #ffffff;
 }

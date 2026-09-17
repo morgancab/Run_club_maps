@@ -20,11 +20,11 @@ export default function Header({
   onGoSwipe,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-3 border-b border-ink-line bg-ink/90 px-4 backdrop-blur-md sm:px-6">
+    <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-3 border-b border-ink-line bg-paper/90 px-4 backdrop-blur-md sm:px-6">
       <button
         type="button"
         onClick={onGoHome}
-        className="shrink-0 font-display text-base font-bold uppercase tracking-tight text-paper sm:text-lg"
+        className="shrink-0 font-display text-base font-bold uppercase tracking-tight text-ink sm:text-lg"
       >
         Run Club <span className="text-accent">Maps</span>
       </button>
@@ -38,7 +38,7 @@ export default function Header({
           className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors sm:px-4 ${
             view === 'swipe'
               ? 'border-accent bg-accent text-ink'
-              : 'border-accent/40 bg-accent/10 text-accent hover:bg-accent/20'
+              : 'border-accent/30 bg-accent-soft text-accent hover:border-accent/60'
           }`}
         >
           <span aria-hidden="true">🔥</span>
@@ -48,14 +48,14 @@ export default function Header({
         <button
           type="button"
           onClick={onGoCarte}
-          className="hidden font-semibold uppercase tracking-wide text-paper/70 transition-colors hover:text-paper sm:inline-block"
+          className="hidden font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-ink sm:inline-block"
         >
           Carte
         </button>
         <button
           type="button"
           onClick={onOpenAbout}
-          className="hidden font-semibold uppercase tracking-wide text-paper/70 transition-colors hover:text-paper sm:inline-block"
+          className="hidden font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-ink sm:inline-block"
         >
           À propos
         </button>
@@ -69,7 +69,7 @@ export default function Header({
           <button
             type="button"
             onClick={() => setLanguage('fr')}
-            className={`flex min-h-[32px] min-w-[32px] items-center justify-center px-2 text-[11px] font-semibold transition-colors ${language === 'fr' ? 'bg-accent text-ink' : 'text-paper/70 hover:text-paper'}`}
+            className={`flex min-h-[32px] min-w-[32px] items-center justify-center px-2 text-[11px] font-semibold transition-colors ${language === 'fr' ? 'bg-accent text-ink' : 'text-concrete hover:text-ink'}`}
             aria-label="Français"
             aria-pressed={language === 'fr'}
           >
@@ -78,7 +78,7 @@ export default function Header({
           <button
             type="button"
             onClick={() => setLanguage('en')}
-            className={`flex min-h-[32px] min-w-[32px] items-center justify-center px-2 text-[11px] font-semibold transition-colors ${language === 'en' ? 'bg-accent text-ink' : 'text-paper/70 hover:text-paper'}`}
+            className={`flex min-h-[32px] min-w-[32px] items-center justify-center px-2 text-[11px] font-semibold transition-colors ${language === 'en' ? 'bg-accent text-ink' : 'text-concrete hover:text-ink'}`}
             aria-label="English"
             aria-pressed={language === 'en'}
           >
@@ -90,7 +90,7 @@ export default function Header({
           href="https://forms.gle/H4r6NMeHp1dtCq1U9"
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden shrink-0 whitespace-nowrap rounded-sm bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink shadow-[0_2px_10px_rgba(255,85,0,0.35)] transition-transform hover:-translate-y-0.5 sm:inline-block sm:px-5 sm:text-sm"
+          className="hidden shrink-0 whitespace-nowrap rounded-sm bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink shadow-[0_2px_10px_rgba(255,85,0,0.3)] transition-transform hover:-translate-y-0.5 sm:inline-block sm:px-5 sm:text-sm"
         >
           Proposer un club
         </a>

@@ -35,7 +35,7 @@ function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-ink">
+    <div className="flex min-h-screen flex-col bg-paper">
       <Header
         language={language}
         setLanguage={setLanguage}
@@ -51,8 +51,8 @@ function App() {
           va et vient depuis l'onglet "Trouve ton club". */}
       <div className={view === 'site' ? 'contents' : 'hidden'}>
         <Hero onGoSwipe={goToSwipe} />
-        <section id="carte" className="scroll-mt-16 px-4 pb-10 pt-2 sm:px-6 sm:pt-10 lg:px-16">
-          <div className="relative isolate mx-auto h-[80vh] max-h-[880px] min-h-[520px] w-full max-w-6xl overflow-hidden rounded-lg border border-ink-line shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <section id="carte" className="scroll-mt-16 bg-paper-soft px-4 pb-10 pt-2 sm:px-6 sm:pt-10 lg:px-16">
+          <div className="relative isolate mx-auto h-[80vh] max-h-[880px] min-h-[520px] w-full max-w-6xl overflow-hidden rounded-xl border border-ink-line shadow-[0_16px_40px_rgba(18,21,26,0.1)]">
             <RunClubMap
               language={language}
               showInfoPopup={showInfoPopup}

@@ -210,7 +210,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
   const passOpacity = Math.min(Math.max(-dragX, 0) / 80, 1);
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] bg-ink px-4 py-6 sm:px-6 sm:py-10 lg:px-16">
+    <section className="min-h-[calc(100vh-4rem)] bg-paper-soft px-4 py-6 sm:px-6 sm:py-10 lg:px-16">
       <button
         type="button"
         onClick={onBack}
@@ -220,10 +220,10 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
       </button>
 
       <div className="mx-auto mt-4 max-w-md text-center sm:mt-6">
-        <span className="inline-block rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-accent">
+        <span className="inline-block rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-accent">
           🔥 Découverte
         </span>
-        <h2 className="mt-3 font-display text-2xl font-bold uppercase tracking-tight text-paper sm:mt-4 sm:text-4xl">
+        <h2 className="mt-3 font-display text-2xl font-bold uppercase tracking-tight text-ink sm:mt-4 sm:text-4xl">
           Trouve ton <span className="text-accent">club</span> 🔥
         </h2>
         {!loading && !isDone && current && (
@@ -241,13 +241,13 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
 
       <div className="relative mx-auto mt-6 h-[min(64vh,520px)] max-w-sm select-none sm:mt-8 sm:h-[560px]">
         {loading && (
-          <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-ink-soft text-sm text-concrete">
+          <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-paper text-sm text-concrete shadow-sm">
             Chargement des clubs…
           </div>
         )}
 
         {!loading && deck.length === 0 && (
-          <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-ink-soft px-6 text-center text-sm text-concrete">
+          <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-paper px-6 text-center text-sm text-concrete shadow-sm">
             Impossible de charger les clubs pour le moment.
           </div>
         )}
@@ -256,12 +256,12 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
           <>
             {/* Carte suivante, en aperçu derrière la carte active */}
             {next && (
-              <div className="absolute inset-0 scale-[0.94] rounded-lg border border-ink-line bg-ink-soft opacity-60" />
+              <div className="absolute inset-0 scale-[0.94] rounded-lg border border-ink-line bg-paper opacity-70" />
             )}
 
             {/* Carte active, draggable */}
             <div
-              className="absolute inset-0 flex touch-none flex-col overflow-hidden rounded-lg border border-ink-line bg-ink-soft shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+              className="absolute inset-0 flex touch-none flex-col overflow-hidden rounded-lg border border-ink-line bg-paper shadow-[0_20px_45px_rgba(18,21,26,0.14)]"
               style={{
                 transform: `translateX(${translateX}px) rotate(${rotate}deg)`,
                 transition: dragging ? 'none' : 'transform 260ms ease, opacity 260ms ease',
@@ -273,7 +273,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
             >
-              <div className="relative h-32 w-full shrink-0 bg-ink sm:h-48">
+              <div className="relative h-32 w-full shrink-0 bg-paper-soft sm:h-48">
                 {getImageSrc(current.properties.image) && !imageError ? (
                   <img
                     src={getImageSrc(current.properties.image)!}
@@ -283,7 +283,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                     onError={() => setImageError(true)}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/30 to-ink text-4xl font-display font-bold text-accent sm:text-5xl">
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent-soft to-paper-soft text-4xl font-display font-bold text-accent sm:text-5xl">
                     {getInitials(current.properties.name)}
                   </div>
                 )}
@@ -297,13 +297,13 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
 
                 {/* Timbres LIKE (cœur) / PASS (croix), qui apparaissent en glissant */}
                 <div
-                  className="absolute left-4 top-4 flex h-16 w-16 rotate-[-16deg] items-center justify-center rounded-full border-4 border-accent bg-ink-soft/80 text-3xl shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                  className="absolute left-4 top-4 flex h-16 w-16 rotate-[-16deg] items-center justify-center rounded-full border-4 border-accent bg-white/90 text-3xl shadow-[0_4px_16px_rgba(18,21,26,0.25)]"
                   style={{ opacity: likeOpacity }}
                 >
                   ❤️
                 </div>
                 <div
-                  className="absolute right-4 top-4 flex h-16 w-16 rotate-[16deg] items-center justify-center rounded-full border-4 border-red-400 bg-ink-soft/80 text-3xl text-red-400 shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                  className="absolute right-4 top-4 flex h-16 w-16 rotate-[16deg] items-center justify-center rounded-full border-4 border-red-400 bg-white/90 text-3xl text-red-400 shadow-[0_4px_16px_rgba(18,21,26,0.25)]"
                   style={{ opacity: passOpacity }}
                 >
                   ✕
@@ -311,14 +311,14 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
               </div>
 
               <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto p-4 sm:gap-2 sm:p-5">
-                <h3 className="m-0 font-display text-xl font-bold uppercase tracking-tight text-paper sm:text-2xl">
+                <h3 className="m-0 font-display text-xl font-bold uppercase tracking-tight text-ink sm:text-2xl">
                   {current.properties.name}
                 </h3>
                 {(current.properties.city || currentDistanceKm !== null) && (
                   <p className="m-0 flex items-center gap-2 text-sm text-concrete">
                     {current.properties.city && <span>📍 {current.properties.city}</span>}
                     {currentDistanceKm !== null && (
-                      <span className="font-bold uppercase tracking-wide text-accent">
+                      <span className="font-stat text-base tracking-wide text-accent">
                         {formatDistanceKm(currentDistanceKm)}
                       </span>
                     )}
@@ -346,27 +346,27 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                       </a>
                     )}
                     {current.properties.social.instagram && (
-                      <a href={current.properties.social.instagram} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-paper no-underline">
+                      <a href={current.properties.social.instagram} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-ink no-underline">
                         📷 Instagram
                       </a>
                     )}
                     {current.properties.social.strava && (
-                      <a href={current.properties.social.strava} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-paper no-underline">
+                      <a href={current.properties.social.strava} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-ink no-underline">
                         🏃 Strava
                       </a>
                     )}
                     {current.properties.social.facebook && (
-                      <a href={current.properties.social.facebook} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-paper no-underline">
+                      <a href={current.properties.social.facebook} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-ink no-underline">
                         📘 Facebook
                       </a>
                     )}
                     {current.properties.social.whatsapp && (
-                      <a href={current.properties.social.whatsapp} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-paper no-underline">
+                      <a href={current.properties.social.whatsapp} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-ink no-underline">
                         💬 WhatsApp
                       </a>
                     )}
                     {current.properties.social.tiktok && (
-                      <a href={current.properties.social.tiktok} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-paper no-underline">
+                      <a href={current.properties.social.tiktok} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-ink no-underline">
                         🎵 TikTok
                       </a>
                     )}
@@ -381,7 +381,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
         {burst && (
           <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
             <div
-              className={`flex h-36 w-36 items-center justify-center rounded-full border-8 bg-ink-soft/90 text-7xl shadow-[0_10px_40px_rgba(0,0,0,0.55)] ${
+              className={`flex h-36 w-36 items-center justify-center rounded-full border-8 bg-white/95 text-7xl shadow-[0_10px_40px_rgba(18,21,26,0.3)] ${
                 burst === 'like' ? 'border-accent' : 'border-red-400 text-red-400'
               }`}
               style={{ animation: 'club-swipe-burst 650ms ease-out forwards' }}
@@ -392,9 +392,9 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
         )}
 
         {!loading && isDone && (
-          <div className="flex h-full flex-col items-center justify-center gap-4 rounded-lg border border-ink-line bg-ink-soft px-6 text-center">
+          <div className="flex h-full flex-col items-center justify-center gap-4 rounded-lg border border-ink-line bg-paper px-6 text-center shadow-sm">
             <span className="text-4xl">🏁</span>
-            <p className="m-0 font-display text-xl font-bold uppercase tracking-tight text-paper">
+            <p className="m-0 font-display text-xl font-bold uppercase tracking-tight text-ink">
               {likedClubs.length > 0
                 ? `Tu as aimé ${likedClubs.length} club${likedClubs.length > 1 ? 's' : ''} !`
                 : "Aucun coup de cœur cette fois"}
@@ -420,7 +420,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
               type="button"
               aria-label="Passer ce club"
               onClick={() => commitSwipe('pass')}
-              className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-ink-line bg-ink-soft text-2xl text-paper transition-transform hover:-translate-y-0.5 hover:border-paper"
+              className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-ink-line bg-paper text-2xl text-ink shadow-sm transition-transform hover:-translate-y-0.5 hover:border-ink"
             >
               ✕
             </button>
@@ -458,24 +458,24 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
             </button>
           </div>
 
-          <div className="mt-3 grid max-h-80 grid-cols-2 gap-2 overflow-y-auto rounded-sm border border-ink-line bg-ink-soft p-2 [scrollbar-color:#FF5500_#1f1f1f] [scrollbar-width:thin] sm:grid-cols-3">
+          <div className="mt-3 grid max-h-80 grid-cols-2 gap-2 overflow-y-auto rounded-sm border border-ink-line bg-paper-soft p-2 [scrollbar-color:#FF5500_#e6e7e1] [scrollbar-width:thin] sm:grid-cols-3">
             {likedClubs.map((club) => {
               const key = clubKey(club);
               const distanceKm = clubDistanceKm(club, userLocation);
               return (
                 <div
                   key={key}
-                  className="relative flex flex-col gap-1 rounded-sm bg-ink p-2.5 pr-6"
+                  className="relative flex flex-col gap-1 rounded-sm border border-ink-line bg-paper p-2.5 pr-6 shadow-sm"
                 >
                   <button
                     type="button"
                     aria-label={`Retirer ${club.properties.name} des favoris`}
                     onClick={() => removeLikedClub(key)}
-                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] text-concrete transition-colors hover:bg-red-400 hover:text-ink"
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] text-concrete transition-colors hover:bg-red-400 hover:text-white"
                   >
                     ✕
                   </button>
-                  <p className="m-0 truncate text-xs font-bold text-paper">{club.properties.name}</p>
+                  <p className="m-0 truncate text-xs font-bold text-ink">{club.properties.name}</p>
                   {(club.properties.city || distanceKm !== null) && (
                     <p className="m-0 flex items-center gap-1.5 truncate text-[11px] text-concrete">
                       {club.properties.city && <span className="truncate">{club.properties.city}</span>}

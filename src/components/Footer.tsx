@@ -1,9 +1,9 @@
 export default function Footer() {
   return (
-    <footer className="border-t border-ink-line bg-ink px-4 py-12 sm:px-6 lg:px-16">
+    <footer className="border-t border-ink-line bg-paper px-4 py-12 sm:px-6 lg:px-16">
       <div className="mx-auto grid max-w-6xl gap-10 sm:grid-cols-3">
         <div>
-          <p className="font-display text-lg font-bold uppercase tracking-tight text-paper">
+          <p className="font-display text-lg font-bold uppercase tracking-tight text-ink">
             Run Club <span className="text-accent">Maps</span>
           </p>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-concrete">
@@ -17,7 +17,7 @@ export default function Footer() {
           <h3 className="text-xs font-bold uppercase tracking-wide text-concrete">Liens rapides</h3>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
-              <a href="#carte" className="text-paper/80 transition-colors hover:text-accent">
+              <a href="#carte" className="text-ink/80 transition-colors hover:text-accent">
                 Voir la carte
               </a>
             </li>
@@ -26,7 +26,7 @@ export default function Footer() {
                 href="https://forms.gle/H4r6NMeHp1dtCq1U9"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-paper/80 transition-colors hover:text-accent"
+                className="text-ink/80 transition-colors hover:text-accent"
               >
                 Proposer un club
               </a>
@@ -36,7 +36,7 @@ export default function Footer() {
                 href="https://www.instagram.com/sport_club_explorer/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-paper/80 transition-colors hover:text-accent"
+                className="text-ink/80 transition-colors hover:text-accent"
               >
                 Instagram
               </a>
@@ -46,7 +46,7 @@ export default function Footer() {
 
         <div>
           <h3 className="text-xs font-bold uppercase tracking-wide text-concrete">Rejoins la communauté</h3>
-          <p className="mt-3 text-sm leading-relaxed text-paper/80">
+          <p className="mt-3 text-sm leading-relaxed text-ink/80">
             Un club n'est pas encore sur la carte ? Signale-le nous en deux
             minutes, il sera ajouté après vérification.
           </p>

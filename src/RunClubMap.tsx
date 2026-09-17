@@ -402,26 +402,26 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId, userLocation 
           <div class="mb-3 flex items-center gap-3 border-b-2 border-ink-line pb-2.5">
             ${club.properties.image ? `<img src="${getCorrectImagePath(club.properties.image)}" alt="${club.properties.name}" class="h-[50px] w-[50px] shrink-0 rounded-full border-2 border-accent object-cover" />` : ''}
             <div class="min-w-0 flex-1">
-              <h3 class="m-0 font-display text-lg font-bold uppercase leading-tight tracking-tight text-paper">${getClubText(club, 'name')}</h3>
+              <h3 class="m-0 font-display text-lg font-bold uppercase leading-tight tracking-tight text-ink">${getClubText(club, 'name')}</h3>
               ${distanceKm !== null ? `<span class="text-xs font-bold uppercase tracking-wide text-accent">📍 ${formatDistanceKm(distanceKm)}</span>` : ''}
             </div>
           </div>
           ${club.properties.city ? `
             <div class="mb-3">
               <h4 class="m-0 mb-1 text-xs font-bold uppercase tracking-wide text-concrete">📍 ${t.city}</h4>
-              <p class="m-0 text-sm text-paper">${club.properties.city}</p>
+              <p class="m-0 text-sm text-ink">${club.properties.city}</p>
             </div>
           ` : ''}
           ${(club.properties.frequency || club.properties.frequency_en) ? `
             <div class="mb-3">
               <h4 class="m-0 mb-1 text-xs font-bold uppercase tracking-wide text-concrete">⏰ ${t.frequency}</h4>
-              <p class="m-0 text-sm text-paper">${getClubText(club, 'frequency')}</p>
+              <p class="m-0 text-sm text-ink">${getClubText(club, 'frequency')}</p>
             </div>
           ` : ''}
           ${(club.properties.description || club.properties.description_en) ? `
             <div class="mb-3.5">
               <h4 class="m-0 mb-1 text-xs font-bold uppercase tracking-wide text-concrete">📝 ${t.description}</h4>
-              <p class="m-0 text-sm leading-snug text-paper">${getClubText(club, 'description')}</p>
+              <p class="m-0 text-sm leading-snug text-ink">${getClubText(club, 'description')}</p>
             </div>
           ` : ''}
           ${club.properties.social && Object.keys(club.properties.social).length > 0 ? `
@@ -429,11 +429,11 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId, userLocation 
               <h4 class="m-0 mb-2 text-xs font-bold uppercase tracking-wide text-concrete">🌐 ${t.socialNetworks}</h4>
               <div class="flex flex-wrap gap-2">
                 ${club.properties.social.website ? `<a href="${club.properties.social.website}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-accent bg-accent px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🔗 ${t.site}</a>` : ''}
-                ${club.properties.social.instagram ? `<a href="${club.properties.social.instagram}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper no-underline">📷 Instagram</a>` : ''}
-                ${club.properties.social.facebook ? `<a href="${club.properties.social.facebook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper no-underline">📘 Facebook</a>` : ''}
-                ${club.properties.social.tiktok ? `<a href="${club.properties.social.tiktok}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper no-underline">🎵 TikTok</a>` : ''}
-                ${club.properties.social.whatsapp ? `<a href="${club.properties.social.whatsapp}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper no-underline">💬 WhatsApp</a>` : ''}
-                ${club.properties.social.strava ? `<a href="${club.properties.social.strava}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper no-underline">🏃 Strava</a>` : ''}
+                ${club.properties.social.instagram ? `<a href="${club.properties.social.instagram}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">📷 Instagram</a>` : ''}
+                ${club.properties.social.facebook ? `<a href="${club.properties.social.facebook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">📘 Facebook</a>` : ''}
+                ${club.properties.social.tiktok ? `<a href="${club.properties.social.tiktok}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🎵 TikTok</a>` : ''}
+                ${club.properties.social.whatsapp ? `<a href="${club.properties.social.whatsapp}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">💬 WhatsApp</a>` : ''}
+                ${club.properties.social.strava ? `<a href="${club.properties.social.strava}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-sm border border-ink-line px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink no-underline">🏃 Strava</a>` : ''}
               </div>
             </div>
           ` : ''}
@@ -876,7 +876,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         flexDirection: 'column',
         alignItems: 'center', 
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0e0e0e 0%, #1a1a1a 100%)',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f4f5f1 100%)',
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
         position: 'relative',
         overflow: 'hidden'
@@ -889,9 +889,9 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
           width: '100%',
           height: '100%',
           background: `
-            radial-gradient(circle at 20% 80%, rgba(255, 77, 28, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(255, 77, 28, 0.08) 0%, transparent 50%)
+            radial-gradient(circle at 20% 80%, rgba(255, 85, 0, 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 85, 0, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(255, 85, 0, 0.06) 0%, transparent 50%)
           `
         }}></div>
 
@@ -902,7 +902,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
           zIndex: 2
         }}>
           <svg width="160" height="160" viewBox="0 0 160 160" style={{
-            filter: 'drop-shadow(0 15px 35px rgba(0,0,0,0.2))'
+            filter: 'drop-shadow(0 15px 35px rgba(18,21,26,0.1))'
           }}>
             {/* Piste de course (cercle extérieur) */}
             <circle
@@ -910,7 +910,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
               cy="80"
               r="65"
               fill="none"
-              stroke="rgba(255, 255, 255, 0.3)"
+              stroke="rgba(18, 21, 26, 0.15)"
               strokeWidth="8"
               strokeDasharray="10 5"
               style={{
@@ -924,7 +924,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
               cy="80"
               r="50"
               fill="none"
-              stroke="rgba(255, 255, 255, 0.2)"
+              stroke="rgba(18, 21, 26, 0.12)"
               strokeWidth="4"
               strokeDasharray="5 3"
               style={{
@@ -1005,7 +1005,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
 
         {/* Texte de chargement avec animation */}
         <div style={{
-          color: 'white',
+          color: '#13161a',
           fontSize: '28px',
           fontWeight: '700',
           fontFamily: '"Space Grotesk", Inter, system-ui, sans-serif',
@@ -1021,7 +1021,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
 
         {/* Sous-texte avec émojis animés */}
         <div style={{
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: '#6b716f',
           fontSize: '18px',
           fontWeight: '500',
           textAlign: 'center',
@@ -1040,7 +1040,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         <div style={{
           width: '320px',
           height: '6px',
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          backgroundColor: 'rgba(18, 21, 26, 0.08)',
           borderRadius: '3px',
           overflow: 'hidden',
           zIndex: 2,
@@ -1076,7 +1076,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         }}>
           <div style={{
             textAlign: 'center',
-            color: 'rgba(255, 255, 255, 0.8)'
+            color: 'rgba(18, 21, 26, 0.65)'
           }}>
             <div style={{
               fontSize: '24px',
@@ -1093,7 +1093,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
           
           <div style={{
             textAlign: 'center',
-            color: 'rgba(255, 255, 255, 0.8)'
+            color: 'rgba(18, 21, 26, 0.65)'
           }}>
             <div style={{
               fontSize: '24px',
@@ -1110,7 +1110,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
           
           <div style={{
             textAlign: 'center',
-            color: 'rgba(255, 255, 255, 0.8)'
+            color: 'rgba(18, 21, 26, 0.65)'
           }}>
             <div style={{
               fontSize: '24px',
@@ -1485,7 +1485,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
       {isMobile && (
         <>
           {/* Barre de navigation mobile en haut */}
-          <header className="absolute top-0 left-0 right-0 z-[1000] flex h-[50px] items-center justify-between border-b border-ink-line bg-ink/95 px-3 py-2 font-body shadow-[0_2px_16px_rgba(0,0,0,0.25)] backdrop-blur-md box-border">
+          <header className="absolute top-0 left-0 right-0 z-[1000] flex h-[50px] items-center justify-between border-b border-ink-line bg-paper/95 px-3 py-2 font-body shadow-[0_2px_16px_rgba(18,21,26,0.08)] backdrop-blur-md box-border">
             {/* Bouton menu et titre */}
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <button
@@ -1516,16 +1516,16 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
               via un portail, pour couvrir tout l'écran (y compris le header). */}
           {showOverlay && createPortal(
             <aside
-              className="fixed inset-0 z-[1000] flex flex-col overflow-hidden bg-ink-soft font-body"
+              className="fixed inset-0 z-[1000] flex flex-col overflow-hidden bg-paper font-body"
               aria-label={language === 'fr' ? 'Panneau de filtres et liste des clubs' : 'Filters panel and clubs list'}
             >
               {/* Header des filtres mobile */}
-              <header className="shrink-0 bg-ink p-3 text-paper">
+              <header className="shrink-0 border-b border-ink-line bg-paper-soft p-3 text-ink">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="m-0 font-display text-base font-semibold uppercase tracking-wide">
                     🏃‍♂️ Run Clubs
                   </h2>
-                  <div className="rounded-sm bg-white/10 px-2.5 py-0.5 text-[13px] font-bold text-accent" aria-live="polite">
+                  <div className="rounded-sm bg-accent-soft px-2.5 py-0.5 text-[13px] font-bold text-accent" aria-live="polite">
                     {filteredClubs.length}/{clubs.length}
                   </div>
                 </div>
@@ -1558,7 +1558,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                     placeholder={t.search}
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="box-border w-full rounded-sm border border-white/20 bg-surface px-2.5 py-2.5 pl-9 text-base text-paper outline-none focus:border-accent"
+                    className="box-border w-full rounded-sm border border-ink-line bg-surface px-2.5 py-2.5 pl-9 text-base text-ink outline-none focus:border-accent"
                   />
                   {searchQuery && (
                     <button
@@ -1573,13 +1573,13 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                 {/* Filtres mobile en grille */}
                 <div className="mb-2 grid grid-cols-2 gap-2">
                   <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-paper/80">
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-concrete">
                       {t.city}
                     </label>
                     <select
                       value={filterCity}
                       onChange={(e) => handleCityFilterChange(e.target.value)}
-                      className="w-full rounded-sm border border-white/20 bg-surface p-1.5 text-[13px] text-paper"
+                      className="w-full rounded-sm border border-ink-line bg-surface p-1.5 text-[13px] text-ink"
                     >
                       <option value="">{t.allCities}</option>
                       {sortedUniqueCities.map(city => (
@@ -1589,13 +1589,13 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-paper/80">
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-concrete">
                       {t.day}
                     </label>
                     <select
                       value={filterDay}
                       onChange={(e) => handleDayFilterChange(e.target.value)}
-                      className="w-full rounded-sm border border-white/20 bg-surface p-1.5 text-[13px] text-paper"
+                      className="w-full rounded-sm border border-ink-line bg-surface p-1.5 text-[13px] text-ink"
                     >
                       <option value="">{t.all}</option>
                       {sortedUniqueDays.map((day: string) => (
@@ -1609,7 +1609,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                 {(filterCity || filterDay || searchQuery) && (
                   <button
                     onClick={clearFilters}
-                    className="w-full rounded-sm border-none bg-white/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper"
+                    className="w-full rounded-sm border border-ink-line bg-paper px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink hover:bg-paper-soft"
                   >
                     ✕ {t.clear}
                   </button>
@@ -1621,7 +1621,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                 {filteredClubs.length === 0 ? (
                   <div className="p-10 text-center text-concrete">
                     <div className="mb-4 text-5xl">🔍</div>
-                    <p className="m-0 font-display text-base font-bold uppercase tracking-wide text-paper">
+                    <p className="m-0 font-display text-base font-bold uppercase tracking-wide text-ink">
                       {t.noClubsFound}
                     </p>
                     <p className="mt-2 mb-0 text-sm">
@@ -1635,7 +1635,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                     <div
                       key={idx}
                       onClick={() => handleClubClick(club)}
-                      className={`flex min-h-11 flex-col gap-2 py-4 transition-colors active:bg-ink-line/40 ${idx < sortedFilteredClubs.length - 1 ? 'border-b border-ink-line' : ''}`}
+                      className={`flex min-h-11 flex-col gap-2 py-4 transition-colors active:bg-paper-soft ${idx < sortedFilteredClubs.length - 1 ? 'border-b border-ink-line' : ''}`}
                     >
                       <div className="flex items-center gap-3">
                         {club.properties.image && (
@@ -1650,7 +1650,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                           />
                         )}
                         <div className="min-w-0 flex-1">
-                          <h4 className="m-0 font-display text-base font-bold uppercase leading-tight tracking-tight text-paper">
+                          <h4 className="m-0 font-display text-base font-bold uppercase leading-tight tracking-tight text-ink">
                             {getClubText(club, 'name')}
                           </h4>
                           <div className="mt-0.5 flex items-center gap-2 text-xs text-concrete">
@@ -1699,7 +1699,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
               </div>
 
               {/* Bouton de retour à la carte centré en bas */}
-              <div className="sticky bottom-0 left-0 right-0 z-10 flex justify-center border-t border-ink-line bg-ink-soft p-4">
+              <div className="sticky bottom-0 left-0 right-0 z-10 flex justify-center border-t border-ink-line bg-paper p-4 shadow-[0_-4px_16px_rgba(18,21,26,0.06)]">
                 <button
                   onClick={() => setShowOverlay(false)}
                   className="flex min-w-[200px] items-center justify-center gap-2 rounded-sm bg-accent px-6 py-3.5 text-base font-bold uppercase tracking-wide text-ink shadow-[0_4px_16px_rgba(255,77,28,0.35)] transition-transform active:scale-95"
@@ -1718,14 +1718,14 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
           carte (plus de survol flottant) ; sur mobile, seule la carte occupe cette zone. */}
       <div className={isMobile ? 'relative h-full w-full' : 'flex h-full w-full'}>
         {!isMobile && (
-          <aside className="flex h-full w-[380px] shrink-0 flex-col overflow-hidden border-r border-ink-line bg-ink-soft font-body">
+          <aside className="flex h-full w-[380px] shrink-0 flex-col overflow-hidden border-r border-ink-line bg-paper font-body">
               {/* Header amélioré */}
-              <div className="shrink-0 bg-ink p-5 text-paper">
+              <div className="shrink-0 border-b border-ink-line bg-paper-soft p-5 text-ink">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="m-0 font-display text-xl font-semibold uppercase tracking-wide">
                     🏃‍♂️ Run Clubs
                   </h3>
-                  <div className="rounded-sm bg-white/10 px-3 py-1 text-sm font-bold text-accent">
+                  <div className="rounded-sm bg-accent-soft px-3 py-1 text-sm font-bold text-accent">
                     {filteredClubs.length}/{clubs.length}
                   </div>
                 </div>
@@ -1758,12 +1758,12 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                     placeholder={t.search}
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="box-border w-full rounded-sm border border-white/20 bg-surface px-3 py-2.5 pl-10 text-sm text-paper outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/30"
+                    className="box-border w-full rounded-sm border border-ink-line bg-surface px-3 py-2.5 pl-10 text-sm text-ink outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/20"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => handleSearchChange('')}
-                      className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-sm p-1 text-base text-concrete hover:bg-black/10"
+                      className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-sm p-1 text-base text-concrete hover:bg-ink/5"
                     >
                       ✕
                     </button>
@@ -1773,13 +1773,13 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                 {/* Filtres */}
                 <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
                   <div>
-                    <label className="mb-1 block text-xs uppercase tracking-wide text-paper/80">
+                    <label className="mb-1 block text-xs uppercase tracking-wide text-concrete">
                       {t.city}
                     </label>
                     <select
                       value={filterCity}
                       onChange={(e) => handleCityFilterChange(e.target.value)}
-                      className="w-full rounded-sm border border-white/20 bg-surface px-2 py-1.5 text-[13px] text-paper"
+                      className="w-full rounded-sm border border-ink-line bg-surface px-2 py-1.5 text-[13px] text-ink"
                     >
                       <option value="">{t.allCities}</option>
                       {sortedUniqueCities.map(city => (
@@ -1789,13 +1789,13 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs uppercase tracking-wide text-paper/80">
+                    <label className="mb-1 block text-xs uppercase tracking-wide text-concrete">
                       {t.day}
                     </label>
                     <select
                       value={filterDay}
                       onChange={(e) => handleDayFilterChange(e.target.value)}
-                      className="w-full rounded-sm border border-white/20 bg-surface px-2 py-1.5 text-[13px] text-paper"
+                      className="w-full rounded-sm border border-ink-line bg-surface px-2 py-1.5 text-[13px] text-ink"
                     >
                       <option value="">{t.all}</option>
                       {sortedUniqueDays.map((day: string) => (
@@ -1807,7 +1807,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                   {(filterCity || filterDay || searchQuery) && (
                     <button
                       onClick={clearFilters}
-                      className="rounded-sm border-none bg-white/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-paper"
+                      className="rounded-sm border border-ink-line bg-paper px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink hover:bg-paper-soft"
                     >
                       ✕ {t.clear}
                     </button>
@@ -1817,7 +1817,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
 
               {/* Liste des clubs */}
               <div
-                className="clubs-list-container min-h-0 flex-1 [scrollbar-color:#FF5500_#1f1f1f] [scrollbar-width:thin]"
+                className="clubs-list-container min-h-0 flex-1 [scrollbar-color:#FF5500_#f1f2ed] [scrollbar-width:thin]"
                 style={{
                   overflowY: 'scroll',
                   paddingBottom: '16px'
@@ -1825,7 +1825,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                 {filteredClubs.length === 0 ? (
                   <div className="p-10 text-center text-concrete">
                     <div className="mb-4 text-5xl">🔍</div>
-                    <p className="m-0 font-display text-base font-bold uppercase tracking-wide text-paper">
+                    <p className="m-0 font-display text-base font-bold uppercase tracking-wide text-ink">
                       {t.noClubsFound}
                     </p>
                     <p className="mt-2 mb-0 text-sm">
@@ -1839,7 +1839,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                     <div
                       key={idx}
                       onClick={() => handleClubClick(club)}
-                      className={`cursor-pointer p-4 transition-colors hover:bg-ink-line/40 ${idx < sortedFilteredClubs.length - 1 ? 'border-b border-ink-line' : ''}`}
+                      className={`cursor-pointer p-4 transition-colors hover:bg-paper-soft ${idx < sortedFilteredClubs.length - 1 ? 'border-b border-ink-line' : ''}`}
                     >
                       <div className="mb-2 flex items-center">
                         {club.properties.image && (
@@ -1854,7 +1854,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                           />
                         )}
                         <div className="flex-1">
-                          <h4 className="m-0 font-display text-base font-bold uppercase tracking-tight text-paper">
+                          <h4 className="m-0 font-display text-base font-bold uppercase tracking-tight text-ink">
                             {getClubText(club, 'name')}
                           </h4>
                           <div className="mt-0.5 flex items-center gap-2 text-xs text-concrete">
@@ -1927,9 +1927,9 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         setShowOverlay={setShowOverlay} 
       />
 
-      {/* Fond de carte sombre — Esri Dark Gray Canvas, sans clé API, cohérent avec la charte noir & orange */}
+      {/* Fond de carte clair — Esri Light Gray Canvas, sans clé API, cohérent avec la charte lumineuse */}
       <TileLayer
-        url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
         attribution='Tiles &copy; Esri — Esri, DeLorme, NAVTEQ'
         maxZoom={19}
       />
@@ -1976,7 +1976,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
           }}
         >
           <div style={{
-            backgroundColor: '#141414',
+            backgroundColor: '#ffffff',
             borderRadius: '16px',
             maxWidth: isMobile ? '100%' : '500px',
             width: '100%',
@@ -2058,7 +2058,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                   margin: '0 0 12px 0',
                   fontSize: '16px',
                   lineHeight: '1.6',
-                  color: '#e5e5e5'
+                  color: '#13161a'
                 }}>
                   {t.projectDescription}
                 </p>
@@ -2066,7 +2066,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                   margin: '0',
                   fontSize: '16px',
                   lineHeight: '1.6',
-                  color: '#a3a3a3'
+                  color: '#6b716f'
                 }}>
                   {t.projectGoal}
                 </p>
@@ -2089,9 +2089,9 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                       alignItems: 'center',
                       gap: '12px',
                       padding: '12px',
-                      backgroundColor: '#1f1f1f',
+                      backgroundColor: '#f4f5f1',
                       borderRadius: '8px',
-                      border: '1px solid #2a2a2a'
+                      border: '1px solid #e6e7e1'
                     }}>
                       <div style={{
                         width: '24px',
@@ -2110,7 +2110,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                       </div>
                       <span style={{
                         fontSize: '14px',
-                        color: '#e5e5e5'
+                        color: '#13161a'
                       }}>
                         {step}
                       </span>
@@ -2143,7 +2143,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                   margin: '0 0 16px 0',
                   fontSize: '14px',
                   lineHeight: '1.5',
-                  color: '#a3a3a3'
+                  color: '#7a3d1f'
                 }}>
                   {t.contributeText}
                 </p>
@@ -2196,7 +2196,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
                   margin: '0 0 16px 0',
                   fontSize: '14px',
                   lineHeight: '1.5',
-                  color: '#a3a3a3'
+                  color: '#8a2f4a'
                 }}>
                   {t.followUsText}
                 </p>
@@ -2281,7 +2281,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         <button
           onClick={clearFilters}
           style={{
-            position: 'fixed',
+            position: 'absolute',
             bottom: '20px',
             left: '50%',
             transform: 'translateX(-50%)',
@@ -2320,7 +2320,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
       {/* Bouton Trouve ton club - Mobile uniquement et si aucun filtre actif */}
       {isMobile && !showOverlay && !filterCity && !filterDay && !searchQuery.trim() && (
         <div style={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: '30px',
           left: '50%',
           transform: 'translateX(-50%)',
@@ -2404,7 +2404,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         <button
           onClick={() => setShowOverlay(true)}
           style={{
-            position: 'fixed',
+            position: 'absolute',
             bottom: '90px',
             right: '20px',
             zIndex: 1001,
@@ -2447,7 +2447,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         <button
           onClick={() => window.open('https://forms.gle/H4r6NMeHp1dtCq1U9', '_blank')}
           style={{
-            position: 'fixed',
+            position: 'absolute',
             bottom: '35px',
             right: '20px',
             zIndex: 1001,
@@ -2697,13 +2697,13 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
           }
         }
         
-        /* Popups de marqueurs aux couleurs du site : fond sombre, accents orange */
+        /* Popups de marqueurs aux couleurs du site : fond clair, accents orange */
         .leaflet-popup-content-wrapper {
-          background: var(--color-ink-soft, #141414) !important;
-          color: var(--color-paper, #f5f5f5) !important;
+          background: var(--color-paper, #ffffff) !important;
+          color: var(--color-ink, #13161a) !important;
           border-radius: 12px !important;
-          border: 1px solid var(--color-ink-line, #262626);
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55) !important;
+          border: 1px solid var(--color-ink-line, #e6e7e1);
+          box-shadow: 0 12px 32px rgba(18, 21, 26, 0.16) !important;
         }
 
         .leaflet-popup-content {
@@ -2711,7 +2711,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         }
 
         .leaflet-popup-tip {
-          background: var(--color-ink-soft, #141414) !important;
+          background: var(--color-paper, #ffffff) !important;
         }
 
         /* Améliorer la croix de fermeture des pop-ups sur toutes les plateformes */
