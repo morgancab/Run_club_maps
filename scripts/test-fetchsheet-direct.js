@@ -19,7 +19,7 @@ try {
     if (social.instagram) console.log(`      📷 Instagram: ${social.instagram}`);
     if (social.facebook) console.log(`      📘 Facebook: ${social.facebook}`);
     if (social.tiktok) console.log(`      🎵 TikTok: ${social.tiktok}`);
-    if (social.whatsapp) console.log(`      💬 WhatsApp: ${social.whatsapp}`);
+    if (social.whatsApp) console.log(`      💬 whatsApp: ${social.whatsApp}`);
     if (social.strava) console.log(`      🏃 Strava: ${social.strava}`);
     
     // Afficher l'ancien champ linkedin s'il existe (pour debug)

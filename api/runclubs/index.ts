@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { fetchRunClubs } from '../../lib/fetchSheet.js';
+import { fetchRunClubs } from '../../lib/fetchClubs.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Permettre CORS
@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Ajouter des informations de debug si aucun club n'est trouvé
     if (clubs.length === 0) {
-      console.warn('⚠️ Aucun club trouvé - vérifiez la configuration Google Sheets');
+      console.warn('⚠️ Aucun club trouvé - vérifiez la configuration Supabase (SUPABASE_URL / SUPABASE_ANON_KEY)');
     } else {
       console.log(`✅ ${clubs.length} clubs récupérés avec succès`);
     }

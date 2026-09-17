@@ -1,6 +1,7 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { fetchRunClubs } from '../lib/fetchSheet.js';
+import { fetchRunClubs } from '../lib/fetchClubs.js';
 
 const app = express();
 const PORT = 3001;
@@ -11,7 +12,7 @@ app.use(express.json());
 // Route API pour les clubs de running
 app.get('/api/runclubs', async (req, res) => {
   try {
-    console.log('📡 Récupération des données depuis Google Sheets...');
+    console.log('📡 Récupération des données depuis Supabase...');
     const clubs = await fetchRunClubs();
     
     const geojson = {
