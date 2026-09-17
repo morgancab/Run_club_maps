@@ -15,6 +15,7 @@
     "test:fetchsheet": "npx tsx scripts/test-fetchsheet-direct.js",
     "test:vercel": "node scripts/test-vercel-config.js",
     "migrate:supabase": "npx tsx scripts/migrate-sheet-to-supabase.ts",
+    "migrate:images": "npx tsx scripts/migrate-images-to-supabase-storage.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
