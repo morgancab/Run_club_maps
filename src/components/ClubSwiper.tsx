@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRunClubs } from '../hooks/useRunClubs';
 import type { RunClubFeature } from '../RunClubMap';
+import { haversineDistanceKm, formatDistanceKm, type UserLocation } from '../utils/geo';
 
 const LIKED_STORAGE_KEY = 'rcm-liked-clubs';
 const SWIPE_THRESHOLD = 110;
@@ -36,10 +37,6 @@ function getImageSrc(image?: string): string | null {
   return image;
 }
 
-function buildDirectionsUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-}
-
 function shuffle<T>(items: T[]): T[] {
   const arr = [...items];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -58,9 +55,25 @@ function loadLikedKeys(): string[] {
   }
 }
 
+// Distance jusqu'à un club depuis la position de l'utilisateur (null si inconnue)
+function clubDistanceKm(club: RunClubFeature, userLocation: UserLocation | null): number | null {
+  if (!userLocation) return null;
+  const [lng, lat] = club.geometry.coordinates;
+  if (isNaN(lat) || isNaN(lng)) return null;
+  return haversineDistanceKm(userLocation.lat, userLocation.lng, lat, lng);
+}
+
 type ExitDirection = 'like' | 'pass' | null;
 
-export default function ClubSwiper() {
+interface ClubSwiperProps {
+  onBack: () => void;
+  /** Position de l'utilisateur (demandée automatiquement à l'arrivée sur le site) —
+   * quand elle est connue, la pile de clubs est triée du plus proche au plus loin
+   * au lieu d'être mélangée au hasard. */
+  userLocation: UserLocation | null;
+}
+
+export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
   const { clubs, loading } = useRunClubs();
   const [deckVersion, setDeckVersion] = useState(0);
   const [index, setIndex] = useState(0);
@@ -74,13 +87,35 @@ export default function ClubSwiper() {
   const burstTimeoutRef = useRef<number | null>(null);
   const startXRef = useRef(0);
   const pointerIdRef = useRef<number | null>(null);
+  const hasCenteredDeckOnLocationRef = useRef(false);
 
-  // deckVersion n'est pas lu dans le corps du memo : c'est un simple "cache-buster"
+  // Si la position de l'utilisateur est connue, la pile est triée du plus proche
+  // au plus loin ; sinon elle reste mélangée au hasard comme avant.
+  // deckVersion n'est lu que dans ce second cas : c'est un simple "cache-buster"
   // pour forcer un nouveau mélange quand on clique sur "Rejouer".
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const deck = useMemo(() => shuffle(clubs), [clubs, deckVersion]);
+  const deck = useMemo(() => {
+    if (userLocation) {
+      return [...clubs].sort(
+        (a, b) => (clubDistanceKm(a, userLocation) ?? Infinity) - (clubDistanceKm(b, userLocation) ?? Infinity)
+      );
+    }
+    return shuffle(clubs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubs, deckVersion, userLocation]);
+
+  // La première fois que la position devient disponible, on revient au début de
+  // la pile (désormais triée par distance) pour ne pas laisser l'utilisateur au
+  // milieu d'un ordre qui vient de changer sous ses pieds.
+  useEffect(() => {
+    if (userLocation && !hasCenteredDeckOnLocationRef.current) {
+      hasCenteredDeckOnLocationRef.current = true;
+      setIndex(0);
+    }
+  }, [userLocation]);
+
   const current = deck[index];
   const next = deck[index + 1];
+  const currentDistanceKm = current ? clubDistanceKm(current, userLocation) : null;
   const isDone = !loading && deck.length > 0 && index >= deck.length;
   const likedClubs = useMemo(
     () => clubs.filter((c) => likedKeys.includes(clubKey(c))),
@@ -175,21 +210,36 @@ export default function ClubSwiper() {
   const passOpacity = Math.min(Math.max(-dragX, 0) / 80, 1);
 
   return (
-    <section id="decouvrir" className="scroll-mt-16 bg-ink px-4 py-16 sm:px-6 lg:px-16">
-      <div className="mx-auto max-w-md text-center">
+    <section className="min-h-[calc(100vh-4rem)] bg-ink px-4 py-6 sm:px-6 sm:py-10 lg:px-16">
+      <button
+        type="button"
+        onClick={onBack}
+        className="mx-auto flex max-w-md items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-accent"
+      >
+        ← Retour au site
+      </button>
+
+      <div className="mx-auto mt-4 max-w-md text-center sm:mt-6">
         <span className="inline-block rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-accent">
           🔥 Découverte
         </span>
-        <h2 className="mt-4 font-display text-3xl font-bold uppercase tracking-tight text-paper sm:text-4xl">
-          Swipe ton <span className="text-accent">run club</span>
+        <h2 className="mt-3 font-display text-2xl font-bold uppercase tracking-tight text-paper sm:mt-4 sm:text-4xl">
+          Trouve ton <span className="text-accent">club</span> 🔥
         </h2>
-        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-concrete">
-          ❤️ ou glisse à droite si le club te tente, ✕ ou glisse à gauche pour
-          passer au suivant.
-        </p>
+        {!loading && !isDone && current && (
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-concrete">
+            👉 Glisse <span className="font-bold text-accent">à droite</span> pour aimer,{' '}
+            <span className="font-bold text-red-400">à gauche</span> pour passer.
+          </p>
+        )}
+        {!loading && deck.length > 0 && !isDone && (
+          <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-concrete/70">
+            Club {Math.min(index + 1, deck.length)} / {deck.length}
+          </p>
+        )}
       </div>
 
-      <div className="relative mx-auto mt-10 h-[600px] max-w-sm select-none">
+      <div className="relative mx-auto mt-6 h-[min(64vh,520px)] max-w-sm select-none sm:mt-8 sm:h-[560px]">
         {loading && (
           <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-ink-soft text-sm text-concrete">
             Chargement des clubs…
@@ -223,7 +273,7 @@ export default function ClubSwiper() {
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
             >
-              <div className="relative h-56 w-full shrink-0 bg-ink">
+              <div className="relative h-32 w-full shrink-0 bg-ink sm:h-48">
                 {getImageSrc(current.properties.image) && !imageError ? (
                   <img
                     src={getImageSrc(current.properties.image)!}
@@ -233,10 +283,17 @@ export default function ClubSwiper() {
                     onError={() => setImageError(true)}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/30 to-ink text-5xl font-display font-bold text-accent">
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/30 to-ink text-4xl font-display font-bold text-accent sm:text-5xl">
                     {getInitials(current.properties.name)}
                   </div>
                 )}
+
+                {/* Repères fixes qui rappellent, dès l'arrivée sur la carte (sans avoir
+                    besoin de commencer à glisser), quel côté correspond à quelle action. */}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white/80">
+                  <span>✕ Passer</span>
+                  <span>Aimer ❤️</span>
+                </div>
 
                 {/* Timbres LIKE (cœur) / PASS (croix), qui apparaissent en glissant */}
                 <div
@@ -253,12 +310,19 @@ export default function ClubSwiper() {
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col gap-2 overflow-hidden p-5">
-                <h3 className="m-0 font-display text-2xl font-bold uppercase tracking-tight text-paper">
+              <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto p-4 sm:gap-2 sm:p-5">
+                <h3 className="m-0 font-display text-xl font-bold uppercase tracking-tight text-paper sm:text-2xl">
                   {current.properties.name}
                 </h3>
-                {current.properties.city && (
-                  <p className="m-0 text-sm text-concrete">📍 {current.properties.city}</p>
+                {(current.properties.city || currentDistanceKm !== null) && (
+                  <p className="m-0 flex items-center gap-2 text-sm text-concrete">
+                    {current.properties.city && <span>📍 {current.properties.city}</span>}
+                    {currentDistanceKm !== null && (
+                      <span className="font-bold uppercase tracking-wide text-accent">
+                        {formatDistanceKm(currentDistanceKm)}
+                      </span>
+                    )}
+                  </p>
                 )}
                 {current.properties.frequency && (
                   <div className="mt-1 inline-block w-fit rounded-sm bg-ink px-2.5 py-1.5 text-xs font-medium text-paper">
@@ -266,7 +330,7 @@ export default function ClubSwiper() {
                   </div>
                 )}
                 {current.properties.description && (
-                  <p className="m-0 line-clamp-4 text-sm leading-snug text-concrete">
+                  <p className="m-0 line-clamp-3 text-sm leading-snug text-concrete sm:line-clamp-4">
                     {current.properties.description}
                   </p>
                 )}
@@ -346,25 +410,33 @@ export default function ClubSwiper() {
         )}
       </div>
 
-      {/* Boutons d'action, alternative accessible au glisser-déposer */}
+      {/* Boutons d'action, alternative accessible au glisser-déposer.
+          Chaque bouton porte une légende visible : les emojis seuls sont
+          ambigus pour qui arrive sans avoir lu les instructions au-dessus. */}
       {!loading && !isDone && current && (
-        <div className="mx-auto mt-6 flex max-w-sm items-center justify-center gap-6">
-          <button
-            type="button"
-            aria-label="Passer ce club"
-            onClick={() => commitSwipe('pass')}
-            className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-ink-line bg-ink-soft text-2xl text-paper transition-transform hover:-translate-y-0.5 hover:border-paper"
-          >
-            ✕
-          </button>
-          <button
-            type="button"
-            aria-label="Aimer ce club"
-            onClick={() => commitSwipe('like')}
-            className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-accent bg-accent text-2xl text-ink transition-transform hover:-translate-y-0.5"
-          >
-            ❤️
-          </button>
+        <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-8 sm:mt-6">
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Passer ce club"
+              onClick={() => commitSwipe('pass')}
+              className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-ink-line bg-ink-soft text-2xl text-paper transition-transform hover:-translate-y-0.5 hover:border-paper"
+            >
+              ✕
+            </button>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-concrete">Passer</span>
+          </div>
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Aimer ce club"
+              onClick={() => commitSwipe('like')}
+              className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-accent bg-accent text-2xl text-ink transition-transform hover:-translate-y-0.5"
+            >
+              ❤️
+            </button>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-accent">J'aime</span>
+          </div>
         </div>
       )}
 
@@ -372,7 +444,7 @@ export default function ClubSwiper() {
           suppression individuelle, pour ne pas laisser la liste grandir
           indéfiniment dans la page. */}
       {likedClubs.length > 0 && (
-        <div className="mx-auto mt-12 max-w-lg">
+        <div className="mx-auto mt-8 max-w-lg sm:mt-12">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wide text-concrete">
               Tes clubs likés ({likedClubs.length})
@@ -388,8 +460,8 @@ export default function ClubSwiper() {
 
           <div className="mt-3 grid max-h-80 grid-cols-2 gap-2 overflow-y-auto rounded-sm border border-ink-line bg-ink-soft p-2 [scrollbar-color:#FF5500_#1f1f1f] [scrollbar-width:thin] sm:grid-cols-3">
             {likedClubs.map((club) => {
-              const [lng, lat] = club.geometry.coordinates;
               const key = clubKey(club);
+              const distanceKm = clubDistanceKm(club, userLocation);
               return (
                 <div
                   key={key}
@@ -404,17 +476,16 @@ export default function ClubSwiper() {
                     ✕
                   </button>
                   <p className="m-0 truncate text-xs font-bold text-paper">{club.properties.name}</p>
-                  {club.properties.city && (
-                    <p className="m-0 truncate text-[11px] text-concrete">{club.properties.city}</p>
+                  {(club.properties.city || distanceKm !== null) && (
+                    <p className="m-0 flex items-center gap-1.5 truncate text-[11px] text-concrete">
+                      {club.properties.city && <span className="truncate">{club.properties.city}</span>}
+                      {distanceKm !== null && (
+                        <span className="shrink-0 font-bold uppercase tracking-wide text-accent">
+                          {formatDistanceKm(distanceKm)}
+                        </span>
+                      )}
+                    </p>
                   )}
-                  <a
-                    href={buildDirectionsUrl(lat, lng)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 text-[11px] font-bold uppercase tracking-wide text-accent no-underline"
-                  >
-                    🧭 Itinéraire
-                  </a>
                 </div>
               );
             })}

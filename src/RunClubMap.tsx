@@ -9,6 +9,8 @@ import 'leaflet.markercluster';
 import { useSEO, useClubStructuredData } from './hooks/useSEO';
 import { cacheService, CACHE_KEYS, CACHE_OPTIONS, type CachedClubData } from './services/cacheService';
 import { useCache } from './hooks/useCache';
+import { haversineDistanceKm, formatDistanceKm, type UserLocation } from './utils/geo';
+import type { GeoStatus } from './hooks/useGeolocation';
 
 export interface RunClubFeature {
   type: 'Feature';
@@ -36,36 +38,6 @@ export interface RunClubFeature {
     description_en?: string;
   };
 }
-
-// Calcule la distance à vol d'oiseau (en km) entre deux points GPS (formule de Haversine)
-const haversineDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-  const toRad = (value: number) => (value * Math.PI) / 180;
-  const earthRadiusKm = 6371;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return earthRadiusKm * c;
-};
-
-// Construit un lien Google Maps pour obtenir l'itinéraire vers un club
-const buildDirectionsUrl = (
-  destinationLat: number,
-  destinationLng: number,
-  origin: { lat: number; lng: number } | null
-): string => {
-  const params = new URLSearchParams({
-    api: '1',
-    destination: `${destinationLat},${destinationLng}`,
-    travelmode: 'walking'
-  });
-  if (origin) {
-    params.set('origin', `${origin.lat},${origin.lng}`);
-  }
-  return `https://www.google.com/maps/dir/?${params.toString()}`;
-};
 
 // Fonction pour créer une icône personnalisée avec l'image du club
 const createCustomIcon = (imageUrl: string, clubName: string) => {
@@ -380,9 +352,8 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId, userLocation 
         return;
       }
 
-      // Distance jusqu'à l'utilisateur (si sa position est connue) et lien d'itinéraire
+      // Distance jusqu'à l'utilisateur, si sa position est connue
       const distanceKm = userLocation ? haversineDistanceKm(userLocation.lat, userLocation.lng, lat, lng) : null;
-      const directionsUrl = buildDirectionsUrl(lat, lng, userLocation);
 
       // Créer le marqueur avec des options anti-flash
       const marker = L.marker([lat, lng], {
@@ -432,10 +403,9 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId, userLocation 
             ${club.properties.image ? `<img src="${getCorrectImagePath(club.properties.image)}" alt="${club.properties.name}" class="h-[50px] w-[50px] shrink-0 rounded-full border-2 border-accent object-cover" />` : ''}
             <div class="min-w-0 flex-1">
               <h3 class="m-0 font-display text-lg font-bold uppercase leading-tight tracking-tight text-paper">${getClubText(club, 'name')}</h3>
-              ${distanceKm !== null ? `<span class="text-xs font-bold uppercase tracking-wide text-accent">📍 ${distanceKm < 1 ? Math.round(distanceKm * 1000) + ' m' : distanceKm.toFixed(1) + ' km'}</span>` : ''}
+              ${distanceKm !== null ? `<span class="text-xs font-bold uppercase tracking-wide text-accent">📍 ${formatDistanceKm(distanceKm)}</span>` : ''}
             </div>
           </div>
-          <a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" class="mb-3 flex items-center justify-center gap-2 rounded-sm bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink no-underline">🧭 ${t.getDirections}</a>
           ${club.properties.city ? `
             <div class="mb-3">
               <h4 class="m-0 mb-1 text-xs font-bold uppercase tracking-wide text-concrete">📍 ${t.city}</h4>
@@ -549,8 +519,6 @@ const translations = {
     followUs: 'Suivez-nous',
     followUsText: 'Restez connecté avec la communauté Sport Club Explorer sur Instagram pour découvrir de nouveaux clubs et partager vos expériences de course !',
     visitInstagram: 'Visiter notre Instagram',
-    getDirections: 'Itinéraire',
-    nearMe: 'Près de moi',
     locating: 'Localisation...',
     sortedByDistance: 'Triés par distance',
     locationDenied: 'Localisation refusée. Autorisez l\'accès à votre position pour voir les clubs les plus proches.',
@@ -608,8 +576,6 @@ const translations = {
     followUs: 'Follow Us',
     followUsText: 'Stay connected with the Sport Club Explorer community on Instagram to discover new clubs and share your running experiences!',
     visitInstagram: 'Visit our Instagram',
-    getDirections: 'Directions',
-    nearMe: 'Near me',
     locating: 'Locating...',
     sortedByDistance: 'Sorted by distance',
     locationDenied: 'Location access denied. Allow location access to see the closest clubs.',
@@ -632,9 +598,16 @@ interface RunClubMapProps {
   language: Language;
   showInfoPopup: boolean;
   setShowInfoPopup: (show: boolean) => void;
+  /** false quand la carte est masquée en CSS (ex: onglet "Trouve ton club" actif) —
+   * sert à redonner à Leaflet ses bonnes dimensions au retour. */
+  active?: boolean;
+  /** Position de l'utilisateur, demandée automatiquement à l'arrivée sur le site
+   * (voir useGeolocation dans App.tsx) — null tant qu'elle n'est pas connue. */
+  userLocation: UserLocation | null;
+  geoStatus: GeoStatus;
 }
 
-export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }: RunClubMapProps) {
+export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, active = true, userLocation, geoStatus }: RunClubMapProps) {
   const [clubs, setClubs] = useState<RunClubFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
@@ -645,44 +618,8 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'granted' | 'denied' | 'error'>('idle');
   const mapRef = useRef<any>(null);
   const { cacheStatus, updateCacheStatus } = useCache();
-
-  // Demande la position de l'utilisateur, centre la carte dessus et trie les clubs par distance
-  const handleLocateMe = useCallback(() => {
-    if (geoStatus === 'loading') return;
-
-    if (userLocation) {
-      // Bouton "actif" : un second clic désactive le tri par distance
-      setUserLocation(null);
-      setGeoStatus('idle');
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      setGeoStatus('error');
-      return;
-    }
-
-    setGeoStatus('loading');
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-        setGeoStatus('granted');
-        setShowOverlay(true);
-        if (mapRef.current) {
-          mapRef.current.setView([latitude, longitude], 12, { animate: true, duration: 1 });
-        }
-      },
-      (error) => {
-        setGeoStatus(error.code === error.PERMISSION_DENIED ? 'denied' : 'error');
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-    );
-  }, [geoStatus, userLocation]);
 
   // Fonction pour obtenir les traductions
   const t = translations[language];
@@ -743,6 +680,17 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Quand la carte redevient visible après avoir été masquée en CSS (display: none),
+  // Leaflet garde des dimensions internes obsolètes tant qu'on ne lui redit pas de
+  // les recalculer.
+  useEffect(() => {
+    if (!active || !mapRef.current) return undefined;
+    const timeoutId = window.setTimeout(() => {
+      mapRef.current?.invalidateSize();
+    }, 50);
+    return () => window.clearTimeout(timeoutId);
+  }, [active]);
 
   // Fonction pour obtenir le texte traduit d'un club
   const getClubText = (club: RunClubFeature, field: 'name' | 'frequency' | 'description'): string => {
@@ -1324,9 +1272,6 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
     return haversineDistanceKm(userLocation.lat, userLocation.lng, lat, lng);
   };
 
-  const formatDistanceKm = (distanceKm: number): string =>
-    distanceKm < 1 ? `${Math.round(distanceKm * 1000)} m` : `${distanceKm.toFixed(1)} km`;
-
   // Si la position de l'utilisateur est connue, les clubs les plus proches sont affichés en premier
   const sortedFilteredClubs = userLocation
     ? [...filteredClubs].sort((a, b) => (getClubDistanceKm(a) ?? Infinity) - (getClubDistanceKm(b) ?? Infinity))
@@ -1585,16 +1530,18 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                   </div>
                 </div>
 
-                {/* Géolocalisation : tri des clubs par distance */}
-                <button
-                  onClick={handleLocateMe}
-                  disabled={geoStatus === 'loading'}
-                  className={`mb-2.5 flex w-full items-center justify-center gap-1.5 rounded-sm border px-2.5 py-2 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-70 ${
-                    userLocation ? 'border-accent bg-accent text-ink' : 'border-white/20 bg-white/10 text-paper'
-                  }`}
-                >
-                  {geoStatus === 'loading' ? `📍 ${t.locating}` : userLocation ? `✕ ${t.sortedByDistance}` : `📍 ${t.nearMe}`}
-                </button>
+                {/* Géolocalisation : demandée automatiquement à l'arrivée sur le site,
+                    ce statut se contente d'informer (aucune action requise). */}
+                {geoStatus === 'loading' && (
+                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-concrete">
+                    📍 {t.locating}
+                  </p>
+                )}
+                {geoStatus === 'granted' && userLocation && (
+                  <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-accent">
+                    📍 {t.sortedByDistance}
+                  </p>
+                )}
                 {(geoStatus === 'denied' || geoStatus === 'error') && (
                   <p className="mb-2.5 text-[11px] leading-snug text-accent">
                     {geoStatus === 'denied' ? t.locationDenied : t.locationError}
@@ -1684,7 +1631,6 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                 ) : (
                   sortedFilteredClubs.map((club, idx) => {
                     const distanceKm = getClubDistanceKm(club);
-                    const [clubLng, clubLat] = club.geometry.coordinates;
                     return (
                     <div
                       key={idx}
@@ -1734,28 +1680,17 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                         <span className="text-xs font-medium uppercase tracking-wide text-concrete">
                           📍 {t.clickToLocate}
                         </span>
-                        <div className="flex items-center gap-2">
+                        {club.properties.social?.website && (
                           <a
-                            href={buildDirectionsUrl(clubLat, clubLng, userLocation)}
+                            href={club.properties.social.website}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="rounded-sm bg-ink px-2 py-1 text-xs font-bold uppercase tracking-wide text-paper no-underline"
+                            className="rounded-sm border border-accent px-2 py-1 text-xs font-bold uppercase tracking-wide text-accent no-underline"
                           >
-                            🧭 {t.getDirections}
+                            🔗 {t.site}
                           </a>
-                          {club.properties.social?.website && (
-                            <a
-                              href={club.properties.social.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="rounded-sm border border-accent px-2 py-1 text-xs font-bold uppercase tracking-wide text-accent no-underline"
-                            >
-                              🔗 {t.site}
-                            </a>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
                     );
@@ -1795,16 +1730,18 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                   </div>
                 </div>
 
-                {/* Géolocalisation : tri des clubs par distance */}
-                <button
-                  onClick={handleLocateMe}
-                  disabled={geoStatus === 'loading'}
-                  className={`mb-3 flex w-full items-center justify-center gap-1.5 rounded-sm border px-3 py-2 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-70 ${
-                    userLocation ? 'border-accent bg-accent text-ink' : 'border-white/20 bg-white/10 text-paper hover:bg-white/15'
-                  }`}
-                >
-                  {geoStatus === 'loading' ? `📍 ${t.locating}` : userLocation ? `✕ ${t.sortedByDistance}` : `📍 ${t.nearMe}`}
-                </button>
+                {/* Géolocalisation : demandée automatiquement à l'arrivée sur le site,
+                    ce statut se contente d'informer (aucune action requise). */}
+                {geoStatus === 'loading' && (
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-concrete">
+                    📍 {t.locating}
+                  </p>
+                )}
+                {geoStatus === 'granted' && userLocation && (
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-wide text-accent">
+                    📍 {t.sortedByDistance}
+                  </p>
+                )}
                 {(geoStatus === 'denied' || geoStatus === 'error') && (
                   <p className="mb-3 text-[11px] leading-snug text-accent">
                     {geoStatus === 'denied' ? t.locationDenied : t.locationError}
@@ -1898,7 +1835,6 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                 ) : (
                   sortedFilteredClubs.map((club, idx) => {
                     const distanceKm = getClubDistanceKm(club);
-                    const [clubLng, clubLat] = club.geometry.coordinates;
                     return (
                     <div
                       key={idx}
@@ -1948,28 +1884,17 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup }
                         <span className="text-xs uppercase tracking-wide text-concrete">
                           📍 {t.clickToLocate}
                         </span>
-                        <div className="flex items-center gap-3">
+                        {club.properties.social?.website && (
                           <a
-                            href={buildDirectionsUrl(clubLat, clubLng, userLocation)}
+                            href={club.properties.social.website}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-xs font-bold uppercase tracking-wide text-paper no-underline"
+                            className="text-xs font-bold uppercase tracking-wide text-accent no-underline"
                           >
-                            🧭 {t.getDirections}
+                            🔗 {t.site}
                           </a>
-                          {club.properties.social?.website && (
-                            <a
-                              href={club.properties.social.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-xs font-bold uppercase tracking-wide text-accent no-underline"
-                            >
-                              🔗 {t.site}
-                            </a>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
                     );
