@@ -13,6 +13,7 @@ Disallow: /src/
 Disallow: /*.json$
 Disallow: /api/
 Disallow: /scripts/
+Disallow: /admin
 
 # Autoriser les ressources importantes
 Allow: /favicon.svg

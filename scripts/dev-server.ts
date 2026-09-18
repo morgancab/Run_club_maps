@@ -4,6 +4,7 @@ import cors from 'cors';
 import { fetchRunClubs } from '../lib/fetchClubs.js';
 import geocodeHandler from '../api/geocode/index.js';
 import submitClubHandler from '../api/submit-club/index.js';
+import adminClubsHandler from '../api/admin/clubs/index.js';
 
 const app = express();
 const PORT = 3001;
@@ -45,6 +46,10 @@ app.get('/api/geocode', (req, res) => {
 app.post('/api/submit-club', (req, res) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   submitClubHandler(req as any, res as any);
+});
+app.all('/api/admin/clubs', (req, res) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminClubsHandler(req as any, res as any);
 });
 
 app.listen(PORT, () => {
