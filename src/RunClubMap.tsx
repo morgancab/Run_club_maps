@@ -13,6 +13,8 @@ import { haversineDistanceKm, formatDistanceKm, type UserLocation } from './util
 import type { GeoStatus } from './hooks/useGeolocation';
 import SocialIcon from './components/SocialIcon';
 import { getSocialIconMarkup } from './utils/socialIcons';
+import { translations, type Language } from './i18n';
+export type { Language };
 
 export interface RunClubFeature {
   type: 'Feature';
@@ -475,126 +477,6 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId, userLocation 
 
   return null;
 }
-
-// Système de traduction
-const translations = {
-  fr: {
-    title: 'Sport Club Explorer',
-    subtitle: '🗺️ Carte Interactive',
-    clubsList: 'Liste des clubs',
-    loading: 'Chargement de la carte...',
-    city: 'Ville',
-    day: 'Jour',
-    all: 'Tous',
-    allCities: 'Toutes',
-    clear: 'Effacer',
-    search: 'Rechercher un club...',
-    addClub: 'Suggérer un club',
-    addClubTooltip: 'Vous connaissez un club qui devrait apparaître sur la carte ?',
-    info: 'En savoir plus',
-    aboutProject: 'À propos du projet',
-    projectDescription: 'Sport Club Explorer est une carte interactive collaborative qui référence les clubs de running en France.',
-    projectGoal: 'Notre objectif est de créer une communauté où chacun peut découvrir et partager des clubs de course près de chez soi.',
-    howItWorks: 'Comment ça marche ?',
-    step1: '🗺️ Explorez la carte pour découvrir les clubs',
-    step2: '🔍 Utilisez les filtres pour affiner votre recherche',
-    step3: '📍 Cliquez sur un marqueur pour voir les détails',
-    step4: '➕ Suggérez de nouveaux clubs via notre formulaire',
-    contribute: 'Contribuer au projet',
-    contributeText: 'Vous connaissez un club qui n\'est pas encore référencé ? Aidez-nous à enrichir la carte !',
-    suggestClub: 'Suggérer un club',
-    close: 'Fermer',
-    noClubsFound: 'Aucun club trouvé',
-    tryModifyFilters: 'Essayez de modifier vos filtres ou votre recherche',
-    clickToLocate: 'Cliquer pour localiser',
-    site: 'Site',
-    description: 'Description',
-    frequency: 'Fréquence',
-    socialNetworks: 'Réseaux sociaux',
-    visitSite: 'Visiter le site',
-    disclaimer: 'Avertissement Important',
-    disclaimerText: 'Les données affichées sur cette carte sont fournies à titre indicatif et peuvent ne pas être à jour. Nous vous recommandons de vérifier directement auprès des clubs (horaires, lieux, contacts) avant de vous déplacer.',
-    contactUs: 'Si vous constatez une erreur ou souhaitez proposer une correction, n\'hésitez pas à nous contacter et à contribuer à l\'amélioration du projet.',
-    backToMap: 'Retour à la carte',
-    clearFilters: 'Effacer les filtres',
-    findYourClub: 'Trouve ton club',
-    followUs: 'Suivez-nous',
-    followUsText: 'Restez connecté avec la communauté Sport Club Explorer sur Instagram pour découvrir de nouveaux clubs et partager vos expériences de course !',
-    visitInstagram: 'Visiter notre Instagram',
-    locating: 'Localisation...',
-    sortedByDistance: 'Triés par distance',
-    locationDenied: 'Localisation refusée. Autorisez l\'accès à votre position pour voir les clubs les plus proches.',
-    locationError: 'Impossible de récupérer votre position.',
-    days: {
-      monday: 'Lundi',
-      tuesday: 'Mardi', 
-      wednesday: 'Mercredi',
-      thursday: 'Jeudi',
-      friday: 'Vendredi',
-      saturday: 'Samedi',
-      sunday: 'Dimanche'
-    }
-  },
-  en: {
-    title: 'Sport Club Explorer',
-    subtitle: '🗺️ Interactive Maps',
-    clubsList: 'Clubs list',
-    loading: 'Loading map...',
-    city: 'City',
-    day: 'Day',
-    all: 'All',
-    allCities: 'All',
-    clear: 'Clear',
-    search: 'Search for a club...',
-    addClub: 'Suggest a club',
-    addClubTooltip: 'Know a club that should appear on the map?',
-    info: 'Learn more',
-    aboutProject: 'About the project',
-    projectDescription: 'Sport Club Explorer is a collaborative interactive map that references running clubs in France.',
-    projectGoal: 'Our goal is to create a community where everyone can discover and share running clubs near them.',
-    howItWorks: 'How it works?',
-    step1: '🗺️ Explore the map to discover clubs',
-    step2: '🔍 Use filters to refine your search',
-    step3: '📍 Click on a marker to see details',
-    step4: '➕ Suggest new clubs via our form',
-    contribute: 'Contribute to the project',
-    contributeText: 'Know a club that isn\'t listed yet? Help us enrich the map!',
-    suggestClub: 'Suggest a club',
-    close: 'Close',
-    noClubsFound: 'No clubs found',
-    tryModifyFilters: 'Try modifying your filters or search',
-    clickToLocate: 'Click to locate',
-    site: 'Website',
-    description: 'Description',
-    frequency: 'Frequency',
-    socialNetworks: 'Social Networks',
-    visitSite: 'Visit Site',
-    disclaimer: 'Important Disclaimer',
-    disclaimerText: 'The data displayed on this map is provided for informational purposes only and may not be up to date. We recommend verifying directly with the clubs (schedules, locations, contacts) before visiting.',
-    contactUs: 'If you notice an error or would like to suggest a correction, please do not hesitate to contact us and contribute to improving the project.',
-    backToMap: 'Back to Map',
-    clearFilters: 'Clear Filters',
-    findYourClub: 'Find Your Club',
-    followUs: 'Follow Us',
-    followUsText: 'Stay connected with the Sport Club Explorer community on Instagram to discover new clubs and share your running experiences!',
-    visitInstagram: 'Visit our Instagram',
-    locating: 'Locating...',
-    sortedByDistance: 'Sorted by distance',
-    locationDenied: 'Location access denied. Allow location access to see the closest clubs.',
-    locationError: 'Unable to get your location.',
-    days: {
-      monday: 'Monday',
-      tuesday: 'Tuesday',
-      wednesday: 'Wednesday',
-      thursday: 'Thursday',
-      friday: 'Friday',
-      saturday: 'Saturday',
-      sunday: 'Sunday'
-    }
-  }
-};
-
-export type Language = 'fr' | 'en';
 
 interface RunClubMapProps {
   language: Language;

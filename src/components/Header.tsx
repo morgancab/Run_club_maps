@@ -1,4 +1,5 @@
 import type { Language } from '../RunClubMap'
+import { translations } from '../i18n'
 
 interface HeaderProps {
   language: Language
@@ -21,6 +22,7 @@ export default function Header({
   onGoCarte,
   onGoSwipe,
 }: HeaderProps) {
+  const t = translations[language]
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-3 border-b border-ink-line bg-paper/90 px-4 backdrop-blur-md sm:px-6">
       <button
@@ -31,7 +33,7 @@ export default function Header({
         Run Club <span className="text-accent">Maps</span>
       </button>
 
-      <nav className="flex items-center gap-3 text-sm sm:gap-5" aria-label="Navigation principale">
+      <nav className="flex items-center gap-3 text-sm sm:gap-5" aria-label={t.navAriaLabel}>
         {/* Onglet dédié pour le mode découverte façon Tinder */}
         <button
           type="button"
@@ -44,7 +46,7 @@ export default function Header({
           }`}
         >
           <span aria-hidden="true">🔥</span>
-          <span className="hidden sm:inline"> Trouve ton club</span>
+          <span className="hidden sm:inline"> {t.findYourClub}</span>
         </button>
 
         <button
@@ -52,21 +54,21 @@ export default function Header({
           onClick={onGoCarte}
           className="hidden font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-ink sm:inline-block"
         >
-          Carte
+          {t.navMap}
         </button>
         <button
           type="button"
           onClick={onOpenAbout}
           className="hidden font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-ink sm:inline-block"
         >
-          À propos
+          {t.navAbout}
         </button>
 
         {/* Sélecteur de langue, unique pour tout le site */}
         <div
           className="flex shrink-0 overflow-hidden rounded-sm border border-ink-line"
           role="group"
-          aria-label={language === 'fr' ? 'Sélection de langue' : 'Language selection'}
+          aria-label={t.langSelectorLabel}
         >
           <button
             type="button"
@@ -93,7 +95,7 @@ export default function Header({
           onClick={onOpenSuggest}
           className="hidden shrink-0 whitespace-nowrap rounded-sm bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink shadow-[0_2px_10px_rgba(255,85,0,0.3)] transition-transform hover:-translate-y-0.5 sm:inline-block sm:px-5 sm:text-sm"
         >
-          Proposer un club
+          {t.navSuggest}
         </button>
       </nav>
     </header>

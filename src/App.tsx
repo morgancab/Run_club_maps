@@ -53,7 +53,7 @@ function App() {
           ne pas perdre l'état de la carte Leaflet ni la position de scroll quand on
           va et vient depuis l'onglet "Trouve ton club". */}
       <div className={view === 'site' ? 'contents' : 'hidden'}>
-        <Hero onGoSwipe={goToSwipe} onOpenSuggest={() => setShowSuggestForm(true)} />
+        <Hero language={language} onGoSwipe={goToSwipe} onOpenSuggest={() => setShowSuggestForm(true)} />
         <section id="carte" className="scroll-mt-16 bg-paper-soft px-4 pb-10 pt-2 sm:px-6 sm:pt-10 lg:px-16">
           <div className="relative isolate mx-auto h-[80vh] max-h-[880px] min-h-[520px] w-full max-w-6xl overflow-hidden rounded-xl border border-ink-line shadow-[0_16px_40px_rgba(18,21,26,0.1)]">
             <RunClubMap
@@ -67,12 +67,18 @@ function App() {
             />
           </div>
         </section>
-        <Footer onOpenSuggest={() => setShowSuggestForm(true)} />
+        <Footer language={language} onOpenSuggest={() => setShowSuggestForm(true)} />
       </div>
 
-      {view === 'swipe' && <ClubSwiper onBack={() => goToSite()} userLocation={userLocation} />}
+      {view === 'swipe' && (
+        <ClubSwiper language={language} onBack={() => goToSite()} userLocation={userLocation} />
+      )}
 
-      <SuggestClubModal open={showSuggestForm} onClose={() => setShowSuggestForm(false)} />
+      <SuggestClubModal
+        language={language}
+        open={showSuggestForm}
+        onClose={() => setShowSuggestForm(false)}
+      />
     </div>
   )
 }

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import type { Language } from '../RunClubMap';
+import { translations } from '../i18n';
 
 interface AddressSuggestion {
   displayName: string;
@@ -9,6 +11,7 @@ interface AddressSuggestion {
 }
 
 interface SuggestClubModalProps {
+  language: Language;
   open: boolean;
   onClose: () => void;
 }
@@ -24,7 +27,8 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-export default function SuggestClubModal({ open, onClose }: SuggestClubModalProps) {
+export default function SuggestClubModal({ language, open, onClose }: SuggestClubModalProps) {
+  const t = translations[language];
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [frequency, setFrequency] = useState('');
@@ -121,12 +125,12 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
     if (!file) return;
 
     if (!['image/png', 'image/jpeg'].includes(file.type)) {
-      setImageError('Le logo doit être un fichier PNG ou JPEG.');
+      setImageError(t.suggestModalLogoErrorType);
       setImageDataUrl(null);
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setImageError(`Le fichier doit faire moins de ${MAX_IMAGE_BYTES / (1024 * 1024)} Mo.`);
+      setImageError(`${t.suggestModalLogoErrorSize} ${MAX_IMAGE_BYTES / (1024 * 1024)} Mo.`);
       setImageDataUrl(null);
       return;
     }
@@ -168,12 +172,12 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Erreur inconnue');
+      if (!response.ok) throw new Error(data.error || t.suggestModalUnknownError);
 
       setStatus('success');
     } catch (error) {
       setStatus('error');
-      setErrorMessage(error instanceof Error ? error.message : 'Erreur inconnue');
+      setErrorMessage(error instanceof Error ? error.message : t.suggestModalUnknownError);
     }
   };
 
@@ -189,12 +193,12 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-ink-line bg-paper shadow-[0_20px_60px_rgba(18,21,26,0.3)]">
         <div className="flex items-center justify-between border-b border-ink-line px-5 py-4">
           <h2 className="m-0 font-display text-lg font-bold uppercase tracking-tight text-ink">
-            Proposer un <span className="text-accent">club</span>
+            {t.suggestModalTitle} <span className="text-accent">club</span>
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t.suggestModalClose}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-line text-ink hover:bg-paper-soft"
           >
             ✕
@@ -205,17 +209,17 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
           <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
             <span className="text-4xl">🎉</span>
             <p className="m-0 font-display text-lg font-bold uppercase tracking-tight text-ink">
-              Merci !
+              {t.suggestModalThanksTitle}
             </p>
             <p className="m-0 max-w-sm text-sm leading-relaxed text-concrete">
-              Votre club a bien été envoyé. Il sera visible sur la carte après une rapide vérification.
+              {t.suggestModalThanksText}
             </p>
             <button
               type="button"
               onClick={onClose}
               className="mt-2 rounded-sm bg-accent px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-ink transition-transform hover:-translate-y-0.5"
             >
-              Fermer
+              {t.suggestModalClose}
             </button>
           </div>
         ) : (
@@ -233,7 +237,7 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
 
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">
-                Nom du club *
+                {t.suggestModalNameLabel}
               </label>
               <input
                 type="text"
@@ -246,23 +250,23 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
 
             <div className="relative">
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">
-                Adresse du point de rendez-vous *
+                {t.suggestModalAddressLabel}
               </label>
               <input
                 type="text"
                 required
-                placeholder="Ex : Place de la République, Paris"
+                placeholder={t.suggestModalAddressPlaceholder}
                 value={addressQuery}
                 onChange={(e) => handleAddressChange(e.target.value)}
                 className="w-full rounded-sm border border-ink-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               />
               {selectedCoords && (
                 <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-accent">
-                  ✓ Adresse localisée
+                  {t.suggestModalAddressLocated}
                 </p>
               )}
               {!selectedCoords && addressLoading && (
-                <p className="mt-1 text-[11px] text-concrete">Recherche...</p>
+                <p className="mt-1 text-[11px] text-concrete">{t.suggestModalAddressSearching}</p>
               )}
               {addressSuggestions.length > 0 && (
                 <ul className="absolute z-10 mt-1 w-full rounded-sm border border-ink-line bg-paper shadow-lg">
@@ -283,33 +287,33 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
 
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">
-                Ville (pour les filtres du site)
+                {t.suggestModalCityLabel}
               </label>
               <input
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Auto-remplie depuis l'adresse, modifiable"
+                placeholder={t.suggestModalCityPlaceholder}
                 className="w-full rounded-sm border border-ink-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               />
             </div>
 
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">
-                Fréquence des sorties
+                {t.suggestModalFrequencyLabel}
               </label>
               <input
                 type="text"
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
-                placeholder="Ex : Hebdomadaire - Mardi 19h"
+                placeholder={t.suggestModalFrequencyPlaceholder}
                 className="w-full rounded-sm border border-ink-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               />
             </div>
 
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">
-                Description
+                {t.suggestModalDescriptionLabel}
               </label>
               <textarea
                 value={description}
@@ -321,7 +325,7 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
 
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">
-                Logo du club (PNG ou JPEG) *
+                {t.suggestModalLogoLabel}
               </label>
               <input
                 type="file"
@@ -334,7 +338,7 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
               {imageDataUrl && (
                 <img
                   src={imageDataUrl}
-                  alt="Aperçu du logo"
+                  alt={t.suggestModalLogoPreviewAlt}
                   className="mt-2 h-16 w-16 rounded-full border border-ink-line object-cover"
                 />
               )}
@@ -350,7 +354,7 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
                 <input type="url" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="https://facebook.com/..." className="w-full rounded-sm border border-ink-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">Site web</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">{t.suggestModalWebsiteLabel}</label>
                 <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://..." className="w-full rounded-sm border border-ink-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent" />
               </div>
               <div>
@@ -378,10 +382,10 @@ export default function SuggestClubModal({ open, onClose }: SuggestClubModalProp
               disabled={!canSubmit}
               className="mt-1 rounded-sm bg-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-ink transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {status === 'submitting' ? 'Envoi en cours...' : 'Envoyer ma proposition'}
+              {status === 'submitting' ? t.suggestModalSubmitting : t.suggestModalSubmit}
             </button>
             <p className="m-0 text-center text-[11px] text-concrete">
-              Votre club sera vérifié avant d'apparaître sur la carte publique.
+              {t.suggestModalFooterNote}
             </p>
           </form>
         )}

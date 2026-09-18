@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRunClubs } from '../hooks/useRunClubs';
-import type { RunClubFeature } from '../RunClubMap';
+import type { RunClubFeature, Language } from '../RunClubMap';
 import { haversineDistanceKm, formatDistanceKm, type UserLocation } from '../utils/geo';
 import SocialIcon from './SocialIcon';
+import { translations } from '../i18n';
 
 const LIKED_STORAGE_KEY = 'rcm-liked-clubs';
 const SWIPE_THRESHOLD = 90;
@@ -71,6 +72,7 @@ function clubDistanceKm(club: RunClubFeature, userLocation: UserLocation | null)
 type ExitDirection = 'like' | 'pass' | null;
 
 interface ClubSwiperProps {
+  language: Language;
   onBack: () => void;
   /** Position de l'utilisateur (demandée automatiquement à l'arrivée sur le site) —
    * quand elle est connue, la pile de clubs est triée du plus proche au plus loin
@@ -78,7 +80,8 @@ interface ClubSwiperProps {
   userLocation: UserLocation | null;
 }
 
-export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
+export default function ClubSwiper({ language, onBack, userLocation }: ClubSwiperProps) {
+  const t = translations[language];
   const { clubs, loading } = useRunClubs();
   const [deckVersion, setDeckVersion] = useState(0);
   const [index, setIndex] = useState(0);
@@ -262,7 +265,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
         onClick={onBack}
         className="mx-auto flex max-w-4xl items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-accent"
       >
-        ← Retour au site
+        {t.swipeBack}
       </button>
 
       {/* Deux colonnes à partir de lg : la découverte (cartes) reste compacte
@@ -274,21 +277,21 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
         <div className="w-full max-w-xs sm:max-w-sm">
           <div className="text-center">
             <span className="inline-block rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-accent">
-              🔥 Découverte
+              {t.swipeBadge}
             </span>
             <h2 className="mt-2 font-display text-xl font-bold uppercase tracking-tight text-ink sm:text-2xl">
-              Trouve ton <span className="text-accent">club</span> 🔥
+              {t.swipeHeadingPrefix} <span className="text-accent">club</span> 🔥
             </h2>
             {!loading && !isDone && current && (
               <p className="mx-auto mt-1.5 text-xs leading-snug text-concrete sm:text-sm">
-                ❤️ <span className="font-bold text-accent">à droite</span> pour aimer, ✕{' '}
-                <span className="font-bold text-red-400">à gauche</span> pour passer.
+                ❤️ <span className="font-bold text-accent">{t.swipeHintRight}</span> {t.swipeHintLike}, ✕{' '}
+                <span className="font-bold text-red-400">{t.swipeHintLeft}</span> {t.swipeHintPass}.
               </p>
             )}
             {!loading && deck.length > 0 && !isDone && (
               <div className="mt-1 flex items-center justify-center gap-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-concrete/70">
-                  Club {Math.min(index + 1, deck.length)} / {deck.length}
+                  {t.swipeCounterPrefix} {Math.min(index + 1, deck.length)} / {deck.length}
                 </p>
                 {canUndo && (
                   <button
@@ -296,7 +299,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                     onClick={undoLastSwipe}
                     className="text-[11px] font-bold uppercase tracking-wide text-accent underline-offset-2 hover:underline"
                   >
-                    ↩️ Annuler
+                    {t.swipeUndo}
                   </button>
                 )}
               </div>
@@ -308,13 +311,13 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
           <div className="relative mx-auto mt-4 h-[min(42vh,360px)] sm:h-[400px]">
             {loading && (
               <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-paper text-sm text-concrete shadow-sm">
-                Chargement des clubs…
+                {t.swipeLoading}
               </div>
             )}
 
             {!loading && deck.length === 0 && (
               <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-paper px-6 text-center text-sm text-concrete shadow-sm">
-                Impossible de charger les clubs pour le moment.
+                {t.swipeLoadError}
               </div>
             )}
 
@@ -362,8 +365,8 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                     {/* Repères fixes qui rappellent, dès l'arrivée sur la carte (sans avoir
                         besoin de commencer à glisser), quel côté correspond à quelle action. */}
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white/80">
-                      <span>✕ Passer</span>
-                      <span>Aimer ❤️</span>
+                      <span>{t.swipeImageSkip}</span>
+                      <span>{t.swipeImageLike}</span>
                     </div>
 
                     {/* Timbres LIKE (cœur) / PASS (croix), qui apparaissent en glissant */}
@@ -423,7 +426,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                       <div className="mt-auto flex flex-wrap gap-1.5 pt-1.5">
                         {current.properties.social.website && (
                           <a href={current.properties.social.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-sm border border-accent px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent no-underline">
-                            <SocialIcon network="website" className="h-2.5 w-2.5" /> Site
+                            <SocialIcon network="website" className="h-2.5 w-2.5" /> {t.site}
                           </a>
                         )}
                         {current.properties.social.instagram && (
@@ -477,8 +480,8 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                 <span className="text-3xl">🏁</span>
                 <p className="m-0 font-display text-lg font-bold uppercase tracking-tight text-ink">
                   {likedClubs.length > 0
-                    ? `Tu as aimé ${likedClubs.length} club${likedClubs.length > 1 ? 's' : ''} !`
-                    : "Aucun coup de cœur cette fois"}
+                    ? `${t.swipeYouLiked} ${likedClubs.length} club${likedClubs.length > 1 ? 's' : ''}${language === 'fr' ? ' !' : '!'}`
+                    : t.swipeNoFavorites}
                 </p>
                 <div className="flex items-center gap-4">
                   <button
@@ -486,7 +489,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                     onClick={restart}
                     className="rounded-sm bg-accent px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-ink transition-transform hover:-translate-y-0.5"
                   >
-                    🔄 Rejouer
+                    {t.swipeReplay}
                   </button>
                   {canUndo && (
                     <button
@@ -494,7 +497,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                       onClick={undoLastSwipe}
                       className="text-[11px] font-bold uppercase tracking-wide text-concrete hover:text-accent"
                     >
-                      ↩️ Revoir le dernier
+                      {t.swipeReviewLast}
                     </button>
                   )}
                 </div>
@@ -510,24 +513,24 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
               <div className="flex flex-col items-center gap-1">
                 <button
                   type="button"
-                  aria-label="Passer ce club"
+                  aria-label={t.swipePassAriaCurrent}
                   onClick={() => commitSwipe('pass')}
                   className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-ink-line bg-paper text-xl text-ink shadow-sm transition-transform hover:-translate-y-0.5 hover:border-ink"
                 >
                   ✕
                 </button>
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-concrete">Passer</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-concrete">{t.swipePassCaption}</span>
               </div>
               <div className="flex flex-col items-center gap-1">
                 <button
                   type="button"
-                  aria-label="Aimer ce club"
+                  aria-label={t.swipeLikeAriaCurrent}
                   onClick={() => commitSwipe('like')}
                   className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-accent bg-accent text-xl text-ink transition-transform hover:-translate-y-0.5"
                 >
                   ❤️
                 </button>
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-accent">J'aime</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-accent">{t.swipeLikeCaption}</span>
               </div>
             </div>
           )}
@@ -538,14 +541,14 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
           <div className="w-full max-w-xs sm:max-w-sm lg:w-72 lg:shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wide text-concrete">
-                Tes clubs likés ({likedClubs.length})
+                {t.swipeLikedClubsTitle} ({likedClubs.length})
               </h3>
               <button
                 type="button"
                 onClick={() => setLikedKeys([])}
                 className="text-[11px] font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-accent"
               >
-                Tout effacer
+                {t.swipeClearAll}
               </button>
             </div>
 
@@ -560,7 +563,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                   >
                     <button
                       type="button"
-                      aria-label={`Retirer ${club.properties.name} des favoris`}
+                      aria-label={`${t.swipeRemoveFromFavoritesAria} ${club.properties.name} ${t.swipeFromFavoritesSuffix}`}
                       onClick={() => removeLikedClub(key)}
                       className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] text-concrete transition-colors hover:bg-red-400 hover:text-white"
                     >
@@ -586,8 +589,8 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                             href={club.properties.social.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title="Site web"
-                            aria-label={`Site web de ${club.properties.name}`}
+                            title={t.site}
+                            aria-label={`${t.site} — ${club.properties.name}`}
                             className="flex h-5 w-5 items-center justify-center rounded-full border border-accent p-1 text-accent no-underline"
                           >
                             <SocialIcon network="website" />
@@ -599,7 +602,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             title="Instagram"
-                            aria-label={`Instagram de ${club.properties.name}`}
+                            aria-label={`Instagram — ${club.properties.name}`}
                             className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
                           >
                             <SocialIcon network="instagram" />
@@ -611,7 +614,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             title="Facebook"
-                            aria-label={`Facebook de ${club.properties.name}`}
+                            aria-label={`Facebook — ${club.properties.name}`}
                             className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
                           >
                             <SocialIcon network="facebook" />
@@ -623,7 +626,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             title="Strava"
-                            aria-label={`Strava de ${club.properties.name}`}
+                            aria-label={`Strava — ${club.properties.name}`}
                             className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
                           >
                             <SocialIcon network="strava" />
@@ -635,7 +638,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             title="WhatsApp"
-                            aria-label={`WhatsApp de ${club.properties.name}`}
+                            aria-label={`WhatsApp — ${club.properties.name}`}
                             className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
                           >
                             <SocialIcon network="whatsapp" />
@@ -647,7 +650,7 @@ export default function ClubSwiper({ onBack, userLocation }: ClubSwiperProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             title="TikTok"
-                            aria-label={`TikTok de ${club.properties.name}`}
+                            aria-label={`TikTok — ${club.properties.name}`}
                             className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
                           >
                             <SocialIcon network="tiktok" />
