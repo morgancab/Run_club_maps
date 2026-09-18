@@ -1839,21 +1839,7 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
       {/* Popup d'information sur le projet */}
       {showInfoPopup && createPortal(
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 2000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-            boxSizing: 'border-box'
-          }}
+          className="fixed inset-0 z-[2000] flex items-center justify-center bg-ink/60 p-4 backdrop-blur-sm"
           onClick={(e) => {
             // Fermer le popup si on clique sur l'arrière-plan (pas sur le contenu)
             if (e.target === e.currentTarget) {
@@ -1861,300 +1847,118 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
             }
           }}
         >
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            maxWidth: isMobile ? '100%' : '500px',
-            width: '100%',
-            maxHeight: isMobile ? '90vh' : '80vh',
-            overflow: 'auto',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            position: 'relative'
-          }}>
-            {/* Header du popup amélioré */}
-            <div style={{
-              background: `
-                linear-gradient(135deg, rgba(255, 77, 28, 0.85) 0%, rgba(247, 147, 30, 0.85) 50%, rgba(255, 140, 66, 0.85) 100%),
-                url('/header-background.jpg') center/cover no-repeat
-              `,
-              color: 'white',
-              padding: '32px 24px',
-              borderRadius: '16px 16px 0 0',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <button
-                onClick={() => setShowInfoPopup(false)}
-                style={{
-                  position: 'absolute',
-                  top: '20px',
-                  right: '20px',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '12px',
-                  width: '36px',
-                  height: '36px',
-                  color: 'white',
-                  fontSize: '16px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.3s ease',
-                  fontWeight: 'bold',
-                  zIndex: 10
-                }}
-              >
-                ✕
-              </button>
-              
-              <div style={{
-                position: 'relative',
-                zIndex: 5,
-                marginBottom: '12px'
-              }}>
-                <h2 style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '28px',
-                  fontWeight: '800',
-                  letterSpacing: '-0.5px',
-                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-                }}>
-                  Sport Club Explorer
+          <div
+            className={`relative w-full overflow-auto rounded-xl border border-ink-line bg-paper shadow-[0_20px_60px_rgba(18,21,26,0.35)] ${
+              isMobile ? 'max-h-[90vh]' : 'max-h-[85vh] max-w-lg'
+            }`}
+          >
+            {/* En-tête */}
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-ink-line bg-paper px-6 py-5">
+              <div>
+                <h2 className="font-display text-xl font-bold uppercase leading-none tracking-tight text-ink sm:text-2xl">
+                  Run Club <span className="text-accent">Maps</span>
                 </h2>
-                <p style={{
-                  margin: '0',
-                  fontSize: '16px',
-                  opacity: 0.95,
-                  fontWeight: '500',
-                  letterSpacing: '0.3px'
-                }}>
+                <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-concrete">
                   {t.aboutProject}
                 </p>
               </div>
+              <button
+                onClick={() => setShowInfoPopup(false)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-ink-line text-ink transition-colors hover:border-accent hover:text-accent"
+                aria-label={t.close}
+              >
+                ✕
+              </button>
             </div>
 
-            {/* Contenu du popup */}
-            <div style={{ padding: '24px' }}>
+            {/* Contenu */}
+            <div className="space-y-6 px-6 py-6">
               {/* Description du projet */}
-              <div style={{ marginBottom: '24px' }}>
-                <p style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                  color: '#13161a'
-                }}>
+              <div className="space-y-2">
+                <p className="text-sm leading-relaxed text-ink sm:text-base">
                   {t.projectDescription}
                 </p>
-                <p style={{
-                  margin: '0',
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                  color: '#6b716f'
-                }}>
+                <p className="text-sm leading-relaxed text-concrete sm:text-base">
                   {t.projectGoal}
                 </p>
               </div>
 
+              {/* Avertissement sur la fiabilité des données : remonté juste après
+                  l'intro pour rester visible sans qu'il faille scroller. */}
+              <div className="rounded-md border border-amber-300 bg-amber-50 p-4">
+                <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-amber-800">
+                  <span aria-hidden="true">⚠️</span>
+                  {t.disclaimer}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-amber-900">
+                  {t.disclaimerText}
+                </p>
+                <p className="mt-2 text-sm font-medium leading-relaxed text-amber-900">
+                  {t.contactUs}
+                </p>
+              </div>
+
               {/* Comment ça marche */}
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{
-                  margin: '0 0 16px 0',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#FF5500'
-                }}>
+              <div>
+                <h3 className="font-display text-sm font-bold uppercase tracking-wide text-ink">
                   {t.howItWorks}
                 </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   {[t.step1, t.step2, t.step3, t.step4].map((step, index) => (
-                    <div key={index} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px',
-                      backgroundColor: '#f4f5f1',
-                      borderRadius: '8px',
-                      border: '1px solid #e6e7e1'
-                    }}>
-                      <div style={{
-                        width: '24px',
-                        height: '24px',
-                        backgroundColor: '#FF5500',
-                        color: 'white',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        flexShrink: 0
-                      }}>
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 rounded-md border border-ink-line bg-paper-soft p-3"
+                    >
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-ink">
                         {index + 1}
                       </div>
-                      <span style={{
-                        fontSize: '14px',
-                        color: '#13161a'
-                      }}>
-                        {step}
-                      </span>
+                      <span className="text-sm text-ink">{step}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Section contribution */}
-              <div style={{
-                backgroundColor: '#ffe4d8',
-                border: '2px solid #FF5500',
-                borderRadius: '12px',
-                padding: '20px',
-                marginTop: '8px'
-              }}>
-                <h3 style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#FF5500',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <span>🤝</span>
-                  {t.contribute}
-                </h3>
-                <p style={{
-                  margin: '0 0 16px 0',
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  color: '#7a3d1f'
-                }}>
-                  {t.contributeText}
-                </p>
-                <button
-                  onClick={() => {
-                    onOpenSuggest();
-                    setShowInfoPopup(false);
-                  }}
-                  style={{
-                    backgroundColor: '#FF5500',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '12px 20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  <span>➕</span>
-                  {t.suggestClub}
-                </button>
-              </div>
+              {/* Contribuer + suivre le projet, comme deux actions secondaires côte à côte */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="flex flex-col rounded-md border border-ink-line p-4">
+                  <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink">
+                    <span aria-hidden="true">🤝</span>
+                    {t.contribute}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-concrete">
+                    {t.contributeText}
+                  </p>
+                  <button
+                    onClick={() => {
+                      onOpenSuggest();
+                      setShowInfoPopup(false);
+                    }}
+                    className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-ink transition-transform hover:-translate-y-0.5"
+                  >
+                    <span aria-hidden="true">➕</span>
+                    {t.suggestClub}
+                  </button>
+                </div>
 
-              {/* Section Instagram */}
-              <div style={{
-                backgroundColor: '#fdf2f8',
-                border: '2px solid #E4405F',
-                borderRadius: '12px',
-                padding: '20px',
-                marginTop: '24px'
-              }}>
-                <h3 style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#E4405F',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  📸
-                  {t.followUs}
-                </h3>
-                <p style={{
-                  margin: '0 0 16px 0',
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  color: '#8a2f4a'
-                }}>
-                  {t.followUsText}
-                </p>
-                <button
-                  onClick={() => {
-                    window.open('https://www.instagram.com/sport_club_explorer/', '_blank');
-                    setShowInfoPopup(false);
-                  }}
-                  style={{
-                    backgroundColor: '#E4405F',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '12px 20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#d63384';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#E4405F';
-                  }}
-                >
-                  📸
-                  {t.visitInstagram}
-                </button>
-              </div>
-
-              {/* Section d'avertissement sur la fiabilité des données */}
-              <div style={{
-                backgroundColor: '#fff8e1',
-                border: '2px solid #ff9800',
-                borderRadius: '12px',
-                padding: '20px',
-                marginTop: '32px',
-                marginBottom: '24px'
-              }}>
-                <h3 style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#f57c00',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <span>⚠️</span>
-                  {t.disclaimer}
-                </h3>
-                <p style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  color: '#5d4e00'
-                }}>
-                  {t.disclaimerText}
-                </p>
-                <p style={{
-                  margin: '0',
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  color: '#5d4e00',
-                  fontWeight: '500'
-                }}>
-                  {t.contactUs}
-                </p>
+                <div className="flex flex-col rounded-md border border-ink-line p-4">
+                  <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink">
+                    <span aria-hidden="true">📸</span>
+                    {t.followUs}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-concrete">
+                    {t.followUsText}
+                  </p>
+                  <button
+                    onClick={() => {
+                      window.open('https://www.instagram.com/sport_club_explorer/', '_blank');
+                      setShowInfoPopup(false);
+                    }}
+                    className="mt-3 inline-flex items-center justify-center gap-2 rounded-md border border-ink-line px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-ink transition-colors hover:border-accent hover:text-accent"
+                  >
+                    <span aria-hidden="true">📸</span>
+                    {t.visitInstagram}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2200,172 +2004,6 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
           aria-label={t.clearFilters}
         >
           🗑️ {t.clearFilters}
-        </button>
-      )}
-
-      {/* Bouton Trouve ton club - Mobile uniquement et si aucun filtre actif */}
-      {isMobile && !showOverlay && !filterCity && !filterDay && !searchQuery.trim() && (
-        <div style={{
-          position: 'absolute',
-          bottom: '30px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          {/* Bouton Suggérer un club */}
-          <button
-            onClick={onOpenSuggest}
-            style={{
-              backgroundColor: '#CC4400',
-              color: 'white',
-              border: 'none',
-              borderRadius: '25px',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(247, 147, 30, 0.4)',
-              transition: 'all 0.2s ease',
-              fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-              minHeight: '44px',
-              minWidth: '140px'
-            }}
-            onTouchStart={(e) => {
-              e.currentTarget.style.backgroundColor = '#e6831a';
-              e.currentTarget.style.transform = 'scale(0.95)';
-            }}
-            onTouchEnd={(e) => {
-              e.currentTarget.style.backgroundColor = '#CC4400';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            aria-label={t.suggestClub}
-          >
-            ➕ {t.suggestClub}
-          </button>
-
-          {/* Bouton Trouve ton club */}
-          <button
-            onClick={() => setShowOverlay(true)}
-            style={{
-              backgroundColor: '#FF5500',
-              color: 'white',
-              border: 'none',
-              borderRadius: '25px',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(255, 77, 28, 0.4)',
-              transition: 'all 0.2s ease',
-              fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-              minHeight: '44px',
-              minWidth: '140px'
-            }}
-            onTouchStart={(e) => {
-              e.currentTarget.style.backgroundColor = '#c73a13';
-              e.currentTarget.style.transform = 'scale(0.95)';
-            }}
-            onTouchEnd={(e) => {
-              e.currentTarget.style.backgroundColor = '#FF5500';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            aria-label={t.findYourClub}
-          >
-            🔍 {t.findYourClub}
-          </button>
-        </div>
-      )}
-
-      {/* Bouton Trouve ton club - Desktop uniquement et si aucun filtre actif */}
-      {!isMobile && !filterCity && !filterDay && !searchQuery.trim() && (
-        <button
-          onClick={() => setShowOverlay(true)}
-          style={{
-            position: 'absolute',
-            bottom: '90px',
-            right: '20px',
-            zIndex: 1001,
-            backgroundColor: '#FF5500',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '14px 18px',
-            fontSize: '15px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            boxShadow: '0 6px 20px rgba(255, 77, 28, 0.4)',
-            transition: 'all 0.3s ease',
-            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            minWidth: '180px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#c73a13';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 77, 28, 0.5)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#FF5500';
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 77, 28, 0.4)';
-          }}
-          aria-label={t.findYourClub}
-        >
-          🔍 {t.findYourClub}
-        </button>
-      )}
-
-
-
-      {/* Bouton Suggérer un club - Desktop uniquement */}
-      {!isMobile && (
-        <button
-          onClick={onOpenSuggest}
-          style={{
-            position: 'absolute',
-            bottom: '35px',
-            right: '20px',
-            zIndex: 1001,
-            backgroundColor: '#CC4400',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '14px 18px',
-            fontSize: '15px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            boxShadow: '0 6px 20px rgba(247, 147, 30, 0.4)',
-            transition: 'all 0.3s ease',
-            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            minWidth: '180px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#e6831a';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 8px 25px rgba(247, 147, 30, 0.5)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#CC4400';
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(247, 147, 30, 0.4)';
-          }}
-          aria-label={t.suggestClub}
-        >
-          ➕ {t.suggestClub}
         </button>
       )}
 
