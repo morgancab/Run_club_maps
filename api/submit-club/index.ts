@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 
 // Le logo est envoyé en base64 dans le corps JSON plutôt qu'en
 // multipart/form-data : ça évite d'ajouter une dépendance de parsing
@@ -7,6 +8,9 @@ import { createClient } from '@supabase/supabase-js';
 const BUCKET = 'club-logos';
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024; // 3 Mo — reste sous la limite de taille de requête de Vercel une fois encodé en base64
 const ALLOWED_MIME_TYPES = new Set(['image/png', 'image/jpeg']);
+
+// Adresse prévenue à chaque nouvelle proposition de club.
+const NOTIFICATION_EMAIL = 'morgan2509@live.fr';
 
 interface SubmitClubBody {
   name?: string;
@@ -46,6 +50,77 @@ function normalizeUrl(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+interface NotificationDetails {
+  name: string;
+  city: string | null;
+  frequency: string | null;
+  description: string | null;
+  latitude: number;
+  longitude: number;
+  imageUrl: string;
+  socials: { label: string; url: string }[];
+  supabaseUrl: string;
+}
+
+// Envoie l'email d'alerte à chaque nouvelle proposition. Ne lève jamais :
+// une panne d'envoi ne doit pas transformer une soumission par ailleurs
+// réussie en erreur pour le visiteur qui a rempli le formulaire.
+async function sendSubmissionNotification(details: NotificationDetails): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn('⚠️ RESEND_API_KEY absente : email de notification non envoyé.');
+    return;
+  }
+
+  // Lien direct vers l'éditeur de table Supabase, pour changer le statut en
+  // un clic. Le "ref" du projet est le sous-domaine de SUPABASE_URL.
+  const projectRef = details.supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+  const editorUrl = projectRef
+    ? `https://supabase.com/dashboard/project/${projectRef}/editor`
+    : null;
+
+  const socialsHtml = details.socials.length
+    ? `<p><strong>Réseaux :</strong><br/>${details.socials
+        .map((s) => `${s.label} : <a href="${s.url}">${s.url}</a>`)
+        .join('<br/>')}</p>`
+    : '';
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px;">
+      <h2 style="margin-bottom: 4px;">Nouvelle proposition de club</h2>
+      <p style="color: #666; margin-top: 0;">En attente de validation</p>
+      <img src="${details.imageUrl}" alt="${details.name}" width="80" height="80" style="border-radius: 50%; object-fit: cover;" />
+      <h3>${details.name}</h3>
+      <p><strong>Ville :</strong> ${details.city || '—'}</p>
+      <p><strong>Fréquence :</strong> ${details.frequency || '—'}</p>
+      <p><strong>Description :</strong> ${details.description || '—'}</p>
+      <p><strong>Coordonnées :</strong> ${details.latitude}, ${details.longitude}
+        (<a href="https://www.google.com/maps?q=${details.latitude},${details.longitude}">voir sur Google Maps</a>)
+      </p>
+      ${socialsHtml}
+      <hr style="margin: 24px 0;" />
+      <p>
+        ${editorUrl ? `<a href="${editorUrl}">Ouvrir la table Supabase</a>` : 'Ouvrez la table "clubs" dans Supabase'}
+        pour passer son statut de "pending" à "approved" et le publier sur la carte.
+      </p>
+    </div>
+  `;
+
+  const resend = new Resend(apiKey);
+  const { error } = await resend.emails.send({
+    from: 'Run Club Maps <onboarding@resend.dev>',
+    to: NOTIFICATION_EMAIL,
+    subject: `Nouvelle proposition de club : ${details.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error('❌ Échec de l\'envoi de l\'email de notification:', error);
+  } else {
+    console.log(`📧 Email de notification envoyé à ${NOTIFICATION_EMAIL}`);
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -151,6 +226,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     console.log(`✅ Nouveau club proposé (en attente de validation) : ${name}`);
+
+    const socials = [
+      { label: 'Instagram', url: normalizeUrl(body.instagram) },
+      { label: 'Facebook', url: normalizeUrl(body.facebook) },
+      { label: 'Site web', url: normalizeUrl(body.website) },
+      { label: 'TikTok', url: normalizeUrl(body.tiktok) },
+      { label: 'WhatsApp', url: normalizeUrl(body.whatsapp) },
+      { label: 'Strava', url: normalizeUrl(body.strava) },
+    ].filter((s): s is { label: string; url: string } => s.url !== null);
+
+    // Ne bloque/casse jamais la réponse envoyée au visiteur : sa soumission a
+    // déjà réussi à ce stade, un souci d'email ne doit pas se répercuter.
+    try {
+      await sendSubmissionNotification({
+        name,
+        city: typeof body.city === 'string' ? body.city.trim() || null : null,
+        frequency: typeof body.frequency === 'string' ? body.frequency.trim() || null : null,
+        description: typeof body.description === 'string' ? body.description.trim() || null : null,
+        latitude,
+        longitude,
+        imageUrl: publicUrlData.publicUrl,
+        socials,
+        supabaseUrl,
+      });
+    } catch (emailError) {
+      console.error('❌ Erreur inattendue lors de l\'envoi de l\'email:', emailError);
+    }
+
     res.status(200).json({ ok: true });
   } catch (error) {
     console.error('❌ Erreur soumission club:', error);

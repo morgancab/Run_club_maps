@@ -6,7 +6,7 @@ App React/TypeScript (Vite) affichant des clubs de running sur une carte Leaflet
 - React 19 + TypeScript, Vite 6, Tailwind CSS 4
 - Leaflet / react-leaflet / leaflet.markercluster pour la carte
 - Backend: API Vercel serverless (`api/runclubs/index.ts`) + `lib/fetchClubs.ts` (lecture table Supabase `clubs` via `@supabase/supabase-js`)
-- `api/submit-club/index.ts` — formulaire public "Proposer un club" ([SuggestClubModal.tsx](src/components/SuggestClubModal.tsx)) : upload du logo vers Supabase Storage + insertion en base avec `status = 'pending'`. N'apparaît sur la carte publique qu'après passage manuel à `status = 'approved'` dans la table Supabase.
+- `api/submit-club/index.ts` — formulaire public "Proposer un club" ([SuggestClubModal.tsx](src/components/SuggestClubModal.tsx)) : upload du logo vers Supabase Storage + insertion en base avec `status = 'pending'`. N'apparaît sur la carte publique qu'après passage manuel à `status = 'approved'` dans la table Supabase. Envoie aussi un email de notification (via Resend, `RESEND_API_KEY`) à l'adresse codée en dur `NOTIFICATION_EMAIL` dans ce fichier — un échec d'envoi n'empêche jamais la soumission de réussir.
 - `api/geocode/index.ts` — proxy vers Nominatim (OpenStreetMap) pour la suggestion d'adresse du formulaire ; sans clé API, mais nécessite un en-tête `User-Agent` que seul un appel serveur peut fixer (d'où le proxy plutôt qu'un appel direct depuis le navigateur).
 - Dev local: `scripts/dev-server.ts` (Express) simule les trois routes serverless ci-dessus
 - Ancienne source de données (Google Sheet) conservée uniquement pour la migration ponctuelle : `lib/fetchSheet.ts` + `scripts/migrate-sheet-to-supabase.ts`
