@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabaseAuth } from '../lib/supabaseAuthClient';
-import AdminLogin from './AdminLogin';
-import AdminDashboard from './AdminDashboard';
+import OwnerLogin from './OwnerLogin';
+import OwnerDashboard from './OwnerDashboard';
 
-export default function AdminApp() {
+export default function OwnerApp() {
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
@@ -28,7 +28,7 @@ export default function AdminApp() {
       <div className="flex min-h-screen items-center justify-center bg-paper p-6 text-center">
         <p className="max-w-sm text-sm text-concrete">
           Configuration manquante : VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY doivent être définies pour activer
-          la page admin.
+          l'espace club.
         </p>
       </div>
     );
@@ -43,8 +43,8 @@ export default function AdminApp() {
   }
 
   if (!session) {
-    return <AdminLogin onSignedIn={setSession} />;
+    return <OwnerLogin onSignedIn={setSession} />;
   }
 
-  return <AdminDashboard session={session} onSignOut={() => void supabaseAuth?.auth.signOut()} />;
+  return <OwnerDashboard session={session} onSignOut={() => void supabaseAuth?.auth.signOut()} />;
 }

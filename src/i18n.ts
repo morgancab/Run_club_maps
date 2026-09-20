@@ -67,6 +67,7 @@ export const translations = {
     navMap: 'Carte',
     navAbout: 'À propos',
     navSuggest: 'Proposer un club',
+    navMyClub: 'Mon club',
     langSelectorLabel: 'Sélection de langue',
 
     // --- Hero ---
@@ -88,6 +89,7 @@ export const translations = {
     footerJoinText: 'Un club n\'est pas encore sur la carte ? Signale-le nous en deux minutes, il sera ajouté après vérification.',
     footerMade: 'Fait avec ❤️ pour la communauté running.',
     footerMapData: 'Données cartographiques © OpenStreetMap & CARTO',
+    footerOwnerLink: 'Vous gérez un club ? Connectez-vous →',
 
     // --- Mode swipe (ClubSwiper) ---
     swipeBack: '← Retour au site',
@@ -204,6 +206,7 @@ export const translations = {
     navMap: 'Map',
     navAbout: 'About',
     navSuggest: 'Suggest a club',
+    navMyClub: 'My club',
     langSelectorLabel: 'Language selection',
 
     // --- Hero ---
@@ -225,6 +228,7 @@ export const translations = {
     footerJoinText: 'A club not on the map yet? Let us know in two minutes, it\'ll be added after review.',
     footerMade: 'Made with ❤️ for the running community.',
     footerMapData: 'Map data © OpenStreetMap & CARTO',
+    footerOwnerLink: 'Manage a club? Sign in →',
 
     // --- Mode swipe (ClubSwiper) ---
     swipeBack: '← Back to site',

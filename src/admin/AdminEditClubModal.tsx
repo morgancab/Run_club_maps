@@ -27,6 +27,7 @@ const FIELDS: { key: FieldKey; label: string; type?: 'textarea' | 'number' }[] =
   { key: 'tiktok', label: 'TikTok' },
   { key: 'whatsapp', label: 'WhatsApp' },
   { key: 'strava', label: 'Strava' },
+  { key: 'owner_email', label: 'Email du owner (accès à /mon-club)' },
 ];
 
 export default function AdminEditClubModal({ club, session, onClose, onSaved }: AdminEditClubModalProps) {

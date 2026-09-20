@@ -1,29 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAdmin, getSupabaseAdminClient } from '../../../lib/adminAuth.js';
+import { CLUB_CONTENT_FIELDS } from '../../../lib/clubFields.js';
 
 const VALID_STATUSES = new Set(['pending', 'approved', 'rejected']);
 
 // Colonnes que la page admin peut modifier via PATCH. Toute autre clé
 // présente dans le corps de la requête est ignorée (whitelist explicite,
 // pas de "update(body)" direct qui laisserait modifier id/created_at/etc.).
-const EDITABLE_FIELDS = [
-  'name',
-  'city',
-  'frequency',
-  'frequency_en',
-  'description',
-  'description_en',
-  'image',
-  'latitude',
-  'longitude',
-  'instagram',
-  'facebook',
-  'website',
-  'tiktok',
-  'whatsapp',
-  'strava',
-  'status',
-] as const;
+// En plus du contenu partagé avec les owners, l'admin peut aussi changer le
+// statut de modération et attribuer/retirer le owner d'un club.
+const EDITABLE_FIELDS = [...CLUB_CONTENT_FIELDS, 'status', 'owner_email'] as const;
 
 // Route réservée à la page /admin (voir src/admin/) : pas de CORS, ces appels
 // ne sont jamais faits depuis un autre domaine que celui du site lui-même.

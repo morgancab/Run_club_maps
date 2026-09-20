@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { Language } from '../RunClubMap'
 import { translations } from '../i18n'
 
@@ -23,6 +24,25 @@ export default function Header({
   onGoSwipe,
 }: HeaderProps) {
   const t = translations[language]
+
+  // Détecte une session /mon-club déjà ouverte (persistée par Supabase Auth
+  // dans le localStorage) pour proposer un accès direct, sans forcer le
+  // bundle Supabase Auth dans le chunk principal du site : import dynamique,
+  // qui réutilise le chunk déjà mis en cache si l'owner a visité /mon-club.
+  const [ownerSignedIn, setOwnerSignedIn] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    import('../lib/supabaseAuthClient').then(({ supabaseAuth }) => {
+      if (!supabaseAuth) return
+      supabaseAuth.auth.getSession().then(({ data }) => {
+        if (!cancelled && data.session) setOwnerSignedIn(true)
+      })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-3 border-b border-ink-line bg-paper/90 px-4 backdrop-blur-md sm:px-6">
       <button
@@ -89,6 +109,15 @@ export default function Header({
             EN
           </button>
         </div>
+
+        {ownerSignedIn && (
+          <a
+            href="/mon-club"
+            className="hidden shrink-0 whitespace-nowrap font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-ink sm:inline-block"
+          >
+            {t.navMyClub}
+          </a>
+        )}
 
         <button
           type="button"

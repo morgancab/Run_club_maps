@@ -55,6 +55,9 @@ export default function Footer({ language, onOpenSuggest }: FooterProps) {
           <p className="mt-3 text-sm leading-relaxed text-ink/80">
             {t.footerJoinText}
           </p>
+          <a href="/mon-club" className="mt-3 inline-block text-sm font-semibold text-accent hover:underline">
+            {t.footerOwnerLink}
+          </a>
         </div>
       </div>
 

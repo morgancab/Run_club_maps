@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { supabaseAuth } from './supabaseAuthClient';
+import { supabaseAuth } from '../lib/supabaseAuthClient';
 
 interface AdminLoginProps {
   onSignedIn: (session: Session) => void;

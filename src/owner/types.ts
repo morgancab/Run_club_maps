@@ -1,4 +1,12 @@
-export interface AdminClub {
+export interface OwnerEditRequest {
+  id: number;
+  club_id: number;
+  changes: Record<string, unknown>;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}
+
+export interface OwnerClub {
   id: number;
   name: string;
   city: string | null;
@@ -16,8 +24,5 @@ export interface AdminClub {
   whatsapp: string | null;
   strava: string | null;
   status: 'pending' | 'approved' | 'rejected';
-  owner_email: string | null;
-  created_at: string;
+  pendingRequest: OwnerEditRequest | null;
 }
-
-export type StatusTab = 'pending' | 'approved' | 'rejected';
