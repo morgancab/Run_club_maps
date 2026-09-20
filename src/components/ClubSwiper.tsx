@@ -253,17 +253,30 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
     setCanUndo(false);
   };
 
+  const afterNext = deck[index + 2];
   const translateX = exitDirection ? (exitDirection === 'like' ? 700 : -700) : dragX;
+  const translateY = exitDirection ? 0 : Math.abs(dragX) * -0.06;
   const rotate = translateX / 18;
   const likeOpacity = Math.min(Math.max(dragX, 0) / 80, 1);
   const passOpacity = Math.min(Math.max(-dragX, 0) / 80, 1);
+  const progressPct = deck.length > 0 ? (Math.min(index, deck.length) / deck.length) * 100 : 0;
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] bg-paper-soft px-4 py-5 sm:px-6 sm:py-8 lg:px-16">
+    <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-paper-soft px-4 py-3 sm:px-6 sm:py-6 lg:flex lg:h-[calc(100vh-4rem)] lg:flex-col lg:px-16 lg:py-4">
+      {/* Accents décoratifs discrets, cohérents avec le reste du site (Hero) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-32 left-[-8%] h-[300px] w-[300px] rounded-full bg-accent/10 blur-[100px]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-32 right-[-8%] h-[300px] w-[300px] rounded-full bg-accent/10 blur-[100px]"
+      />
+
       <button
         type="button"
         onClick={onBack}
-        className="mx-auto flex max-w-4xl items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-accent"
+        className="relative mx-auto flex w-full max-w-4xl shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-concrete transition-colors hover:text-accent"
       >
         {t.swipeBack}
       </button>
@@ -271,77 +284,83 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
       {/* Deux colonnes à partir de lg : la découverte (cartes) reste compacte
           et légèrement décalée à gauche, les clubs likés apparaissent à droite
           au fur et à mesure au lieu de s'empiler en dessous. En dessous de lg,
-          faute de place, tout reste centré et empilé verticalement. */}
-      <div className="mx-auto mt-4 flex max-w-4xl flex-col items-center gap-8 lg:mt-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
+          faute de place, tout reste centré et empilé verticalement.
+          lg:flex-1 + lg:min-h-0 : la ligne (et tout ce qu'elle contient) se
+          redimensionne pour tenir exactement dans la hauteur restante de
+          l'écran, quelle que soit sa taille — jamais de barre de défilement
+          de page sur desktop. */}
+      <div className="relative mx-auto mt-4 flex max-w-4xl flex-col items-center gap-8 lg:mt-4 lg:min-h-0 lg:flex-1 lg:flex-row lg:items-stretch lg:justify-center lg:gap-10">
         {/* Colonne découverte */}
-        <div className="w-full max-w-xs sm:max-w-sm">
-          <div className="text-center">
-            <span className="inline-block rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-accent">
+        <div className="flex w-full max-w-xs flex-col sm:max-w-sm lg:min-h-0">
+          <div className="shrink-0 text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-accent">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
               {t.swipeBadge}
             </span>
-            <h2 className="mt-2 font-display text-xl font-bold uppercase tracking-tight text-ink sm:text-2xl">
+            <h2 className="mt-2 font-display text-2xl font-bold uppercase leading-none tracking-tight text-ink sm:text-3xl">
               {t.swipeHeadingPrefix} <span className="text-accent">club</span> 🔥
             </h2>
             {!loading && !isDone && current && (
-              <p className="mx-auto mt-1.5 text-xs leading-snug text-concrete sm:text-sm">
+              <p className="mx-auto mt-2 text-xs leading-snug text-concrete sm:text-sm">
                 ❤️ <span className="font-bold text-accent">{t.swipeHintRight}</span> {t.swipeHintLike}, ✕{' '}
                 <span className="font-bold text-red-400">{t.swipeHintLeft}</span> {t.swipeHintPass}.
               </p>
             )}
             {!loading && deck.length > 0 && !isDone && (
-              <div className="mt-1 flex items-center justify-center gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-concrete/70">
+              <div className="mx-auto mt-3 max-w-[220px]">
+                <div className="h-1 overflow-hidden rounded-full bg-ink-line">
+                  <div
+                    className="h-full rounded-full bg-accent transition-[width] duration-300 ease-out"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+                <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-concrete/70">
                   {t.swipeCounterPrefix} {Math.min(index + 1, deck.length)} / {deck.length}
                 </p>
-                {canUndo && (
-                  <button
-                    type="button"
-                    onClick={undoLastSwipe}
-                    className="text-[11px] font-bold uppercase tracking-wide text-accent underline-offset-2 hover:underline"
-                  >
-                    {t.swipeUndo}
-                  </button>
-                )}
               </div>
             )}
           </div>
 
-          {/* Pile de cartes : volontairement compacte pour que les boutons
-              d'action juste en dessous restent toujours visibles à l'écran. */}
-          <div className="relative mx-auto mt-4 h-[min(42vh,360px)] sm:h-[400px]">
+          {/* Pile de cartes : hauteur fixe (adaptée au viewport) sur mobile,
+              flexible sur desktop pour toujours tenir dans l'écran. */}
+          <div className="relative mx-auto mt-4 h-[min(54vh,440px)] w-full sm:h-[480px] lg:h-auto lg:min-h-0 lg:flex-1">
             {loading && (
-              <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-paper text-sm text-concrete shadow-sm">
+              <div className="flex h-full items-center justify-center rounded-2xl border border-ink-line bg-paper text-sm text-concrete shadow-sm">
                 {t.swipeLoading}
               </div>
             )}
 
             {!loading && deck.length === 0 && (
-              <div className="flex h-full items-center justify-center rounded-lg border border-ink-line bg-paper px-6 text-center text-sm text-concrete shadow-sm">
+              <div className="flex h-full items-center justify-center rounded-2xl border border-ink-line bg-paper px-6 text-center text-sm text-concrete shadow-sm">
                 {t.swipeLoadError}
               </div>
             )}
 
             {!loading && !isDone && current && (
               <>
-                {/* Carte suivante, en aperçu derrière la carte active */}
+                {/* Deux cartes d'aperçu derrière la carte active, pour un vrai
+                    effet de pile plutôt qu'un simple double contour. */}
+                {afterNext && (
+                  <div className="absolute inset-0 translate-y-4 scale-[0.9] rounded-2xl border border-ink-line bg-paper opacity-40" />
+                )}
                 {next && (
-                  <div className="absolute inset-0 scale-[0.94] rounded-lg border border-ink-line bg-paper opacity-70" />
+                  <div className="absolute inset-0 translate-y-2 scale-[0.95] rounded-2xl border border-ink-line bg-paper opacity-70 shadow-[0_8px_20px_rgba(18,21,26,0.08)]" />
                 )}
 
-                {/* Carte active. Le glisser-déposer ne démarre que depuis la photo
-                    et l'entête nom/ville (voir plus bas) : le reste de la carte
-                    garde un défilement et une sélection de texte tactiles
-                    normaux, pour lire une description sans déclencher un swipe. */}
+                {/* Carte active. Le glisser-déposer ne démarre que depuis la
+                    photo (nom/ville/tags inclus, superposés dessus) : le
+                    contenu en dessous (description, réseaux) garde un
+                    défilement et une sélection de texte tactiles normaux. */}
                 <div
-                  className="absolute inset-0 flex flex-col overflow-hidden rounded-lg border border-ink-line bg-paper shadow-[0_16px_36px_rgba(18,21,26,0.14)]"
+                  className="absolute inset-0 flex flex-col overflow-hidden rounded-2xl bg-paper shadow-[0_20px_50px_rgba(18,21,26,0.22)]"
                   style={{
-                    transform: `translateX(${translateX}px) rotate(${rotate}deg)`,
-                    transition: dragging ? 'none' : 'transform 260ms ease, opacity 260ms ease',
+                    transform: `translate(${translateX}px, ${translateY}px) rotate(${rotate}deg)`,
+                    transition: dragging ? 'none' : 'transform 320ms cubic-bezier(0.22,1,0.36,1), opacity 260ms ease',
                     opacity: exitDirection ? 0 : 1,
                   }}
                 >
                   <div
-                    className="relative h-20 w-full shrink-0 touch-none select-none bg-paper-soft sm:h-28"
+                    className="relative h-[68%] w-full shrink-0 touch-none select-none bg-paper-soft"
                     style={{ cursor: dragging ? 'grabbing' : 'grab' }}
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}
@@ -357,62 +376,54 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
                         onError={() => setImageError(true)}
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent-soft to-paper-soft text-3xl font-display font-bold text-accent sm:text-4xl">
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent-soft to-paper-soft text-5xl font-display font-bold text-accent">
                         {getInitials(current.properties.name)}
                       </div>
                     )}
 
+                    {/* Voile dégradé + nom/ville/distance superposés en bas de
+                        la photo, façon carte de rencontre. */}
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent px-4 pb-3 pt-10">
+                      <h3 className="m-0 truncate font-display text-lg font-bold uppercase tracking-tight text-white sm:text-xl">
+                        {current.properties.name}
+                      </h3>
+                      {(current.properties.city || currentDistanceKm !== null) && (
+                        <p className="m-0 mt-0.5 flex items-center gap-2 text-xs text-white/85 sm:text-sm">
+                          {current.properties.city && <span>📍 {current.properties.city}</span>}
+                          {currentDistanceKm !== null && (
+                            <span className="font-stat text-sm tracking-wide text-accent sm:text-base">
+                              {formatDistanceKm(currentDistanceKm)}
+                            </span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+
                     {/* Repères fixes qui rappellent, dès l'arrivée sur la carte (sans avoir
                         besoin de commencer à glisser), quel côté correspond à quelle action. */}
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white/80">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-3 pt-2 text-[9px] font-bold uppercase tracking-wide text-white/70">
                       <span>{t.swipeImageSkip}</span>
                       <span>{t.swipeImageLike}</span>
                     </div>
 
                     {/* Timbres LIKE (cœur) / PASS (croix), qui apparaissent en glissant */}
                     <div
-                      className="absolute left-3 top-2 flex h-12 w-12 rotate-[-16deg] items-center justify-center rounded-full border-4 border-accent bg-white/90 text-2xl shadow-[0_4px_16px_rgba(18,21,26,0.25)]"
+                      className="absolute left-4 top-4 flex h-16 w-16 rotate-[-18deg] items-center justify-center rounded-2xl border-[3px] border-accent bg-white/95 text-3xl shadow-[0_6px_20px_rgba(255,85,0,0.35)]"
                       style={{ opacity: likeOpacity }}
                     >
                       ❤️
                     </div>
                     <div
-                      className="absolute right-3 top-2 flex h-12 w-12 rotate-[16deg] items-center justify-center rounded-full border-4 border-red-400 bg-white/90 text-2xl text-red-400 shadow-[0_4px_16px_rgba(18,21,26,0.25)]"
+                      className="absolute right-4 top-4 flex h-16 w-16 rotate-[18deg] items-center justify-center rounded-2xl border-[3px] border-red-400 bg-white/95 text-3xl text-red-400 shadow-[0_6px_20px_rgba(248,113,113,0.35)]"
                       style={{ opacity: passOpacity }}
                     >
                       ✕
                     </div>
                   </div>
 
-                  {/* Deuxième zone de prise en main : le nom et la ville. Regroupée
-                      avec la photo, elle agrandit la zone de glisser sans empiéter
-                      sur le contenu défilable (fréquence, description, liens). */}
-                  <div
-                    className="shrink-0 touch-none select-none px-3 pt-2 sm:px-4 sm:pt-3"
-                    style={{ cursor: dragging ? 'grabbing' : 'grab' }}
-                    onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={endDrag}
-                    onPointerCancel={endDrag}
-                  >
-                    <h3 className="m-0 truncate font-display text-base font-bold uppercase tracking-tight text-ink sm:text-lg">
-                      {current.properties.name}
-                    </h3>
-                    {(current.properties.city || currentDistanceKm !== null) && (
-                      <p className="m-0 mt-0.5 flex items-center gap-2 text-xs text-concrete sm:text-sm">
-                        {current.properties.city && <span>📍 {current.properties.city}</span>}
-                        {currentDistanceKm !== null && (
-                          <span className="font-stat text-sm tracking-wide text-accent sm:text-base">
-                            {formatDistanceKm(currentDistanceKm)}
-                          </span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3 pt-1 sm:gap-1.5 sm:px-4 sm:pb-4">
+                  <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-4 pb-4 pt-2.5">
                     {current.properties.frequency && (
-                      <div className="mt-1 inline-block w-fit rounded-sm bg-ink px-2 py-1 text-[11px] font-medium text-paper sm:text-xs">
+                      <div className="inline-block w-fit rounded-full bg-ink px-2.5 py-1 text-[11px] font-medium text-paper sm:text-xs">
                         ⏰ {current.properties.frequency}
                       </div>
                     )}
@@ -425,32 +436,32 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
                     {current.properties.social && Object.values(current.properties.social).some(Boolean) && (
                       <div className="mt-auto flex flex-wrap gap-1.5 pt-1.5">
                         {current.properties.social.website && (
-                          <a href={current.properties.social.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-sm border border-accent px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent no-underline">
+                          <a href={current.properties.social.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent no-underline">
                             <SocialIcon network="website" className="h-2.5 w-2.5" /> {t.site}
                           </a>
                         )}
                         {current.properties.social.instagram && (
-                          <a href={current.properties.social.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-sm border border-ink-line px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
+                          <a href={current.properties.social.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-ink-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
                             <SocialIcon network="instagram" className="h-2.5 w-2.5" /> Instagram
                           </a>
                         )}
                         {current.properties.social.strava && (
-                          <a href={current.properties.social.strava} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-sm border border-ink-line px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
+                          <a href={current.properties.social.strava} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-ink-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
                             <SocialIcon network="strava" className="h-2.5 w-2.5" /> Strava
                           </a>
                         )}
                         {current.properties.social.facebook && (
-                          <a href={current.properties.social.facebook} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-sm border border-ink-line px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
+                          <a href={current.properties.social.facebook} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-ink-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
                             <SocialIcon network="facebook" className="h-2.5 w-2.5" /> Facebook
                           </a>
                         )}
                         {current.properties.social.whatsapp && (
-                          <a href={current.properties.social.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-sm border border-ink-line px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
+                          <a href={current.properties.social.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-ink-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
                             <SocialIcon network="whatsapp" className="h-2.5 w-2.5" /> WhatsApp
                           </a>
                         )}
                         {current.properties.social.tiktok && (
-                          <a href={current.properties.social.tiktok} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-sm border border-ink-line px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
+                          <a href={current.properties.social.tiktok} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-ink-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink no-underline">
                             <SocialIcon network="tiktok" className="h-2.5 w-2.5" /> TikTok
                           </a>
                         )}
@@ -476,8 +487,32 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
             )}
 
             {!loading && isDone && (
-              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-ink-line bg-paper px-6 text-center shadow-sm">
-                <span className="text-3xl">🏁</span>
+              <div className="flex h-full flex-col items-center justify-center gap-4 rounded-2xl border border-ink-line bg-paper px-6 text-center shadow-[0_20px_50px_rgba(18,21,26,0.12)]">
+                <span className="text-4xl">🏁</span>
+                {likedClubs.length > 0 && (
+                  <div className="flex -space-x-3">
+                    {likedClubs.slice(0, 5).map((club) => {
+                      const src = getImageSrc(club.properties.image);
+                      return (
+                        <div
+                          key={clubKey(club)}
+                          className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-paper bg-accent-soft text-xs font-bold text-accent shadow-sm"
+                        >
+                          {src ? (
+                            <img src={src} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            getInitials(club.properties.name)
+                          )}
+                        </div>
+                      );
+                    })}
+                    {likedClubs.length > 5 && (
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-paper bg-ink text-xs font-bold text-paper shadow-sm">
+                        +{likedClubs.length - 5}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <p className="m-0 font-display text-lg font-bold uppercase tracking-tight text-ink">
                   {likedClubs.length > 0
                     ? `${t.swipeYouLiked} ${likedClubs.length} club${likedClubs.length > 1 ? 's' : ''}${language === 'fr' ? ' !' : '!'}`
@@ -487,7 +522,7 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
                   <button
                     type="button"
                     onClick={restart}
-                    className="rounded-sm bg-accent px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-ink transition-transform hover:-translate-y-0.5"
+                    className="rounded-full bg-accent px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-ink shadow-[0_10px_24px_rgba(255,85,0,0.28)] transition-transform hover:-translate-y-0.5"
                   >
                     {t.swipeReplay}
                   </button>
@@ -506,16 +541,27 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
           </div>
 
           {/* Boutons d'action, alternative accessible au glisser-déposer.
-              Chaque bouton porte une légende visible : les emojis seuls sont
-              ambigus pour qui arrive sans avoir lu les instructions au-dessus. */}
+              Annuler / Passer / Aimer, comme les trois boutons d'une vraie
+              appli de swipe — chacun garde sa légende visible en dessous. */}
           {!loading && !isDone && current && (
-            <div className="mx-auto mt-4 flex items-center justify-center gap-8">
+            <div className="mx-auto mt-4 flex shrink-0 items-center justify-center gap-5 sm:gap-7">
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={t.swipeUndo}
+                  disabled={!canUndo}
+                  onClick={undoLastSwipe}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-ink-line bg-paper text-lg text-concrete shadow-sm transition-transform enabled:hover:-translate-y-0.5 enabled:hover:border-ink enabled:hover:text-ink disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  ↺
+                </button>
+              </div>
               <div className="flex flex-col items-center gap-1">
                 <button
                   type="button"
                   aria-label={t.swipePassAriaCurrent}
                   onClick={() => commitSwipe('pass')}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-ink-line bg-paper text-xl text-ink shadow-sm transition-transform hover:-translate-y-0.5 hover:border-ink"
+                  className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-ink-line bg-paper text-2xl text-ink shadow-[0_8px_20px_rgba(18,21,26,0.1)] transition-transform hover:-translate-y-0.5 hover:border-red-300 hover:text-red-400"
                 >
                   ✕
                 </button>
@@ -526,7 +572,7 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
                   type="button"
                   aria-label={t.swipeLikeAriaCurrent}
                   onClick={() => commitSwipe('like')}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-accent bg-accent text-xl text-ink transition-transform hover:-translate-y-0.5"
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-2xl text-ink shadow-[0_10px_24px_rgba(255,85,0,0.35)] transition-transform hover:-translate-y-0.5"
                 >
                   ❤️
                 </button>
@@ -538,8 +584,8 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
 
         {/* Colonne clubs likés : à droite dès lg, en dessous sur mobile/tablette. */}
         {likedClubs.length > 0 && (
-          <div className="w-full max-w-xs sm:max-w-sm lg:w-72 lg:shrink-0">
-            <div className="flex items-center justify-between">
+          <div className="flex w-full max-w-xs flex-col sm:max-w-sm lg:w-72 lg:min-h-0 lg:shrink-0">
+            <div className="flex shrink-0 items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wide text-concrete">
                 {t.swipeLikedClubsTitle} ({likedClubs.length})
               </h3>
@@ -552,112 +598,118 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
               </button>
             </div>
 
-            <div className="mt-3 grid max-h-80 grid-cols-2 gap-2 overflow-y-auto rounded-sm border border-ink-line bg-paper-soft p-2 [scrollbar-color:#FF5500_#e6e7e1] [scrollbar-width:thin] sm:grid-cols-3 lg:grid-cols-1 lg:max-h-[500px]">
+            <div className="mt-3 grid max-h-80 grid-cols-2 gap-2 overflow-y-auto rounded-lg border border-ink-line bg-paper-soft p-2 [scrollbar-color:#FF5500_#e6e7e1] [scrollbar-width:thin] sm:grid-cols-3 lg:min-h-0 lg:max-h-none lg:flex-1 lg:grid-cols-1">
               {likedClubs.map((club) => {
                 const key = clubKey(club);
                 const distanceKm = clubDistanceKm(club, userLocation);
+                const src = getImageSrc(club.properties.image);
                 return (
                   <div
                     key={key}
-                    className="relative flex flex-col gap-1 rounded-sm border border-ink-line bg-paper p-2.5 pr-6 shadow-sm"
+                    className="relative flex items-start gap-2 rounded-lg border border-ink-line bg-paper p-2.5 pr-6 shadow-sm transition-shadow hover:shadow-[0_6px_16px_rgba(18,21,26,0.1)] lg:items-center"
                   >
-                    <button
-                      type="button"
-                      aria-label={`${t.swipeRemoveFromFavoritesAria} ${club.properties.name} ${t.swipeFromFavoritesSuffix}`}
-                      onClick={() => removeLikedClub(key)}
-                      className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] text-concrete transition-colors hover:bg-red-400 hover:text-white"
-                    >
-                      ✕
-                    </button>
-                    <p className="m-0 truncate text-xs font-bold text-ink">{club.properties.name}</p>
-                    {(club.properties.city || distanceKm !== null) && (
-                      <p className="m-0 flex items-center gap-1.5 truncate text-[11px] text-concrete">
-                        {club.properties.city && <span className="truncate">{club.properties.city}</span>}
-                        {distanceKm !== null && (
-                          <span className="shrink-0 font-bold uppercase tracking-wide text-accent">
-                            {formatDistanceKm(distanceKm)}
-                          </span>
-                        )}
-                      </p>
-                    )}
+                    <div className="hidden h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent-soft text-[10px] font-bold text-accent lg:flex">
+                      {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : getInitials(club.properties.name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        aria-label={`${t.swipeRemoveFromFavoritesAria} ${club.properties.name} ${t.swipeFromFavoritesSuffix}`}
+                        onClick={() => removeLikedClub(key)}
+                        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] text-concrete transition-colors hover:bg-red-400 hover:text-white"
+                      >
+                        ✕
+                      </button>
+                      <p className="m-0 truncate text-xs font-bold text-ink">{club.properties.name}</p>
+                      {(club.properties.city || distanceKm !== null) && (
+                        <p className="m-0 flex items-center gap-1.5 truncate text-[11px] text-concrete">
+                          {club.properties.city && <span className="truncate">{club.properties.city}</span>}
+                          {distanceKm !== null && (
+                            <span className="shrink-0 font-bold uppercase tracking-wide text-accent">
+                              {formatDistanceKm(distanceKm)}
+                            </span>
+                          )}
+                        </p>
+                      )}
 
-                    {/* Petites icônes réseaux, pour retrouver le club sans revenir au swipe */}
-                    {club.properties.social && Object.values(club.properties.social).some(Boolean) && (
-                      <div className="mt-0.5 flex flex-wrap items-center gap-1">
-                        {club.properties.social.website && (
-                          <a
-                            href={club.properties.social.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={t.site}
-                            aria-label={`${t.site} — ${club.properties.name}`}
-                            className="flex h-5 w-5 items-center justify-center rounded-full border border-accent p-1 text-accent no-underline"
-                          >
-                            <SocialIcon network="website" />
-                          </a>
-                        )}
-                        {club.properties.social.instagram && (
-                          <a
-                            href={club.properties.social.instagram}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Instagram"
-                            aria-label={`Instagram — ${club.properties.name}`}
-                            className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
-                          >
-                            <SocialIcon network="instagram" />
-                          </a>
-                        )}
-                        {club.properties.social.facebook && (
-                          <a
-                            href={club.properties.social.facebook}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Facebook"
-                            aria-label={`Facebook — ${club.properties.name}`}
-                            className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
-                          >
-                            <SocialIcon network="facebook" />
-                          </a>
-                        )}
-                        {club.properties.social.strava && (
-                          <a
-                            href={club.properties.social.strava}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Strava"
-                            aria-label={`Strava — ${club.properties.name}`}
-                            className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
-                          >
-                            <SocialIcon network="strava" />
-                          </a>
-                        )}
-                        {club.properties.social.whatsapp && (
-                          <a
-                            href={club.properties.social.whatsapp}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="WhatsApp"
-                            aria-label={`WhatsApp — ${club.properties.name}`}
-                            className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
-                          >
-                            <SocialIcon network="whatsapp" />
-                          </a>
-                        )}
-                        {club.properties.social.tiktok && (
-                          <a
-                            href={club.properties.social.tiktok}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="TikTok"
-                            aria-label={`TikTok — ${club.properties.name}`}
-                            className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
-                          >
-                            <SocialIcon network="tiktok" />
-                          </a>
-                        )}
-                      </div>
-                    )}
+                      {/* Petites icônes réseaux, pour retrouver le club sans revenir au swipe */}
+                      {club.properties.social && Object.values(club.properties.social).some(Boolean) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1">
+                          {club.properties.social.website && (
+                            <a
+                              href={club.properties.social.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={t.site}
+                              aria-label={`${t.site} — ${club.properties.name}`}
+                              className="flex h-5 w-5 items-center justify-center rounded-full border border-accent p-1 text-accent no-underline"
+                            >
+                              <SocialIcon network="website" />
+                            </a>
+                          )}
+                          {club.properties.social.instagram && (
+                            <a
+                              href={club.properties.social.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Instagram"
+                              aria-label={`Instagram — ${club.properties.name}`}
+                              className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
+                            >
+                              <SocialIcon network="instagram" />
+                            </a>
+                          )}
+                          {club.properties.social.facebook && (
+                            <a
+                              href={club.properties.social.facebook}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Facebook"
+                              aria-label={`Facebook — ${club.properties.name}`}
+                              className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
+                            >
+                              <SocialIcon network="facebook" />
+                            </a>
+                          )}
+                          {club.properties.social.strava && (
+                            <a
+                              href={club.properties.social.strava}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Strava"
+                              aria-label={`Strava — ${club.properties.name}`}
+                              className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
+                            >
+                              <SocialIcon network="strava" />
+                            </a>
+                          )}
+                          {club.properties.social.whatsapp && (
+                            <a
+                              href={club.properties.social.whatsapp}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="WhatsApp"
+                              aria-label={`WhatsApp — ${club.properties.name}`}
+                              className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
+                            >
+                              <SocialIcon network="whatsapp" />
+                            </a>
+                          )}
+                          {club.properties.social.tiktok && (
+                            <a
+                              href={club.properties.social.tiktok}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="TikTok"
+                              aria-label={`TikTok — ${club.properties.name}`}
+                              className="flex h-5 w-5 items-center justify-center rounded-full border border-ink-line p-1 text-ink no-underline"
+                            >
+                              <SocialIcon network="tiktok" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
