@@ -1,18 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-
-interface AdminClub {
-  id: number;
-  name: string;
-  city: string | null;
-  frequency: string | null;
-  description: string | null;
-  image: string | null;
-  status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
-}
-
-type StatusTab = 'pending' | 'approved' | 'rejected';
+import type { AdminClub, StatusTab } from './types';
+import AdminEditClubModal from './AdminEditClubModal';
 
 const TAB_LABELS: Record<StatusTab, string> = {
   pending: 'En attente',
@@ -32,6 +21,7 @@ export default function AdminDashboard({ session, onSignOut }: AdminDashboardPro
   const [error, setError] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<number | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [editingClub, setEditingClub] = useState<AdminClub | null>(null);
 
   const load = useCallback(
     async (statusTab: StatusTab) => {
@@ -192,6 +182,13 @@ export default function AdminDashboard({ session, onSignOut }: AdminDashboardPro
                 )}
                 <button
                   disabled={actioningId === club.id}
+                  onClick={() => setEditingClub(club)}
+                  className="rounded-md border border-ink-line px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-ink transition-colors hover:border-accent disabled:opacity-50"
+                >
+                  Modifier
+                </button>
+                <button
+                  disabled={actioningId === club.id}
                   onClick={() => remove(club.id)}
                   className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-red-600 transition-colors hover:border-red-400 disabled:opacity-50"
                 >
@@ -202,6 +199,18 @@ export default function AdminDashboard({ session, onSignOut }: AdminDashboardPro
           ))}
         </div>
       </div>
+
+      {editingClub && (
+        <AdminEditClubModal
+          club={editingClub}
+          session={session}
+          onClose={() => setEditingClub(null)}
+          onSaved={(updated) => {
+            setClubs((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+            setEditingClub(null);
+          }}
+        />
+      )}
     </div>
   );
 }

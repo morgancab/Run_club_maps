@@ -3,6 +3,28 @@ import { requireAdmin, getSupabaseAdminClient } from '../../../lib/adminAuth.js'
 
 const VALID_STATUSES = new Set(['pending', 'approved', 'rejected']);
 
+// Colonnes que la page admin peut modifier via PATCH. Toute autre clé
+// présente dans le corps de la requête est ignorée (whitelist explicite,
+// pas de "update(body)" direct qui laisserait modifier id/created_at/etc.).
+const EDITABLE_FIELDS = [
+  'name',
+  'city',
+  'frequency',
+  'frequency_en',
+  'description',
+  'description_en',
+  'image',
+  'latitude',
+  'longitude',
+  'instagram',
+  'facebook',
+  'website',
+  'tiktok',
+  'whatsapp',
+  'strava',
+  'status',
+] as const;
+
 // Route réservée à la page /admin (voir src/admin/) : pas de CORS, ces appels
 // ne sont jamais faits depuis un autre domaine que celui du site lui-même.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -34,14 +56,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === 'PATCH') {
-    const body = req.body as { id?: number; status?: string };
-    if (!body.id || !body.status || !VALID_STATUSES.has(body.status)) {
-      res.status(400).json({ error: 'Paramètres invalides (id, status requis).' });
+    const body = req.body as Record<string, unknown> & { id?: number };
+    if (!body.id) {
+      res.status(400).json({ error: 'Paramètre id requis.' });
       return;
     }
+    if (body.status !== undefined && !VALID_STATUSES.has(body.status as string)) {
+      res.status(400).json({ error: 'Statut invalide.' });
+      return;
+    }
+
+    const updates: Record<string, unknown> = {};
+    for (const field of EDITABLE_FIELDS) {
+      if (field in body) {
+        updates[field] = body[field];
+      }
+    }
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ error: 'Aucune donnée à mettre à jour.' });
+      return;
+    }
+    if ('name' in updates && (typeof updates.name !== 'string' || !updates.name.trim())) {
+      res.status(400).json({ error: 'Le nom du club est requis.' });
+      return;
+    }
+
     const { data, error } = await supabase
       .from('clubs')
-      .update({ status: body.status })
+      .update(updates)
       .eq('id', body.id)
       .select()
       .single();
