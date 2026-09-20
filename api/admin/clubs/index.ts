@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAdmin, getSupabaseAdminClient } from '../../../lib/adminAuth';
+import { requireAdmin, getSupabaseAdminClient } from '../../../lib/adminAuth.js';
 
 const VALID_STATUSES = new Set(['pending', 'approved', 'rejected']);
 
