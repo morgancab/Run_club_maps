@@ -33,10 +33,16 @@ function createHeroPinIcon(imageUrl: string, delaySeconds: number) {
   });
 }
 
-// Fond de carte du Hero : une vraie carte Leaflet (même fond de carte que la
-// carte principale, Esri Light Gray Canvas), non interactive, avec les
+// Fond de carte du Hero : une vraie carte Leaflet, non interactive, avec les
 // logos des clubs positionnés à leurs coordonnées réelles. Purement
 // décorative : aucun clic, drag, zoom ni focus clavier possible.
+//
+// Même fond Esri Light Gray Canvas que la carte principale. Une variante
+// CARTO "sans labels" existait pour éviter les noms de pays/villes, mais son
+// accès anonyme sans clé API a été supprimé (tuiles remplacées par un
+// filigrane "API KEY REQUIRED"). Les quelques labels résiduels d'Esri (noms
+// de pays, mers) sont donc masqués visuellement par le voile blanc plus
+// opaque posé par-dessus dans Hero.tsx, plutôt qu'au niveau des tuiles.
 export default function HeroMap() {
   const clubs = useClubLogos(24);
 

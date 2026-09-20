@@ -26,16 +26,18 @@ export default function Hero({ language, onGoSwipe, onOpenSuggest }: HeroProps) 
           sans dépendre de l'ordre du DOM (voir commentaire dans HeroMap.tsx). */}
       <div className="relative z-10">
       {/* Voile clair au-dessus de la carte : assure la lisibilité du texte
-          par-dessus des tuiles/pins réels, tout en laissant deviner la carte
-          sur les bords. Dégradé radial centré sur le bloc de texte + fondu
-          haut/bas vers le blanc pour raccorder proprement avec le reste de
-          la page. */}
+          par-dessus des tuiles/pins réels, et rend illisibles les quelques
+          noms de pays/mers embarqués dans les tuiles Esri (un plancher
+          d'opacité élevé partout, pas seulement au centre — combiné au léger
+          flou appliqué à la carte elle-même, voir .hero-leaflet-map plus
+          bas). Dégradé radial centré sur le bloc de texte + fondu haut/bas
+          vers le blanc pour raccorder proprement avec le reste de la page. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 65% 60% at 50% 42%, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.75) 45%, rgba(255,255,255,0.35) 72%, rgba(255,255,255,0.08) 100%)',
+            'radial-gradient(ellipse 65% 60% at 50% 42%, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.84) 72%, rgba(255,255,255,0.76) 100%)',
         }}
       />
       <div
@@ -179,6 +181,13 @@ export default function Hero({ language, onGoSwipe, onOpenSuggest }: HeroProps) 
           font-size: 9px;
           opacity: 0.55;
           background: transparent;
+        }
+        /* Flou léger sur les tuiles uniquement (pas les pins de clubs, qui
+           restent nets) : brouille les quelques noms de pays/mers embarqués
+           dans le fond de carte Esri sans dépendre d'un fournisseur de tuiles
+           "sans labels" tiers (voir HeroMap.tsx). */
+        .hero-leaflet-map .leaflet-tile-pane {
+          filter: blur(3.5px) saturate(0.8);
         }
         @media (prefers-reduced-motion: reduce) {
           svg path { animation: none !important; stroke-dashoffset: 0 !important; }
