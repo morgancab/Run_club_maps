@@ -8,6 +8,7 @@ import { Resend } from 'resend';
 const BUCKET = 'club-logos';
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024; // 3 Mo — reste sous la limite de taille de requête de Vercel une fois encodé en base64
 const ALLOWED_MIME_TYPES = new Set(['image/png', 'image/jpeg']);
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Adresse prévenue à chaque nouvelle proposition de club.
 const NOTIFICATION_EMAIL = 'morgan2509@live.fr';
@@ -28,6 +29,10 @@ interface SubmitClubBody {
   imageBase64?: string; // data URL complète : "data:image/png;base64,...."
   // Honeypot anti-spam : un champ que seul un robot remplit. Doit rester vide.
   companyWebsite?: string;
+  // Renseigné uniquement si le proposant a coché "je veux gérer ce club" :
+  // devient owner_email dès l'insertion, pour qu'il puisse créer un compte
+  // sur /mon-club avec cette adresse dès que le club est en ligne.
+  ownerEmail?: string;
 }
 
 function slugify(value: string): string {
@@ -62,6 +67,7 @@ interface NotificationDetails {
   imageUrl: string;
   socials: { label: string; url: string }[];
   supabaseUrl: string;
+  ownerEmail: string | null;
 }
 
 // Envoie l'email d'alerte à chaque nouvelle proposition. Ne lève jamais :
@@ -99,6 +105,7 @@ async function sendSubmissionNotification(details: NotificationDetails): Promise
       <p><strong>Coordonnées :</strong> ${details.latitude}, ${details.longitude}
         (<a href="https://www.google.com/maps?q=${details.latitude},${details.longitude}">voir sur Google Maps</a>)
       </p>
+      ${details.ownerEmail ? `<p><strong>Email owner fourni :</strong> ${details.ownerEmail} (déjà enregistré comme owner_email, aucune action requise pour l'attribution)</p>` : ''}
       ${socialsHtml}
       <hr style="margin: 24px 0;" />
       <p>
@@ -173,6 +180,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  const ownerEmail = typeof body.ownerEmail === 'string' ? body.ownerEmail.trim() : '';
+  if (ownerEmail && !EMAIL_REGEX.test(ownerEmail)) {
+    res.status(400).json({ error: 'Adresse email invalide.' });
+    return;
+  }
+
   const match = body.imageBase64.match(/^data:([^;]+);base64,(.+)$/);
   if (!match) {
     res.status(400).json({ error: 'Format de logo invalide.' });
@@ -219,6 +232,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       whatsapp: normalizeUrl(body.whatsapp),
       strava: normalizeUrl(body.strava),
       status: 'pending',
+      owner_email: ownerEmail || null,
     });
 
     if (insertError) {
@@ -249,6 +263,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         imageUrl: publicUrlData.publicUrl,
         socials,
         supabaseUrl,
+        ownerEmail: ownerEmail || null,
       });
     } catch (emailError) {
       console.error('❌ Erreur inattendue lors de l\'envoi de l\'email:', emailError);

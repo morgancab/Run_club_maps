@@ -40,6 +40,8 @@ export default function SuggestClubModal({ language, open, onClose }: SuggestClu
   const [whatsapp, setWhatsapp] = useState('');
   const [strava, setStrava] = useState('');
   const [companyWebsite, setCompanyWebsite] = useState(''); // honeypot
+  const [wantsOwnership, setWantsOwnership] = useState(false);
+  const [ownerEmail, setOwnerEmail] = useState('');
 
   const [addressQuery, setAddressQuery] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
@@ -68,6 +70,8 @@ export default function SuggestClubModal({ language, open, onClose }: SuggestClu
     setWhatsapp('');
     setStrava('');
     setCompanyWebsite('');
+    setWantsOwnership(false);
+    setOwnerEmail('');
     setAddressQuery('');
     setAddressSuggestions([]);
     setSelectedCoords(null);
@@ -140,7 +144,11 @@ export default function SuggestClubModal({ language, open, onClose }: SuggestClu
   };
 
   const canSubmit =
-    name.trim().length > 0 && selectedCoords !== null && imageDataUrl !== null && status !== 'submitting';
+    name.trim().length > 0 &&
+    selectedCoords !== null &&
+    imageDataUrl !== null &&
+    (!wantsOwnership || ownerEmail.trim().length > 0) &&
+    status !== 'submitting';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +176,7 @@ export default function SuggestClubModal({ language, open, onClose }: SuggestClu
           strava,
           imageBase64: imageDataUrl,
           companyWebsite,
+          ownerEmail: wantsOwnership ? ownerEmail.trim() : undefined,
         }),
       });
 
@@ -214,6 +223,11 @@ export default function SuggestClubModal({ language, open, onClose }: SuggestClu
             <p className="m-0 max-w-sm text-sm leading-relaxed text-concrete">
               {t.suggestModalThanksText}
             </p>
+            {wantsOwnership && (
+              <p className="m-0 max-w-sm rounded-sm border border-accent/30 bg-accent-soft px-3 py-2 text-xs leading-relaxed text-accent">
+                {t.suggestModalThanksOwnerText}
+              </p>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -369,6 +383,36 @@ export default function SuggestClubModal({ language, open, onClose }: SuggestClu
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">Strava</label>
                 <input type="url" value={strava} onChange={(e) => setStrava(e.target.value)} placeholder="https://strava.com/clubs/..." className="w-full rounded-sm border border-ink-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent" />
               </div>
+            </div>
+
+            <div className="rounded-sm border border-ink-line bg-paper-soft p-3">
+              <label className="flex cursor-pointer items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={wantsOwnership}
+                  onChange={(e) => setWantsOwnership(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+                />
+                <span className="text-xs font-bold uppercase tracking-wide text-ink">
+                  {t.suggestModalOwnershipCheckbox}
+                </span>
+              </label>
+              {wantsOwnership && (
+                <div className="mt-2">
+                  <p className="mb-1.5 text-[11px] leading-snug text-concrete">{t.suggestModalOwnershipHelp}</p>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-concrete">
+                    {t.suggestModalOwnershipEmailLabel}
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={ownerEmail}
+                    onChange={(e) => setOwnerEmail(e.target.value)}
+                    placeholder={t.suggestModalOwnershipEmailPlaceholder}
+                    className="w-full rounded-sm border border-ink-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+                  />
+                </div>
+              )}
             </div>
 
             {status === 'error' && errorMessage && (
