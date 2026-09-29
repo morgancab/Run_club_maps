@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-// Route publique, appelée anonymement : "view" depuis la carte principale
-// (ouverture de la popup d'un marqueur, voir RunClubMap.tsx) et "like" depuis
-// le mode swipe (voir ClubSwiper.tsx). Purement statistique pour les owners
+// Route publique : "view" depuis la carte principale (ouverture de la popup
+// d'un marqueur, voir RunClubMap.tsx), "like" depuis le mode swipe (voir
+// ClubSwiper.tsx), et "share" depuis /mon-club quand l'owner copie son lien
+// ou télécharge son QR code (voir OwnerShareCard.tsx). Purement statistique
 // (voir OwnerDashboard) : pas d'authentification requise, pas de donnée
 // sensible en jeu — au pire un visiteur pourrait gonfler artificiellement un
 // compteur, ce qui n'a pas d'impact au-delà de la métrique elle-même.
@@ -22,10 +23,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const body = req.body as { clubId?: number; event?: 'view' | 'like' };
+  const body = req.body as { clubId?: number; event?: 'view' | 'like' | 'share' };
   const clubId = typeof body.clubId === 'number' ? body.clubId : NaN;
+  const validEvents = new Set(['view', 'like', 'share']);
 
-  if (Number.isNaN(clubId) || (body.event !== 'view' && body.event !== 'like')) {
+  if (Number.isNaN(clubId) || !body.event || !validEvents.has(body.event)) {
     res.status(400).json({ error: 'Paramètres invalides (clubId, event requis).' });
     return;
   }
@@ -40,7 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
-  const rpcName = body.event === 'view' ? 'increment_view_count' : 'increment_like_count';
+  const rpcName =
+    body.event === 'view' ? 'increment_view_count' : body.event === 'like' ? 'increment_like_count' : 'increment_share_count';
   const { error } = await supabase.rpc(rpcName, { p_club_id: clubId });
 
   if (error) {

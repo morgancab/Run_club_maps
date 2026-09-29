@@ -15,8 +15,16 @@ export function getCompletionChecklist(club: OwnerClub): ChecklistItem[] {
   );
   return [
     { key: 'image', label: 'Logo du club', done: Boolean(club.image) },
-    { key: 'description', label: 'Description', done: Boolean(club.description?.trim()) },
-    { key: 'frequency', label: 'Fréquence des sorties', done: Boolean(club.frequency?.trim()) },
+    {
+      key: 'description',
+      label: 'Description (FR et EN)',
+      done: Boolean(club.description?.trim()) && Boolean(club.description_en?.trim()),
+    },
+    {
+      key: 'frequency',
+      label: 'Fréquence des sorties (FR et EN)',
+      done: Boolean(club.frequency?.trim()) && Boolean(club.frequency_en?.trim()),
+    },
     { key: 'city', label: 'Ville', done: Boolean(club.city?.trim()) },
     { key: 'social', label: 'Au moins un réseau social', done: hasSocial },
   ];

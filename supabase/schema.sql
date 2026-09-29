@@ -225,5 +225,19 @@ begin
 end;
 $$ language plpgsql security definer;
 
+-- Incrémenté quand l'owner clique "Copier" ou "Télécharger le QR code" sur
+-- /mon-club (voir OwnerShareCard) : sert de 3ᵉ palier dans la checklist
+-- d'engagement (compléter sa fiche / obtenir 5 vues / partager sur ses
+-- réseaux) qui pousse activement le club à parler du site.
+alter table public.clubs add column if not exists share_count integer not null default 0;
+
+create or replace function public.increment_share_count(p_club_id bigint)
+returns void as $$
+begin
+  update public.clubs set share_count = share_count + 1 where id = p_club_id;
+end;
+$$ language plpgsql security definer;
+
 grant execute on function public.increment_view_count(bigint) to service_role;
 grant execute on function public.increment_like_count(bigint) to service_role;
+grant execute on function public.increment_share_count(bigint) to service_role;

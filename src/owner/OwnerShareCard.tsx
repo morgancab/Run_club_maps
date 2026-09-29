@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import type { OwnerClub } from './types';
+import { trackClubEvent } from '../utils/trackClubEvent';
 
 interface OwnerShareCardProps {
   club: OwnerClub;
+  /** Appelé après un clic sur "Copier" ou "Télécharger" — permet au parent de
+   * mettre à jour share_count localement sans attendre un rechargement. */
+  onShared: () => void;
 }
 
 // Lien + QR code vers la fiche du club, à usage de l'owner sur SES propres
@@ -11,7 +15,7 @@ interface OwnerShareCardProps {
 // entièrement côté client (bibliothèque qrcode, pas d'API tierce) : after la
 // mésaventure avec les tuiles CARTO qui ont fini par exiger une clé, on évite
 // de dépendre d'un service externe pour quelque chose d'aussi simple.
-export default function OwnerShareCard({ club }: OwnerShareCardProps) {
+export default function OwnerShareCard({ club, onShared }: OwnerShareCardProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -36,14 +40,21 @@ export default function OwnerShareCard({ club }: OwnerShareCardProps) {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
+      trackClubEvent(club.id, 'share');
+      onShared();
     } catch {
       // Presse-papiers indisponible (contexte non sécurisé, permission
       // refusée...) : le lien reste sélectionnable manuellement dans le champ.
     }
   };
 
+  const handleDownload = () => {
+    trackClubEvent(club.id, 'share');
+    onShared();
+  };
+
   return (
-    <div className="border-t border-ink-line px-5 py-5">
+    <div>
       <h3 className="text-xs font-bold uppercase tracking-wide text-concrete">Partager mon club</h3>
       <p className="mt-1 text-xs leading-relaxed text-concrete">
         À coller dans ta bio Instagram, sur tes affiches ou ton site : ce lien ouvre directement la carte sur ton
@@ -77,6 +88,7 @@ export default function OwnerShareCard({ club }: OwnerShareCardProps) {
             <a
               href={qrDataUrl}
               download={`qr-code-${club.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`}
+              onClick={handleDownload}
               className="mt-2 inline-block rounded-md bg-accent px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-ink transition-transform hover:-translate-y-0.5"
             >
               Télécharger le QR code

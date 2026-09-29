@@ -27,4 +27,5 @@ export interface OwnerClub {
   pendingRequest: OwnerEditRequest | null;
   view_count: number;
   like_count: number;
+  share_count: number;
 }
