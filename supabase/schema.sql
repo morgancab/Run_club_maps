@@ -194,3 +194,36 @@ drop trigger if exists on_auth_user_login on auth.users;
 create trigger on_auth_user_login
   after update on auth.users
   for each row execute function public.handle_auth_user_login();
+
+-- ============================================================
+-- STATS DE VUE/LIKE — mini-KPI pour les owners
+-- ============================================================
+--
+-- Deux sources bien distinctes : view_count est incrémenté quand un visiteur
+-- ouvre la fiche d'un club sur la CARTE (popup d'un marqueur, RunClubMap),
+-- like_count quand il le like en mode swipe (ClubSwiper) — la carte n'a pas
+-- de geste "like", seul le swipe en a un. Affichés uniquement à l'owner sur
+-- /mon-club (jamais sur la carte publique, lib/fetchClubs.ts ne les inclut
+-- pas dans les properties renvoyées). Deux fonctions RPC dédiées plutôt qu'un
+-- simple .update() : l'incrément doit être atomique (deux visiteurs qui
+-- interagissent en même temps ne doivent pas se marcher dessus avec un "lire
+-- puis écrire" classique).
+alter table public.clubs add column if not exists view_count integer not null default 0;
+alter table public.clubs add column if not exists like_count integer not null default 0;
+
+create or replace function public.increment_view_count(p_club_id bigint)
+returns void as $$
+begin
+  update public.clubs set view_count = view_count + 1 where id = p_club_id;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.increment_like_count(p_club_id bigint)
+returns void as $$
+begin
+  update public.clubs set like_count = like_count + 1 where id = p_club_id;
+end;
+$$ language plpgsql security definer;
+
+grant execute on function public.increment_view_count(bigint) to service_role;
+grant execute on function public.increment_like_count(bigint) to service_role;

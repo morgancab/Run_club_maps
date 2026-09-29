@@ -2,6 +2,8 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { OwnerClub } from './types';
 import AddressAutocompleteField, { type AddressSuggestion } from '../components/AddressAutocompleteField';
+import { getCompletionChecklist } from './completionChecklist';
+import OwnerShareCard from './OwnerShareCard';
 
 interface OwnerClubFormProps {
   club: OwnerClub;
@@ -49,6 +51,9 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 export default function OwnerClubForm({ club, session, onUpdated }: OwnerClubFormProps) {
   const [expanded, setExpanded] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const checklist = getCompletionChecklist(club);
+  const missingItems = checklist.filter((item) => !item.done);
   const [values, setValues] = useState<Record<TextFieldKey, string>>(() =>
     Object.fromEntries(TEXT_FIELDS.map((f) => [f.key, club[f.key] == null ? '' : String(club[f.key])])) as Record<
       TextFieldKey,
@@ -127,28 +132,98 @@ export default function OwnerClubForm({ club, session, onUpdated }: OwnerClubFor
 
   return (
     <div className="overflow-hidden rounded-xl border border-ink-line bg-paper shadow-[0_4px_16px_rgba(18,21,26,0.04)]">
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-paper-soft"
-      >
-        <div className="flex items-center gap-3">
+      <div className="flex w-full items-center justify-between gap-4 px-5 py-4">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
           {club.image ? (
-            <img src={club.image} alt={club.name} className="h-12 w-12 rounded-full border border-ink-line object-cover" />
+            <img src={club.image} alt={club.name} className="h-12 w-12 shrink-0 rounded-full border border-ink-line object-cover" />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-ink-line bg-paper-soft text-lg">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink-line bg-paper-soft text-lg">
               🏃
             </div>
           )}
-          <div>
-            <p className="font-display font-bold uppercase tracking-tight text-ink">{club.name}</p>
+          <div className="min-w-0">
+            <p className="truncate font-display font-bold uppercase tracking-tight text-ink">{club.name}</p>
             <p className="text-xs text-concrete">{club.city || 'Ville non renseignée'}</p>
           </div>
+        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setShareOpen((v) => !v);
+              setExpanded(false);
+            }}
+            className="rounded-md border border-ink-line px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-ink transition-colors hover:border-accent hover:text-accent"
+          >
+            {shareOpen ? 'Fermer' : 'Partager'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setExpanded((v) => !v);
+              setShareOpen(false);
+            }}
+            className="rounded-md border border-ink-line px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-ink transition-colors hover:border-accent hover:text-accent"
+          >
+            {expanded ? 'Fermer' : 'Modifier'}
+          </button>
         </div>
-        <span className="shrink-0 rounded-md border border-ink-line px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-ink">
-          {expanded ? 'Fermer' : 'Modifier'}
+      </div>
+
+      {/* Checklist de complétion : une vraie action à faire, utile même sans
+          trafic sur le site (contrairement aux compteurs ci-dessous).
+          Toujours affichée, y compris à 100% (confirmation positive) — sinon
+          rien ne distingue "fiche complète" de "composant absent". */}
+      <div className="mx-5 mb-4 border-t border-ink-line pt-3">
+        {missingItems.length === 0 ? (
+          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-accent">
+            <span aria-hidden="true">✅</span> Fiche complète
+          </p>
+        ) : (
+          <>
+            <p className="text-xs font-bold uppercase tracking-wide text-concrete">
+              Fiche complétée à {Math.round(((checklist.length - missingItems.length) / checklist.length) * 100)}%
+            </p>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink-line">
+              <div
+                className="h-full rounded-full bg-accent transition-[width] duration-300"
+                style={{ width: `${((checklist.length - missingItems.length) / checklist.length) * 100}%` }}
+              />
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {missingItems.map((item) => (
+                <span
+                  key={item.key}
+                  className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-800"
+                >
+                  {item.label} manquant
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Mini-stats cumulées, deux sources distinctes : les vues viennent de
+          la carte (ouverture de la fiche d'un marqueur), les likes du mode
+          swipe. Toujours visibles, même carte repliée — la vraie raison de
+          revenir régulièrement. */}
+      <div className="mx-5 mb-4 flex gap-4 border-t border-ink-line pt-3 text-xs text-concrete">
+        <span className="flex items-center gap-1.5" title="Ouvertures de la fiche du club sur la carte">
+          <span aria-hidden="true">👁️</span>
+          <strong className="font-stat text-sm text-ink">{club.view_count}</strong> vues carte
         </span>
-      </button>
+        <span className="flex items-center gap-1.5" title="Likes reçus en mode swipe">
+          <span aria-hidden="true">❤️</span>
+          <strong className="font-stat text-sm text-ink">{club.like_count}</strong> likes swipe
+        </span>
+      </div>
+
+      {shareOpen && <OwnerShareCard club={club} />}
 
       {club.pendingRequest && (
         <div className="mx-5 mb-4 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">

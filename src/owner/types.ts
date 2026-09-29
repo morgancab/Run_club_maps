@@ -25,4 +25,6 @@ export interface OwnerClub {
   strava: string | null;
   status: 'pending' | 'approved' | 'rejected';
   pendingRequest: OwnerEditRequest | null;
+  view_count: number;
+  like_count: number;
 }

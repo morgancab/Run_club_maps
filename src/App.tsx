@@ -27,9 +27,26 @@ function App() {
   const [showInfoPopup, setShowInfoPopup] = useState(false)
   const [showSuggestForm, setShowSuggestForm] = useState(false)
   const [view, setView] = useState<View>(() => (SWIPE_ROUTES.includes(normalizedPath()) ? 'swipe' : 'site'))
+  // Lien direct partageable vers un club précis (voir "Partager" sur
+  // /mon-club) : runclubmaps.com/?club=<id> ouvre la carte centrée sur ce
+  // club, popup déjà ouverte. Lu une seule fois au chargement.
+  const [highlightClubId] = useState<number | null>(() => {
+    const raw = new URLSearchParams(window.location.search).get('club')
+    const parsed = raw ? Number(raw) : NaN
+    return Number.isFinite(parsed) ? parsed : null
+  })
   // Demandée une seule fois, dès l'arrivée sur le site, et partagée par la
   // carte et le mode swipe (tri du plus proche au plus loin).
   const { userLocation, geoStatus } = useGeolocation()
+
+  // Amène directement à la carte quand on arrive via un lien "?club=".
+  useEffect(() => {
+    if (highlightClubId === null) return
+    requestAnimationFrame(() => {
+      document.getElementById('carte')?.scrollIntoView({ behavior: 'smooth' })
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Ouvre directement le formulaire si l'utilisateur arrive via un lien dédié
   // (ex: runclubmaps.com/proposer-un-club), et garde l'URL synchronisée avec
@@ -105,6 +122,7 @@ function App() {
               userLocation={userLocation}
               geoStatus={geoStatus}
               onOpenSuggest={openSuggestForm}
+              highlightClubId={highlightClubId}
             />
           </div>
         </section>

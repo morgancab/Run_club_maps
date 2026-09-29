@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRunClubs } from '../hooks/useRunClubs';
 import type { RunClubFeature, Language } from '../RunClubMap';
 import { haversineDistanceKm, formatDistanceKm, type UserLocation } from '../utils/geo';
+import { trackClubEvent } from '../utils/trackClubEvent';
 import SocialIcon from './SocialIcon';
 import { translations } from '../i18n';
 
@@ -172,6 +173,7 @@ export default function ClubSwiper({ language, onBack, userLocation }: ClubSwipe
       if (direction === 'like') {
         const key = clubKey(current);
         setLikedKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
+        trackClubEvent(current.properties.id, 'like');
       }
       setIndex((i) => i + 1);
       setDragX(0);

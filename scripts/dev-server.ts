@@ -9,6 +9,7 @@ import adminEditRequestsHandler from '../api/admin/edit-requests/index.js';
 import ownerClubsHandler from '../api/owner/clubs/index.js';
 import ownerEditRequestsHandler from '../api/owner/edit-requests/index.js';
 import adminUsersHandler from '../api/admin/users/index.js';
+import trackClubHandler from '../api/track/club/index.js';
 
 const app = express();
 const PORT = 3001;
@@ -70,6 +71,10 @@ app.all('/api/owner/edit-requests', (req, res) => {
 app.all('/api/admin/users', (req, res) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adminUsersHandler(req as any, res as any);
+});
+app.post('/api/track/club', (req, res) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  trackClubHandler(req as any, res as any);
 });
 
 app.listen(PORT, () => {

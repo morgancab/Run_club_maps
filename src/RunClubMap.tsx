@@ -13,6 +13,7 @@ import { haversineDistanceKm, formatDistanceKm, type UserLocation } from './util
 import type { GeoStatus } from './hooks/useGeolocation';
 import SocialIcon from './components/SocialIcon';
 import { getSocialIconMarkup } from './utils/socialIcons';
+import { trackClubEvent } from './utils/trackClubEvent';
 import { translations, type Language } from './i18n';
 export type { Language };
 
@@ -23,6 +24,10 @@ export interface RunClubFeature {
     coordinates: [number, number];
   };
   properties: {
+    // Optionnel : absent pour un cache client déjà en place avant l'ajout de
+    // ce champ (30 min de TTL, voir cacheService). Nécessaire pour rattacher
+    // une vue/un like au bon club côté serveur — voir api/track/club.
+    id?: number;
     name: string;
     city?: string;
     frequency?: string;
@@ -445,6 +450,13 @@ function ClusteredMarkers({ clubs, getClubText, t, selectedClubId, userLocation 
       `;
 
       marker.bindPopup(popupContent);
+
+      // Mini-stat "vue" pour l'owner (voir /mon-club) : déclenchée à
+      // l'ouverture réelle de la popup, que ce soit un clic direct sur le
+      // marqueur ou l'ouverture programmatique via la liste (voir
+      // selectedClubId / marker.openPopup() plus bas) — un seul point
+      // d'écoute couvre les deux chemins.
+      marker.on('popupopen', () => trackClubEvent(club.properties.id, 'view'));
       
       // Ajouter le marqueur au cluster seulement si les coordonnées sont valides
       // Utiliser addLayers en batch pour éviter le flash
@@ -491,9 +503,12 @@ interface RunClubMapProps {
   geoStatus: GeoStatus;
   /** Ouvre le formulaire "Proposer un club" (géré au niveau de App.tsx). */
   onOpenSuggest: () => void;
+  /** Id du club à centrer/ouvrir automatiquement (lien "?club=" partagé
+   * depuis /mon-club) — null si absent de l'URL. */
+  highlightClubId?: number | null;
 }
 
-export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, active = true, userLocation, geoStatus, onOpenSuggest }: RunClubMapProps) {
+export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, active = true, userLocation, geoStatus, onOpenSuggest, highlightClubId }: RunClubMapProps) {
   const [clubs, setClubs] = useState<RunClubFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
@@ -506,6 +521,40 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
   const [selectedClubId, setSelectedClubId] = useState<string | undefined>(undefined);
   const mapRef = useRef<any>(null);
   const { cacheStatus, updateCacheStatus } = useCache();
+
+  // Fonction pour gérer les clics sur un club
+  const handleClubClick = (club: RunClubFeature) => {
+    if (mapRef.current) {
+      const map = mapRef.current;
+      // Utiliser le même format d'ID que dans ClusteredMarkers
+      const clubId = `${club.properties.name}-${club.geometry.coordinates[0]}-${club.geometry.coordinates[1]}`;
+
+      // Centrer la carte sur le club avec un zoom élevé pour éviter le clustering
+      map.setView([club.geometry.coordinates[1], club.geometry.coordinates[0]], 16);
+
+      // Définir le club sélectionné pour ouvrir sa popup
+      setSelectedClubId(clubId);
+
+      // Fermer l'overlay
+      setShowOverlay(false);
+    }
+  };
+
+  // Lien direct "?club=<id>" (voir App.tsx) : une fois les clubs chargés et
+  // la carte prête, centre dessus et ouvre sa popup comme un clic manuel.
+  // Ne se déclenche qu'une fois (highlightAppliedRef), même si "clubs" est
+  // rechargé ensuite (ex: retour de cache expiré). Placé avant le "if
+  // (loading) return" plus bas : les hooks ne peuvent pas être appelés après
+  // un retour conditionnel (règle des hooks React).
+  const highlightAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!highlightClubId || highlightAppliedRef.current || clubs.length === 0 || !mapRef.current) return;
+    const match = clubs.find((c) => c.properties.id === highlightClubId);
+    if (match) {
+      highlightAppliedRef.current = true;
+      handleClubClick(match);
+    }
+  }, [highlightClubId, clubs]);
 
   // Fonction pour obtenir les traductions
   const t = translations[language];
@@ -1339,24 +1388,6 @@ export default function RunClubMap({ language, showInfoPopup, setShowInfoPopup, 
         adjustMapToFilteredClubs(currentFilteredClubs);
       }
     }, 300);
-  };
-
-  // Fonction pour gérer les clics sur un club
-  const handleClubClick = (club: RunClubFeature) => {
-    if (mapRef.current) {
-      const map = mapRef.current;
-      // Utiliser le même format d'ID que dans ClusteredMarkers
-      const clubId = `${club.properties.name}-${club.geometry.coordinates[0]}-${club.geometry.coordinates[1]}`;
-      
-      // Centrer la carte sur le club avec un zoom élevé pour éviter le clustering
-      map.setView([club.geometry.coordinates[1], club.geometry.coordinates[0]], 16);
-      
-      // Définir le club sélectionné pour ouvrir sa popup
-      setSelectedClubId(clubId);
-      
-      // Fermer l'overlay
-      setShowOverlay(false);
-    }
   };
 
   return (

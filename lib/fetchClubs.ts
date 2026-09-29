@@ -7,6 +7,7 @@ interface RunClubFeature {
     coordinates: [number, number];
   };
   properties: {
+    id: number;
     name: string;
     city?: string;
     frequency?: string;
@@ -84,6 +85,7 @@ function rowToFeature(row: ClubRow): RunClubFeature | null {
       coordinates: [longitude, latitude], // GeoJSON : [lon, lat]
     },
     properties: {
+      id: row.id,
       name: row.name || '',
       name_en: row.name || '',
       city: row.city || '',
